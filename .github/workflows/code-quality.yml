@@ -2,12 +2,17 @@ name: "Code Quality"
 on: [push, pull_request]
 
 jobs:
-  codeQuality:
+  CodeQuality:
     name: Code Quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@1.1.0
+        with:
+          ignore: src/tegonal-scripts
         env:
-          SHELLCHECK_OPTS: -x -P ./src/utility
+          SHELLCHECK_OPTS: -x -P ./src
+
+      - name: check all scripts have documentation
+        run: ./scripts/update-docu.sh

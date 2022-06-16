@@ -1,0 +1,22 @@
+name: Cleanup
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cleanup Sources
+        run: ./scripts/update-docu.sh
+      - name: Create Pull Request if necessary
+        uses: peter-evans/create-pull-request@v4
+        with:
+          branch: auto-cleanup
+          title: Cleanup
+          commit-message: cleanup sources
+          body: Looks like someone forgot to run some commands before committing. I did it for them :)
+          delete-branch: true

@@ -12,13 +12,13 @@
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
 -->
 
-# Gget
+# gget
 
-Retrieve files stored in a git repository including automatic verification of fingerprint and signature.
+g(it)get is a bash based script which fetches a file or a directory stored in a git repository including automatic verification via GPG signature.
 
 **The initial idea behind this project**:  
 You have scripts you use in multiple projects and would like to have a single place where you maintain them.
-Maybe you even made them public so that others can use them as well (for instance [Tegonal scripts](https://github.com/tegonal/scripts)).
+Maybe you even made them public so that others can use them as well (as we have done with [Tegonal scripts](https://github.com/tegonal/gget)).
 This tool provides an easy way to fetch them into your project. 
 
 ---
@@ -28,6 +28,62 @@ Please have a look at the README of the git tag in case you are looking for the 
 For instance, the [README of v0.1.0](https://github.com/tegonal/gget/tree/v0.1.0/README.md).
 
 ---
+
+**Table of Content**
+- [Installation](#installation)
+- [Usage](#usage)
+- [Contributors and contribute](#contributors-and-contribute)
+- [License](#license)
+
+# Installation
+
+<!-- for main -->
+1. [![Download](https://img.shields.io/badge/Download-v0.1.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.1.0)
+the latest version
+
+<!-- for a specific release -->
+<!--
+1. [![Download](https://img.shields.io/badge/Download-v0.1.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.1.0)
+-->
+
+2. extract the zip/tar.gz
+3. copy the src directory to a place where you want to store gget e.g. /opt/gget or into your project directory
+4. optional: create a symlink `ln -s /opt/gget/gget.sh /usr/local/bin/gget`
+
+# Usage
+
+<gget>
+
+<!-- auto-generated, do not modify here but in src/gget.sh -->
+```bash
+#!/usr/bin/env bash
+
+current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
+
+# Assuming gget.sh is in the same directory as your script
+"$current_dir/gget.sh" -r tegonal-scripts -u https://github.com/tegonal/scripts \
+  -t v0.1.0 -p src/utility/update-bash-docu.sh \
+  -d "$current_dir/tegonal-scripts"
+```
+
+</gget>
+
+Following the output of running `gget --help`:
+
+<gget-help>
+
+<!-- auto-generated, do not modify here but in src/gget.sh -->
+```text
+Parameters:
+-p|--path            define which file or directory shall be fetched
+-d|--directory       (optional) define into which directory it should be fetched -- default: .
+-r|--remote          define the name of the remote repository to use
+-u|--url             define the url of the remote repository
+-w|--working-directory (optional) define a path which gget shall use as working directory -- default: ./gget
+-t|--tag             define which tag should be used to fetch the file
+```
+
+</gget-help>
 
 # Contributors and contribute
 
@@ -45,4 +101,4 @@ You are more than welcome to contribute as well:
 
 # License
 
-The provided scripts are licensed under [Apache 2.0](http://opensource.org/licenses/Apache2.0).
+gget is licensed under [Apache 2.0](http://opensource.org/licenses/Apache2.0).
