@@ -10,8 +10,8 @@
 #######  Description  #############
 #
 #  Utility to get a file or a directory from a public git repository.
-#  Each file is verified against its *.asc file which needs to be alongside the file.
-#  Corresponding public GPG keys need to be placed in gget's workdir (.gget by default) under WORKDIR/public-keys/<remote>
+#  Each file is verified against its signature (*.sig file) which needs to be alongside the file.
+#  Corresponding public GPG keys (*.asc) need to be placed in gget's workdir (.gget by default) under WORKDIR/public-keys/<remote>
 #
 #######  Usage  ###################
 #
@@ -52,7 +52,7 @@ help[path]='define which file or directory shall be fetched'
 # shellcheck disable=SC2034
 params[workingDirectory]='-w|--working-directory'
 # shellcheck disable=SC2034
-help[workingDirectory]='(optional) define a path which gget shall use as working directory -- default: ./gget'
+help[workingDirectory]='(optional) define a path which gget shall use as working directory -- default: .gget'
 
 # shellcheck disable=SC2034
 params[directory]='-d|--directory'
@@ -88,14 +88,15 @@ cd "$repo"
 
 declare gpgHomeDir="$workingDirectory/public-keys/$remote/gpg"
 mkdir -p "$gpgHomeDir"
+chmod 700 "$gpgHomeDir"y
 
 declare publicKeysDir="$workingDirectory/public-keys/$remote"
 
-if [ "$(find "$publicKeysDir" -name "*.asc" -maxdepth 1 | wc -l)" -eq 0 ]; then
+if [ "$(find "$publicKeysDir" -maxdepth 1 -name "*.asc"  | wc -l)" -eq 0 ]; then
   echo >&2 "no public keys for remote $remote defined in $publicKeysDir"
   exit 2
 fi
-find "$publicKeysDir" -name "*.asc" -maxdepth 1 -exec gpg --homedir="$gpgHomeDir" --import "{}" \;
+find "$publicKeysDir" -maxdepth 1 -name "*.asc"  -exec gpg --homedir="$gpgHomeDir" --import "{}" \;
 
 
 if ! [ -d "$directory" ]; then
@@ -122,11 +123,11 @@ git checkout "tags/$tag" -- "$path"
 { set +x; } 2>/dev/null
 
 
-declare sigExtension="asc"
+declare sigExtension="sig"
 
 if [ -f "$repo/$path" ]; then
   set -x
-  # is a file, fetch also the corresponding *.asc
+  # is a file, fetch also the corresponding signature
   git checkout "tags/$tag" -- "$path.$sigExtension"
 
   # don't show commands as output anymore
