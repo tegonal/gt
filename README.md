@@ -5,13 +5,14 @@
 [![Code Quality](https://github.com/tegonal/gget/workflows/Code%20Quality/badge.svg?event=push&branch=main)](https://github.com/tegonal/gget/actions?query=workflow%3ACode%20Quality+branch%3Amain)
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
 
+<!-- for main end -->
 <!-- for a specific release -->
 <!--
 [![Download](https://img.shields.io/badge/Download-v0.1.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.1.0)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
 -->
-
+<!-- for a specific release end -->
 # gget
 
 g(it)get is a bash based script which fetches a file or a directory stored in a git repository including automatic verification via GPG signature.
@@ -37,36 +38,12 @@ For instance, the [README of v0.1.0](https://github.com/tegonal/gget/tree/v0.1.0
 
 # Installation
 
-<!-- for main -->
 1. [![Download](https://img.shields.io/badge/Download-v0.1.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.1.0)
-the latest version
-
-<!-- for a specific release -->
-<!--
-1. [![Download](https://img.shields.io/badge/Download-v0.1.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.1.0)
--->
-
 2. extract the zip/tar.gz
 3. copy the src directory to a place where you want to store gget e.g. /opt/gget or into your project directory
 4. optional: create a symlink `ln -s /opt/gget/gget.sh /usr/local/bin/gget`
 
 # Usage
-
-<gget>
-
-<!-- auto-generated, do not modify here but in src/gget.sh -->
-```bash
-#!/usr/bin/env bash
-
-current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
-
-# Assuming gget.sh is in the same directory as your script
-"$current_dir/gget.sh" -r tegonal-scripts -u https://github.com/tegonal/scripts \
-  -t v0.1.0 -p src/utility/update-bash-docu.sh \
-  -d "$current_dir/tegonal-scripts"
-```
-
-</gget>
 
 Following the output of running `gget --help`:
 
@@ -84,6 +61,24 @@ Parameters:
 ```
 
 </gget-help>
+
+Full usage example:
+
+<gget>
+
+<!-- auto-generated, do not modify here but in src/gget.sh -->
+```bash
+#!/usr/bin/env bash
+
+current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
+
+# Assuming gget.sh is in the same directory as your script
+"$current_dir/gget.sh" -r tegonal-scripts -u https://github.com/tegonal/scripts \
+  -t v0.1.0 -p src/utility/update-bash-docu.sh \
+  -d "$current_dir/tegonal-scripts"
+```
+
+</gget>
 
 # Contributors and contribute
 
