@@ -56,7 +56,7 @@ Parameters:
 -d|--directory       (optional) define into which directory it should be fetched -- default: .
 -r|--remote          define the name of the remote repository to use
 -u|--url             define the url of the remote repository
--w|--working-directory (optional) define a path which gget shall use as working directory -- default: ./gget
+-w|--working-directory (optional) define a path which gget shall use as working directory -- default: .gget
 -t|--tag             define which tag should be used to fetch the file
 ```
 
