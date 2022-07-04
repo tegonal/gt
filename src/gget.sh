@@ -17,101 +17,94 @@
 #
 #    #!/usr/bin/env bash
 #
-#    current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
+#    current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 #
 #    # Assuming gget.sh is in the same directory as your script
 #    "$current_dir/gget.sh" -r tegonal-scripts -u https://github.com/tegonal/scripts \
-#      -t v0.1.0 -p src/utility/update-bash-docu.sh \
-#      -d "$current_dir/tegonal-scripts"
+#    	-t v0.1.0 -p src/utility/update-bash-docu.sh \
+#    	-d "$current_dir/tegonal-scripts"
 #
 ###################################
 
 set -e
 
 if ! [ -x "$(command -v "git")" ]; then
-  echo >&2 "Error: git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)"
-  exit 1
+	printf >&2 "\033[1;31mERROR\033[0m: git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)\n"
+	exit 100
 fi
-
-declare -A params
-declare -A help
 
 declare remote url tag path workingDirectory directory
-params[remote]='-r|--remote'
-help[remote]='define the name of the remote repository to use'
-
-params[url]="-u|--url"
-help[url]='define the url of the remote repository'
-
-params[tag]='-t|--tag'
-help[tag]='define which tag should be used to fetch the file'
-
-params[path]='-p|--path'
-help[path]='define which file or directory shall be fetched'
-
 # shellcheck disable=SC2034
-params[workingDirectory]='-w|--working-directory'
-# shellcheck disable=SC2034
-help[workingDirectory]='(optional) define a path which gget shall use as working directory -- default: .gget'
+declare params=(
+	remote 		'-r|--remote' 'define the name of the remote repository to use'
+	url 			'-u|--url' 		'define the url of the remote repository'
+	tag 			'-t|--tag' 		'define which tag should be used to pull the file/directory'
+	path 			'-p|--path' 	'define which file or directory shall be fetched'
+	workingDirectory '-w|--working-directory' '(optional) define a path which gget shall use as working directory -- default: .gget'
+	directory '-d|--directory' '(optional) define into which directory it should pull the file/directory -- default: .'
+)
 
-# shellcheck disable=SC2034
-params[directory]='-d|--directory'
-# shellcheck disable=SC2034
-help[directory]='(optional) define into which directory it should be fetched -- default: .'
+declare example=''
 
 current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-source "$current_dir/tegonal-scripts/src/utility/parse-args.sh" || exit 123
+source "$current_dir/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
-parseArguments params "$@"
-if ! [ -v workingDirectory ]; then workingDirectory=$(realpath "./.gget"); fi
+parseArguments params "$example" "$@"
+if ! [ -v workingDirectory ]; then workingDirectory="./.gget"; fi
 if ! [ -v directory ]; then directory="."; fi
-checkAllArgumentsSet params
+checkAllArgumentsSet params "$example"
+
+# make directory paths absolute
+workingDirectory=$(realpath "$workingDirectory")
+directory=$(realpath "$directory")
 
 if ! [ -d "$workingDirectory" ]; then
-  echo >&2 "working directory does not exist, check for typos: $workingDirectory"
-  exit 1
+	printf >&2 "\033[1;31mERROR\033[0m: working directory does not exist, check for typos: %s\n" "$workingDirectory"
+	exit 9
 fi
 
-
-mkdir -p "$workingDirectory" || (echo >&2 "failed to create working directory: $workingDirectory" && false)
-cd "$workingDirectory"
+mkdir -p "$workingDirectory" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create working directory: %s\n" "$workingDirectory" && exit 1)
 
 declare repo="$workingDirectory/repos/$remote"
 
 if ! [ -d "$repo" ]; then
-  mkdir "$repo" || (echo >&2 "failed to create remote directory $repo" && false)
-  cd "$repo"
-  git init
+	mkdir "$repo" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create remote directory %s\n" "$repo" && exit 1)
+	cd "$repo"
+	git init
+	cd "$current_dir"
+else
+	# delete all leftovers from a previous unsuccessful pull
+	find "$repo" -maxdepth 1 -type d \
+		-not -path "$repo" \
+		-not -path "$repo/.git" \
+		-exec rm -r {} \;
 fi
-cd "$repo"
-
 
 declare gpgHomeDir="$workingDirectory/public-keys/$remote/gpg"
 mkdir -p "$gpgHomeDir"
-chmod 700 "$gpgHomeDir"y
+chmod 700 "$gpgHomeDir"
 
 declare publicKeysDir="$workingDirectory/public-keys/$remote"
 
-if [ "$(find "$publicKeysDir" -maxdepth 1 -name "*.asc"  | wc -l)" -eq 0 ]; then
-  echo >&2 "no public keys for remote $remote defined in $publicKeysDir"
-  exit 2
+if [ "$(find "$publicKeysDir" -maxdepth 1 -name "*.asc" | wc -l)" -eq 0 ]; then
+	printf >&2 "\033[1;31mERROR\033[0m: no public keys for remote %s defined in %s\n" "$remote" "$publicKeysDir"
+	exit 1
 fi
-find "$publicKeysDir" -maxdepth 1 -name "*.asc"  -exec gpg --homedir="$gpgHomeDir" --import "{}" \;
-
+find "$publicKeysDir" -maxdepth 1 -name "*.asc" -exec gpg --homedir="$gpgHomeDir" --import "{}" \;
 
 if ! [ -d "$directory" ]; then
-  mkdir "$directory" || (echo >&2 "failed to create output directory $directory" && false)
+	mkdir "$directory" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create output directory %s\n" "$directory" && exit 1)
 fi
 
-git init
+cd "$repo"
 echo "setup remote $remote using url $url"
 if ! git remote | grep -q "$remote"; then
-  git remote add "$remote" "$url"
+	git remote add "$remote" "$url"
 else
-  git remote set-url "$remote" "$url"
+	git remote set-url "$remote" "$url"
 fi
 
-git ls-remote -t "$remote" | grep "$tag" || (echo >&2 "remote $remote does not have a tag $tag" && git ls-remote -t "$remote" && false)
+git ls-remote -t "$remote" | grep "$tag" || (printf >&2 "\033[1;31mERROR\033[0m: remote %s does not have a tag %s\n" "$remote" "$tag" && git ls-remote -t "$remote" && exit 1)
 
 # show commands as output
 set -x
@@ -122,27 +115,30 @@ git checkout "tags/$tag" -- "$path"
 # don't show commands as output anymore
 { set +x; } 2>/dev/null
 
-
 declare sigExtension="sig"
 
 if [ -f "$repo/$path" ]; then
-  set -x
-  # is a file, fetch also the corresponding signature
-  git checkout "tags/$tag" -- "$path.$sigExtension"
+	set -x
+	# is a file, fetch also the corresponding signature
+	git checkout "tags/$tag" -- "$path.$sigExtension"
 
-  # don't show commands as output anymore
-  { set +x; } 2>/dev/null
+	# don't show commands as output anymore
+	{ set +x; } 2>/dev/null
 fi
 
-find "$path" -not -name "*.$sigExtension" -type f \
-  -print0 | while read -r -d $'\0' file
-    do
-      echo "verifying $file"
-      if ! [ -f "$file.$sigExtension" ]; then
-        echo >&2 "there was no corresponding *.$sigExtension file for $file"
-        exit 3
-      fi
-      gpg --homedir="$gpgHomeDir" --verify "$file.$sigExtension" "$file"
-      mkdir --parents "$directory/$file"
-      mv "$file" "$directory/$file"
-    done
+cd "$repo"
+find "$path" -not -name "*.$sigExtension" -type f -print0 |
+	while read -r -d $'\0' file; do
+		echo "verifying $file"
+		if [ -f "$file.$sigExtension" ]; then
+			if [ -d "$directory/$file" ]; then
+				printf >&2 "\033[1;31mERROR\033[0m: there exists a directory with the same name at %s\n" "$directory/$file"
+				exit 1
+			fi
+			gpg --homedir="$gpgHomeDir" --verify "$file.$sigExtension" "$file"
+			mkdir -p "$(dirname "$directory/$file")"
+			mv "$repo/$file" "$directory/$file"
+		else
+			printf >&2 "\033[1;33mWARNING\033[0m: there was no corresponding *.%s file for %s, skipping it\n" "$sigExtension" "$file"
+		fi
+	done

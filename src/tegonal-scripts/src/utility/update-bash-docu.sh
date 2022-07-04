@@ -20,7 +20,7 @@
 #    declare current_dir
 #    current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 #
-#    # Assuming /update-bash-docu.sh is in the same directory as your script
+#    # Assuming update-bash-docu.sh is in the same directory as your script
 #    source "$current_dir/update-bash-docu.sh"
 #    find . -name "*.sh" \
 #      -not -name "*.doc.sh" \

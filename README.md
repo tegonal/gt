@@ -52,12 +52,12 @@ Following the output of running `gget --help`:
 <!-- auto-generated, do not modify here but in src/gget.sh -->
 ```text
 Parameters:
--p|--path            define which file or directory shall be fetched
--d|--directory       (optional) define into which directory it should be fetched -- default: .
--r|--remote          define the name of the remote repository to use
--u|--url             define the url of the remote repository
--w|--working-directory (optional) define a path which gget shall use as working directory -- default: .gget
--t|--tag             define which tag should be used to fetch the file
+-r|--remote              define the name of the remote repository to use
+-u|--url                 define the url of the remote repository
+-t|--tag                 define which tag should be used to pull the file/directory
+-p|--path                define which file or directory shall be fetched
+-w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+-d|--directory           (optional) define into which directory it should pull the file/directory -- default: .
 ```
 
 </gget-help>
@@ -70,12 +70,12 @@ Full usage example:
 ```bash
 #!/usr/bin/env bash
 
-current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
+current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 
 # Assuming gget.sh is in the same directory as your script
 "$current_dir/gget.sh" -r tegonal-scripts -u https://github.com/tegonal/scripts \
-  -t v0.1.0 -p src/utility/update-bash-docu.sh \
-  -d "$current_dir/tegonal-scripts"
+	-t v0.1.0 -p src/utility/update-bash-docu.sh \
+	-d "$current_dir/tegonal-scripts"
 ```
 
 </gget>

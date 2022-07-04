@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.2.1
+#                                         Version: v0.3.0
 #
 #######  Description  #############
 #
@@ -24,8 +24,8 @@
 #    file=$(mktemp)
 #    echo "<my-script-help></my-script-help>" > "$file"
 #
-#    # replaceSnippet file id dir pattern snippet
-#    replaceSnippet my-script.sh my-script-help "$(dirname "$file")" "$(basename "$file")"
+#    # replaceHelpSnippet script id dir pattern
+#    replaceHelpSnippet my-script.sh my-script-help "$(dirname "$file")" "$(basename "$file")"
 #
 #    echo "content"
 #    cat "$file"
