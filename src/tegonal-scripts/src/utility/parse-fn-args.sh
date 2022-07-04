@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#
+#                                         Version: v0.3.0
 #
 #######  Description  #############
 #
@@ -37,7 +37,7 @@
 #
 #      declare command dir varargs
 #      # shellcheck disable=SC2034
-#      declare args=(command dir varargs)
+#      declare args=(command dir)
 #
 #      # Assuming parse-fn-args.sh is in the same directory as your script
 #      current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
@@ -54,19 +54,21 @@
 #
 ###################################
 
-set -e
-
 if ! [[ -v args[@] ]]; then
-  echo >&2 "parse-fn-args.sh requires you to define an array named 'args', for instance as follows"
+  echo >&2 "\033[1;31mERROR\033[0m: parse-fn-args.sh requires you to define an array named 'args', for instance as follows"
   echo >&2 "declare args=(variableStoringArg1 variableStoringArg2)"
   exit 2
 fi
 
 declare withVarArgs
-withVarArgs=$(declare -p "varargs" >/dev/null 2>&1)
+if declare -p varargs >/dev/null 2>&1; then
+  withVarArgs=true
+else
+  withVarArgs=false
+fi
 
-if [ "${#args[@]}" -lt "$#"  ]; then
-  printf >&2 "Not enough arguments supplied to \033[0m\033[0;36m%s\033[0m: expected %s, given %s\nFollowing a listing of the arguments (red means missing):\n" "${FUNCNAME[1]}" "${#args[@]}" "$#"
+if [ "$#" -lt "${#args[@]}" ]; then
+  printf >&2 "\033[1;31mERROR: Not enough arguments supplied to \033[0m\033[0;36m%s\033[0m: expected %s, given %s\nFollowing a listing of the arguments (red means missing):\n" "${FUNCNAME[1]}" "${#args[@]}" "$#"
 
   declare -i i=1
   for name in "${args[@]}"; do
@@ -84,7 +86,7 @@ if [ "${#args[@]}" -lt "$#"  ]; then
 fi
 
 if ! [ "$withVarArgs" ] && ! [ "$#" -eq "${#args[@]}" ]; then
-  printf >&2 "more arguments supplied than expected to \033[0m\033[0;36m%s\033[0m: expected %s, given %s\n" "${FUNCNAME[1]}" "${#args[@]}" "$#"
+  printf >&2 "\033[1;31mERROR\033[0m: more arguments supplied than expected to \033[0m\033[0;36m%s\033[0m: expected %s, given %s\n" "${FUNCNAME[1]}" "${#args[@]}" "$#"
   echo >&2 "in case you wanted your last parameter to be a vararg parameter, then use 'vararg' as last variable name in 'args'"
   exit 1
 fi
