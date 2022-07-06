@@ -15,18 +15,14 @@
 #
 #    #!/usr/bin/env bash
 #
-#    current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-#
-#    # Assuming gget-remote.sh is in the same directory as your script -- though, usually you would use: gget remote ...
-#
 #    # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
-#    "$current_dir/gget-remote.sh" add -r tegonal-scripts -u https://github.com/tegonal/scripts
+#    gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
 #
 #    # lists all existing remotes
-#    "$current_dir/gget-remote.sh" list
+#    gget remote list
 #
 #    # removes the remote tegonal-scripts again
-#    "$current_dir/gget-remote.sh" remove -r tegonal-scripts
+#    gget remote remove -r tegonal-scripts
 #
 ###################################
 
@@ -41,25 +37,44 @@ declare WORKING_DIR_PATTERN='-w|--working-directory'
 
 function add() {
 
-	declare remote url directory workingDirectory unsecure
+	declare remote url pullDirectory workingDirectory unsecure
 	# shellcheck disable=SC2034
 	declare params=(
 		remote '-r|--remote' 'define the name of the remote repository to use'
 		url '-u|--url' 'define the url of the remote repository'
-		directory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: ./lib/<remote>'
+		pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: lib/<remote>'
 		unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false'
 		workingDirectory "$WORKING_DIR_PATTERN" '(optional) define a path which gget shall use as working directory -- default: .gget'
 	)
-	declare example=''
-	parseArguments params "$example" "$@"
-	if ! [ -v directory ]; then directory="./lib/$remote"; fi
+	declare examples
+	examples=$(
+		cat <<-EOM
+			# adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
+			# uses the default location lib/tegonal-scripts for the files which will be pulled from this remote
+			gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
+
+			# uses a custom pull directory, files of the remote tegonal-scripts will now
+			# be placed into scripts/lib/tegonal-scripts instead of default location lib/tegonal-scripts
+			gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -d scripts/lib/tegonal-scripts
+
+			# Does not complain if the remote does not provide a GPG key for verification (but still tries to fetch one)
+			gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecure true
+
+			# uses a custom working directory
+			gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/.gget
+		EOM
+	)
+	parseArguments params "$examples" "$@"
+	if ! [ -v pullDirectory ]; then pullDirectory="lib/$remote"; fi
 	if ! [ -v unsecure ]; then unsecure=false; fi
 	if ! [ -v workingDirectory ]; then workingDirectory="$DEFAULT_WORKING_DIR"; fi
-	checkAllArgumentsSet params "$example"
+	checkAllArgumentsSet params "$examples"
+
+	echo "--directory \"$pullDirectory\"" >"$workingDirectory/pull.args"
 
 	# make directory paths absolute
 	workingDirectory=$(readlink -m "$workingDirectory")
-	directory=$(readlink -m "$directory")
+	pullDirectory=$(readlink -m "$pullDirectory")
 
 	mkdir -p "$workingDirectory"
 
@@ -73,13 +88,15 @@ function add() {
 		exit 9
 	fi
 
-	mkdir -p "$directory"
-
 	mkdir "$remoteDirectory" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create remote directory %s\n" "$remoteDirectory" && exit 1)
 	declare publicKeys="$remoteDirectory/public-keys"
 	mkdir "$publicKeys"
 	declare repo="$remoteDirectory/repo"
 	mkdir "$repo"
+	declare gpgDir="$publicKeys/gpg"
+	mkdir "$gpgDir"
+	chmod 700 "$gpgDir"
+
 	cd "$repo"
 
 	# show commands in output
@@ -102,6 +119,7 @@ function add() {
 	if ! ((checkoutResult == 0)); then
 		if [ "$unsecure" == true ]; then
 			printf "\033[1;33mWARNING\033[0m: no GPG key found, ignoring it because --unsecure true was specified\n"
+			echo "--unsecure true" >>"$workingDirectory/pull.args"
 			exit 0
 		else
 			printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s)\n" "$remote" "$defaultBranch"
@@ -109,18 +127,14 @@ function add() {
 		fi
 	fi
 
-	declare findAsc='find ".gget" -maxdepth 1 -name "*.asc"'
-	if (($(eval "$findAsc" | wc -l) == 0)); then
+	function findAsc() {
+		find "$repo/.gget" -maxdepth 1 -type f -name "*.asc" "$@"
+	}
+	if (($(findAsc | wc -l) == 0)); then
 		printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it\n" "$remote"
 		exit 1
 	fi
 
-	eval "$findAsc -exec mv {} \"$publicKeys\" \;"
-	rm -r ".gget"
-	cd "$publicKeys"
-	declare gpgDir="$publicKeys/gpg"
-	mkdir "$gpgDir"
-	chmod 700 "$gpgDir"
 	echo ""
 	declare numberOfImportedKeys=0
 
@@ -130,7 +144,7 @@ function add() {
 	exec 4<"$tmpFile"
 	rm "$tmpFile"
 
-	find "$publicKeys" -name "*.asc" -type f -print0 >&3
+	findAsc -print0 >&3
 
 	while read -u 4 -r -d $'\0' file; do
 		declare outputKey
@@ -149,6 +163,7 @@ function add() {
 				while read -r keyId; do
 					echo -e "5\ny\n" | gpg --homedir "$gpgDir" --command-fd 0 --edit-key "$keyId" trust
 				done
+			mv "$file" "$publicKeys/"
 			((numberOfImportedKeys += 1))
 		else
 			echo "deleting key $file"
@@ -157,6 +172,7 @@ function add() {
 	done
 	exec 3>&-
 	exec 4<&-
+	rm -r "$repo/.gget"
 
 	if ((numberOfImportedKeys == 0)); then
 		if [ "$unsecure" == true ]; then
@@ -169,7 +185,7 @@ function add() {
 	fi
 
 	gpg --homedir "$gpgDir" --list-sig
-	echo "Imported $numberOfImportedKeys GPG key(s) successfully, you are ready to pull files via: gget pull -r $remote ..."
+	printf "\033[1;32mSUCCESS\033[0m: remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -t <VERSION> -p <PATH>\n" "$remote" "$numberOfImportedKeys" "$remote"
 }
 
 function remove() {
@@ -177,11 +193,22 @@ function remove() {
 	# shellcheck disable=SC2034
 	local params=(
 		remote '-r|--remote' 'define the name of the remote which shall be removed'
-		workingDirectory '-w|--working-directory' '(optional) define a path which gget shall use as working directory -- default: .gget'
+		workingDirectory "$WORKING_DIR_PATTERN" '(optional) define a path which gget shall use as working directory -- default: .gget'
 	)
-	parseArguments params "$example" "$@"
+	declare examples
+	examples=$(
+		cat <<-EOM
+			# removes the remote tegonal-scripts
+			gget remote remove -r tegonal-scripts
+
+			# uses a custom working directory
+			gget remote remove -r tegonal-scripts -w .github/.gget
+		EOM
+	)
+
+	parseArguments params "$examples" "$@"
 	if ! [ -v workingDirectory ]; then workingDirectory="$DEFAULT_WORKING_DIR"; fi
-	checkAllArgumentsSet params "$example"
+	checkAllArgumentsSet params "$examples"
 
 	declare remoteDirectory="$workingDirectory/$remote"
 
@@ -203,11 +230,22 @@ function list() {
 	declare workingDirectory
 	# shellcheck disable=SC2034
 	local params=(
-		workingDirectory '-w|--working-directory' '(optional) define a path which gget shall use as working directory -- default: .gget'
+		workingDirectory "$WORKING_DIR_PATTERN" '(optional) define a path which gget shall use as working directory -- default: .gget'
 	)
-	parseArguments params "$example" "$@"
+	declare examples
+	examples=$(
+		cat <<-EOM
+			# lists all defined remotes in .gget
+			gget remote list
+
+			# uses a custom working directory
+			gget remote list -w .github/.gget
+		EOM
+	)
+
+	parseArguments params "$examples" "$@"
 	if ! [ -v workingDirectory ]; then workingDirectory="$DEFAULT_WORKING_DIR"; fi
-	checkAllArgumentsSet params "$example"
+	checkAllArgumentsSet params "$examples"
 
 	if ! [ -d "$workingDirectory" ]; then
 		printf >&2 "\033[1;31mERROR\033[0m: working directory %s does not exist\n" "$workingDirectory"

@@ -31,6 +31,6 @@ declare additionalHelp=(
  gget-remote-list "src/gget-remote.sh" "list --help"
 )
 for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
-	replaceHelpSnippet "${additionalHelp[i+1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i+2]}"
+	replaceHelpSnippet "$projectDir/${additionalHelp[i+1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i+2]}"
 done
 
