@@ -33,6 +33,10 @@ For instance, the [README of v0.1.0](https://github.com/tegonal/gget/tree/v0.1.0
 **Table of Content**
 - [Installation](#installation)
 - [Usage](#usage)
+  - [remote](#remote)
+    - [add](#add)
+    - [remove](#remove)
+    - [list](#list)
 - [Contributors and contribute](#contributors-and-contribute)
 - [License](#license)
 
@@ -79,6 +83,85 @@ current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 
 ```
 
 </gget>
+
+## remote
+
+<gget-remote-help>
+
+<!-- auto-generated, do not modify here but in src/gget-remote.sh -->
+```text
+Use one of the following commands:
+add      add a remote
+remove   remove a remote
+list     list all existing remotes
+```
+
+</gget-remote-help>
+
+Full usage example:
+
+<gget-remote>
+
+<!-- auto-generated, do not modify here but in src/gget-remote.sh -->
+```bash
+#!/usr/bin/env bash
+
+current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+
+# Assuming gget-remote.sh is in the same directory as your script -- though, usually you would use: gget remote ...
+
+# adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
+"$current_dir/gget-remote.sh" add -r tegonal-scripts -u https://github.com/tegonal/scripts
+
+# lists all existing remotes
+"$current_dir/gget-remote.sh" list
+
+# removes the remote tegonal-scripts again
+"$current_dir/gget-remote.sh" remove -r tegonal-scripts
+```
+
+</gget-remote>
+
+## add
+
+<gget-remote-add-help>
+
+<!-- auto-generated, do not modify here but in src/gget-remote.sh -->
+```text
+Parameters:
+-r|--remote              define the name of the remote repository to use
+-u|--url                 define the url of the remote repository
+-d|--directory           (optional) define into which directory files of this remote will be pulled -- default: ./lib/<remote>
+--unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false
+-w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+```
+
+</gget-remote-add-help>
+
+### remove
+
+<gget-remote-remove-help>
+
+<!-- auto-generated, do not modify here but in src/gget-remote.sh -->
+```text
+Parameters:
+-r|--remote              define the name of the remote which shall be removed
+-w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+```
+
+</gget-remote-remove-help>
+
+### list
+
+<gget-remote-list-help>
+
+<!-- auto-generated, do not modify here but in src/gget-remote.sh -->
+```text
+Parameters:
+-w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+```
+
+</gget-remote-list-help>
 
 # Contributors and contribute
 

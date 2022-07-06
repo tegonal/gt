@@ -24,3 +24,13 @@ find "$projectDir/src" -maxdepth 1 -name "*.sh" \
     updateBashDocumentation "$script" "${id////-}" . README.md
     replaceHelpSnippet "$script" "${id////-}-help" . README.md
   done
+
+declare additionalHelp=(
+ gget-remote-add "src/gget-remote.sh" "add --help"
+ gget-remote-remove "src/gget-remote.sh" "remove --help"
+ gget-remote-list "src/gget-remote.sh" "list --help"
+)
+for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
+	replaceHelpSnippet "${additionalHelp[i+1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i+2]}"
+done
+

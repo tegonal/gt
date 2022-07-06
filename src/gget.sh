@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#
+#                                         Version: v0.1.0-SNAPSHOT
 #
 #######  Description  #############
 #
@@ -32,6 +32,7 @@ if ! [ -x "$(command -v "git")" ]; then
 	printf >&2 "\033[1;31mERROR\033[0m: git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)\n"
 	exit 100
 fi
+
 
 declare remote url tag path workingDirectory directory
 # shellcheck disable=SC2034
@@ -112,7 +113,7 @@ set -x
 git fetch --depth 1 "$remote" "refs/tags/$tag:refs/tags/$tag"
 git checkout "tags/$tag" -- "$path"
 
-# don't show commands as output anymore
+# don't show commands in output anymore
 { set +x; } 2>/dev/null
 
 declare sigExtension="sig"
@@ -122,7 +123,7 @@ if [ -f "$repo/$path" ]; then
 	# is a file, fetch also the corresponding signature
 	git checkout "tags/$tag" -- "$path.$sigExtension"
 
-	# don't show commands as output anymore
+	# don't show commands in output anymore
 	{ set +x; } 2>/dev/null
 fi
 
