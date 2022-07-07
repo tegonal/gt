@@ -111,6 +111,17 @@ if ! [ -d "$pullDirectory" ]; then
 	mkdir -p "$pullDirectory" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create the pull directory %s\n" "$pullDirectory" && exit 1)
 fi
 
+if [ -f "$repo" ]; then
+	printf >&2 "\033[1;31mERROR\033[0m: looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s\n" "$remote" "$remoteDirectory"
+  exit 1
+elif ! [ -d "$repo" ]; then
+	printf "\033[0;36mINFO\033[0m repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig\n" "$remote"
+	mkdir -p "$repo"
+	cd "$repo"
+	git init
+	cp "$remoteDirectory/gitconfig" "$repo/.git/config"
+fi
+
 cd "$repo"
 git ls-remote -t "$remote" | grep "$tag" >/dev/null || (printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m does not have arg tag \033[0;36m%s\033[0m\nFollowing the available tags:\n" "$remote" "$tag" && git ls-remote -t "$remote" && exit 1)
 
@@ -146,7 +157,7 @@ while read -r -d $'\0' file; do
 	}
 
 	if [ -f "$file.$sigExtension" ]; then
-		echo "verifying $file"
+		printf "verifying \033[0;36m%s\033[0m\n" "$file"
 		if [ -d "$pullDirectory/$file" ]; then
 			printf >&2 "\033[1;31mERROR\033[0m: there exists arg directory with the same name at %s\n" "$pullDirectory/$file"
 			exit 1

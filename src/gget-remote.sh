@@ -97,6 +97,7 @@ function add() {
 	mkdir "$gpgDir"
 	chmod 700 "$gpgDir"
 
+	local current=$(pwd)
 	cd "$repo"
 
 	# show commands in output
@@ -104,6 +105,12 @@ function add() {
 	git init
 	git remote add "$remote" "$url"
 
+	cd "$current"
+	# we need to copy the git config away in order that one can commit it
+	# this file will be used to restore the config for those who have not setup the remote on their machine
+	cp "$repo/.git/config" "$remoteDirectory/gitconfig"
+
+	cd "$repo"
 	declare defaultBranch
 	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p')"
 
