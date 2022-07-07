@@ -11,8 +11,8 @@ set -e
 
 declare projectDir
 projectDir="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../")"
-source "$projectDir/src/tegonal-scripts/src/utility/update-bash-docu.sh"
-source "$projectDir/src/tegonal-scripts/src/utility/replace-help-snippet.sh"
+source "$projectDir/lib/tegonal-scripts/src/utility/update-bash-docu.sh"
+source "$projectDir/lib/tegonal-scripts/src/utility/replace-help-snippet.sh"
 
 find "$projectDir/src" -maxdepth 1 -name "*.sh" \
   -not -name "*.doc.sh" \

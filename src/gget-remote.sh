@@ -97,7 +97,8 @@ function add() {
 	mkdir "$gpgDir"
 	chmod 700 "$gpgDir"
 
-	local current=$(pwd)
+	declare current
+	current=$(pwd)
 	cd "$repo"
 
 	# show commands in output
@@ -121,7 +122,7 @@ function add() {
 
 	set +e
 	git checkout "$remote/$defaultBranch" -- '.gget'
-	local checkoutResult=$?
+	declare checkoutResult=$?
 	set -e
 	if ! ((checkoutResult == 0)); then
 		if [ "$unsecure" == true ]; then
