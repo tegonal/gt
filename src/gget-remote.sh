@@ -30,6 +30,7 @@ set -e
 
 declare current_dir
 current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+source "$current_dir/gpg-utils.sh"
 source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
 declare DEFAULT_WORKING_DIR='.gget'
@@ -70,11 +71,8 @@ function add() {
 	if ! [ -v workingDirectory ]; then workingDirectory="$DEFAULT_WORKING_DIR"; fi
 	checkAllArgumentsSet params "$examples"
 
-	echo "--directory \"$pullDirectory\"" >"$workingDirectory/pull.args"
-
 	# make directory paths absolute
 	workingDirectory=$(readlink -m "$workingDirectory")
-	pullDirectory=$(readlink -m "$pullDirectory")
 
 	mkdir -p "$workingDirectory"
 
@@ -89,6 +87,8 @@ function add() {
 	fi
 
 	mkdir "$remoteDirectory" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create remote directory %s\n" "$remoteDirectory" && exit 1)
+	echo "--directory \"$pullDirectory\"" >"$workingDirectory/$remote/pull.args"
+
 	declare publicKeys="$remoteDirectory/public-keys"
 	mkdir "$publicKeys"
 	declare repo="$remoteDirectory/repo"
@@ -155,22 +155,7 @@ function add() {
 	findAsc -print0 >&3
 
 	while read -u 4 -r -d $'\0' file; do
-		declare outputKey
-		outputKey=$(gpg --keyid-format LONG --import-options show-only --import "$file")
-		echo "$outputKey"
-		printf "\n\033[0;36mThe above key(s) will be used to verify the files you will pull from this remote, do you trust it?\033[0m y/[N]:"
-		while read -r isTrusting; do
-			break
-		done
-		echo ""
-		echo "Decision: $isTrusting"
-		if [ "$isTrusting" == "y" ]; then
-			echo "importing key $file"
-			gpg --homedir "$gpgDir" --import "$file"
-			echo "$outputKey" | grep pub | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
-				while read -r keyId; do
-					echo -e "5\ny\n" | gpg --homedir "$gpgDir" --command-fd 0 --edit-key "$keyId" trust
-				done
+		if importKey "$gpgDir" "$file" --confirm=true; then
 			mv "$file" "$publicKeys/"
 			((numberOfImportedKeys += 1))
 		else

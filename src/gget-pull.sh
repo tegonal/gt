@@ -27,14 +27,15 @@
 
 set -e
 
-declare remote tag path workingDirectory
+declare remote tag path pullDirectory unsecure forceNoVerification workingDirectory
 # shellcheck disable=SC2034
 declare params=(
 	remote '-r|--remote' 'define the name of the remote repository to use'
 	tag '-t|--tag' 'define which tag should be used to pull the file/directory'
 	path '-p|--path' 'define which file or directory shall be fetched'
 	pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add")'
-	unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false'
+	unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false'
+	forceNoVerification '--unsecure-no-verification' '(optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false'
 	workingDirectory '-w|--working-directory' '(optional) define arg path which gget shall use as working directory -- default: .gget'
 )
 
@@ -52,23 +53,31 @@ examples=$(
 )
 
 current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+source "$current_dir/gpg-utils.sh"
 source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
+declare currentDir
+currentDir=$(pwd)
+
 # parsing once so that we get the workingDirectory
-parseArguments params "$examples" "$@"
+parseArguments params "$examples" "$@" > /dev/null
 if ! [ -v workingDirectory ]; then workingDirectory="./.gget"; fi
 
+declare pullArgsFile="$workingDirectory/$remote/pull.args"
+
 # parse again in case we have default arguments for pull
-if [ -f "$workingDirectory/pull.args" ]; then
-	defaultArguments=$(cat "$workingDirectory/pull.args")
+if [ -f "$pullArgsFile" ]; then
+	defaultArguments=$(cat "$pullArgsFile")
 	declare args=()
 	eval 'for arg in '"$defaultArguments"'; do
 			args+=("$arg");
 	done'
+	args+=("$@")
 	parseArguments params "$examples" "${args[@]}"
 fi
 
-if ! [ -v unsecure ]; then unsecure=false; fi
+if ! [ -v forceNoVerification ]; then forceNoVerification=false; fi
+if ! [ -v unsecure ]; then unsecure="$forceNoVerification"; fi
 checkAllArgumentsSet params "$examples"
 
 if ! [ -d "$workingDirectory" ]; then
@@ -79,43 +88,55 @@ fi
 
 # make directory paths absolute
 workingDirectory=$(readlink -m "$workingDirectory")
-pullDirectory=$(readlink -m "$pullDirectory")
+declare pullDirectoryAbsolute
+pullDirectoryAbsolute=$(readlink -m "$pullDirectory")
 
 declare remoteDirectory="$workingDirectory/$remote"
 declare repo="$remoteDirectory/repo"
 declare publicKeys="$remoteDirectory/public-keys"
 declare gpgDir="$publicKeys/gpg"
 
-declare doVerification=true
-if ! [ -d "$gpgDir" ]; then
-	printf "\033[0;36mINFO\033[0m no gpg dir in %s\nWe are going to import all public keys which are stored in %s\n" "$gpgDir" "$publicKeys"
-	function findAsc() {
-		find "$publicKeys" -maxdepth 1 -type f -name "*.asc" "$@"
-	}
-	if (($(findAsc | wc -l) == 0)); then
-		if [ "$unsecure" == true ]; then
-			printf "\033[1;33mWARNING\033[0m: no GPG key found, won't be able to verify files (which is OK because --unsecure true was specified)\n"
-			doVerification=false
+declare doVerification
+if [ "$forceNoVerification" == true ]; then
+	doVerification=false
+else
+	doVerification=true
+	if ! [ -d "$gpgDir" ]; then
+		printf "\033[0;36mINFO\033[0m: no gpg dir in %s\nWe are going to import all public keys which are stored in %s\n" "$gpgDir" "$publicKeys"
+		function findAsc() {
+			find "$publicKeys" -maxdepth 1 -type f -name "*.asc" "$@"
+		}
+		if (($(findAsc | wc -l) == 0)); then
+			if [ "$unsecure" == true ]; then
+				printf "\033[1;33mWARNING\033[0m: no GPG key found, won't be able to verify files (which is OK because --unsecure true was specified)\n"
+				doVerification=false
+			else
+				printf >&2 "\033[1;31mERROR\033[0m: no public keys for remote \033[0;36m%s\033[0m defined in %s\n" "$remote" "$publicKeys"
+				exit 1
+			fi
 		else
-			printf >&2 "\033[1;31mERROR\033[0m: no public keys for remote \033[0;36m%s\033[0m defined in %s\n" "$remote" "$publicKeys"
-			exit 1
+			mkdir "$gpgDir"
+			chmod 700 "$gpgDir"
+			findAsc -print0 |
+				while read -r -d $'\0' file; do
+					importKey "$gpgDir" "$file" --confirm=false
+				done
 		fi
-	else
-		mkdir "$gpgDir"
-		chmod 700 "$gpgDir"
-		findAsc -exec gpg --homedir="$gpgDir" --import "{}" \;
+	fi
+	if [ "$unsecure" == true ] && [ "$doVerification" == true ]; then
+		printf "\033[0;36mINFO\033[0m: gpg key found going to perform verification even though --unsecure true was specified\n"
 	fi
 fi
 
-if ! [ -d "$pullDirectory" ]; then
-	mkdir -p "$pullDirectory" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create the pull directory %s\n" "$pullDirectory" && exit 1)
+if ! [ -d "$pullDirectoryAbsolute" ]; then
+	mkdir -p "$pullDirectoryAbsolute" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create the pull directory %s\n" "$pullDirectoryAbsolute" && exit 1)
 fi
 
 if [ -f "$repo" ]; then
 	printf >&2 "\033[1;31mERROR\033[0m: looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s\n" "$remote" "$remoteDirectory"
-  exit 1
+	exit 1
 elif ! [ -d "$repo" ]; then
-	printf "\033[0;36mINFO\033[0m repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig\n" "$remote"
+	printf "\033[0;36mINFO\033[0m: repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig\n" "$remote"
 	mkdir -p "$repo"
 	cd "$repo"
 	git init
@@ -136,10 +157,26 @@ git checkout "tags/$tag" -- "$path"
 
 declare sigExtension="sig"
 
+
+function mentionUnsecure() {
+	if ! [ "$unsecure" == true ]; then
+		printf "Disable this check via --unsecure true\n"
+	else
+		printf "Disable this check via --unsecure-no-verification true\n"
+	fi
+}
+
 if [ "$doVerification" == "true" ] && [ -f "$repo/$path" ]; then
 	set -x
 	# is arg file, fetch also the corresponding signature
-	git checkout "tags/$tag" -- "$path.$sigExtension"
+	if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
+		# don't show commands in output anymore
+		{ set +x; } 2>/dev/null
+
+		printf >&2 "\033[1;31mERROR\033[0m: no signature file found, aborting. "
+		mentionUnsecure >&2
+		exit 1
+	fi
 
 	# don't show commands in output anymore
 	{ set +x; } 2>/dev/null
@@ -148,27 +185,84 @@ fi
 cd "$repo"
 
 declare numberOfPulledFiles=0
+declare pulledFiles="$remoteDirectory/pulled.txt"
+if ! [ -f "$pulledFiles" ]; then
+	touch "$pulledFiles" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create pulled.txt at %s\n" "$pulledFiles" && exit 1)
+fi
+
+function moveFile() {
+	local file=$1
+
+	declare relativeTarget
+	relativeTarget=$(realpath --relative-to="$workingDirectory" "$pullDirectoryAbsolute/$file")
+	declare absoluteTarget
+	absoluteTarget="$pullDirectoryAbsolute/$file"
+	mkdir -p "$(dirname "$absoluteTarget")"
+	declare sha
+	sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
+	declare entry="$tag	$file	$sha	$relativeTarget"
+	declare currentEntry
+	set +e
+	function grepByFile() {
+		grep -E "^[^\t]+	$file" "$@" "$pulledFiles"
+	}
+	currentEntry=$(grepByFile)
+	set -e
+	declare currentVersion
+	currentVersion=$(echo "$currentEntry" | perl -0777 -pe 's/([^\t]+)\t.*/$1/')
+
+	if [ "$currentEntry" == "" ]; then
+		echo "$entry" >>"$pulledFiles"
+	elif ! [ "$currentVersion" == "$tag" ]; then
+		printf "\033[0;36mINFO\033[0m: the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m\n" "$currentVersion" "$tag" "$pullDirectory/$file"
+		# we could warn about a version which was older
+		grepByFile -v >"$pulledFiles.new"
+		mv "$pulledFiles.new" "$pulledFiles"
+		echo "$entry" >>"$pulledFiles"
+	else
+		declare currentSha
+		currentSha=$(echo "$currentEntry" | perl -0777 -pe 's/[^\t]+\t[^\t]+\t([0-9a-f]+)\t.*/$1/')
+		if ! [ "$currentSha" == "$sha" ]; then
+			printf "\033[1;33mWARNING\033[0m: looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s\n" "$file" "$tag"
+			git --no-pager diff "$(echo "$currentSha" | git hash-object -w --stdin)" "$(echo "$sha" | git hash-object -w --stdin)" --word-diff=color --word-diff-regex . | grep -A 1 @@ | tail -n +2
+			printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFiles"
+			rm "$repo/$file"
+			return
+		elif ! grep "$entry" "$pulledFiles" >/dev/null; then
+			declare currentLocation
+			currentLocation=$(echo "$currentEntry" | perl -0777 -pe 's/[^\t]+\t[^\t]+\t[^\t]+\t([^\t]+)/$1/')
+			printf "\033[1;33mWARNING\033[0m: the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)\n" "$(realpath --relative-to="$currentDir" "$workingDirectory/$currentLocation")" "$pullDirectory/$file"
+			printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFiles"
+			rm "$repo/$file"
+			return
+		else
+
+			if [ -f "$absoluteTarget" ]; then
+				printf "\033[0;36mINFO\033[0m: the file was pulled before to same location, going to override \033[0;36m%s\033[0m\n" "$pullDirectory/$file"
+			fi
+		fi
+	fi
+	mv "$repo/$file" "$absoluteTarget"
+
+	((numberOfPulledFiles += 1))
+}
 
 while read -r -d $'\0' file; do
-	function moveFile(){
-		mkdir -p "$(dirname "$pullDirectory/$file")"
-			mv "$repo/$file" "$pullDirectory/$file"
-			((numberOfPulledFiles += 1))
-	}
-
-	if [ -f "$file.$sigExtension" ]; then
+	if [ "$doVerification" == "true" ] && [ -f "$file.$sigExtension" ]; then
 		printf "verifying \033[0;36m%s\033[0m\n" "$file"
-		if [ -d "$pullDirectory/$file" ]; then
-			printf >&2 "\033[1;31mERROR\033[0m: there exists arg directory with the same name at %s\n" "$pullDirectory/$file"
+		if [ -d "$pullDirectoryAbsolute/$file" ]; then
+			printf >&2 "\033[1;31mERROR\033[0m: there exists a directory with the same name at %s\n" "$pullDirectoryAbsolute/$file"
 			exit 1
 		fi
 		gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
-		moveFile
+		rm "$file.$sigExtension"
+		moveFile "$file"
 	elif [ "$doVerification" == "true" ]; then
-		printf "\033[1;33mWARNING\033[0m: there was no corresponding *.%s file for %s, skipping it. Disable this check via --unsecure true\n" "$sigExtension" "$file"
+		printf "\033[1;33mWARNING\033[0m: there was no corresponding *.%s file for %s, skipping it. " "$sigExtension" "$file"
+
 		rm "$file"
 	else
-		moveFile
+		moveFile "$file"
 	fi
 done < <(find "$path" -type f -not -name "*.$sigExtension" -print0)
 
