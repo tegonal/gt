@@ -52,7 +52,7 @@ examples=$(
 )
 
 current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-source "$current_dir/tegonal-scripts/src/utility/parse-args.sh" || exit 200
+source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
 # parsing once so that we get the workingDirectory
 parseArguments params "$examples" "$@"
