@@ -108,11 +108,11 @@ Following the output of running `gget remote add --help`:
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
 Parameters:
--r|--remote              define the name of the remote repository to use
--u|--url                 define the url of the remote repository
--d|--directory           (optional) define into which directory files of this remote will be pulled -- default: lib/<remote>
+-r|--remote              name to refer to this the remote repository
+-u|--url                 url of the remote repository
+-d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false
--w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+-w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
 
 Examples:
 # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
@@ -184,11 +184,11 @@ Following the output of running `gget pull --help`:
 <!-- auto-generated, do not modify here but in src/gget-pull.sh -->
 ```text
 Parameters:
--r|--remote                  define the name of the remote repository to use
--t|--tag                     define which tag should be used to pull the file/directory
--p|--path                    define which file or directory shall be fetched
--d|--directory               (optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)
--w|--working-directory       (optional) define arg path which gget shall use as working directory -- default: .gget
+-r|--remote                  name of the remote repository
+-t|--tag                     git tag used to pull the file/directory
+-p|--path                    path in remote repository which shall be pulled (file or directory)
+-d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)
+-w|--working-directory       (optional) path which gget shall use as working directory -- default: .gget
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false
 
