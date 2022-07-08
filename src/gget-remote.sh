@@ -39,7 +39,9 @@ function gget-remote() {
 
 	source "$scriptDir/shared-patterns.source.sh"
 	source "$scriptDir/gpg-utils.sh"
+	source "$scriptDir/utils.sh"
 	source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
+
 
 	function add() {
 
@@ -131,15 +133,15 @@ function gget-remote() {
 				exit 0
 			else
 				printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s)\n" "$remote" "$defaultBranch"
+				deleteDirChmod777 "$remoteDirectory"
 				exit 1
 			fi
 		fi
 
-		function findAsc() {
-			find "$repo/.gget" -maxdepth 1 -type f -name "*.asc" "$@"
-		}
-		if (($(findAsc | wc -l) == 0)); then
+		# shellcheck disable=SC2310,SC2311
+		if noAscInDir "$repo/.gget"; then
 			printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it\n" "$remote"
+			deleteDirChmod777 "$remoteDirectory"
 			exit 1
 		fi
 
@@ -151,10 +153,11 @@ function gget-remote() {
 		exec 4<"$tmpFile"
 		rm "$tmpFile"
 
-		findAsc -print0 >&3
+		findAsc "$repo/.gget"  -print0 >&3
 
 		echo ""
 		while read -u 4 -r -d $'\0' file; do
+			# shellcheck disable=SC2310
 			if importKey "$gpgDir" "$file" --confirm=true; then
 				mv "$file" "$publicKeys/"
 				((numberOfImportedKeys += 1))
@@ -165,7 +168,7 @@ function gget-remote() {
 		done
 		exec 3>&-
 		exec 4<&-
-		rm -r "$repo/.gget"
+		deleteDirChmod777 "$repo/.gget"
 
 		if ((numberOfImportedKeys == 0)); then
 			if [ "$unsecure" == true ]; then
@@ -256,9 +259,7 @@ function gget-remote() {
 			exit 9
 		fi
 
-		# because files in .git will be write-protected and we don't want sudo for this command
-		chmod -R 777 "$remoteDirectory"
-		rm -r "$remoteDirectory"
+		deleteDirChmod777 "$remoteDirectory"
 		printf "\033[1;32mSUCCESS\033[0m: removed remote \033[0;36m%s\033[0m\n" "$remote"
 	}
 

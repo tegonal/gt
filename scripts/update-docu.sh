@@ -7,7 +7,7 @@
 #         /___/
 #
 #
-set -e
+set -eu
 
 declare projectDir
 projectDir="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../")"

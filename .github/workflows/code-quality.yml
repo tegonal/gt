@@ -12,7 +12,7 @@ jobs:
         with:
           ignore: lib/tegonal-scripts
         env:
-          SHELLCHECK_OPTS: -x -P ./src
+          SHELLCHECK_OPTS: -s bash -S info -x -o all -e SC2312 -P ./src
 
       - name: check all scripts have documentation
         run: ./scripts/update-docu.sh
