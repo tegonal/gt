@@ -184,12 +184,13 @@ Following the output of running `gget pull --help`:
 <!-- auto-generated, do not modify here but in src/gget-pull.sh -->
 ```text
 Parameters:
--r|--remote              define the name of the remote repository to use
--t|--tag                 define which tag should be used to pull the file/directory
--p|--path                define which file or directory shall be fetched
--d|--directory           (optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add")
---unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false
--w|--working-directory   (optional) define arg path which gget shall use as working directory -- default: .gget
+-r|--remote                  define the name of the remote repository to use
+-t|--tag                     define which tag should be used to pull the file/directory
+-p|--path                    define which file or directory shall be fetched
+-d|--directory               (optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add")
+-w|--working-directory       (optional) define arg path which gget shall use as working directory -- default: .gget
+--unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false
+--unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false
 
 Examples:
 # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts

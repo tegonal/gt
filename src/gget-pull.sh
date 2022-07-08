@@ -9,7 +9,7 @@
 #
 #######  Description  #############
 #
-#  'remote' command of gget: utlity to manage gget remotes
+#  'pull' command of gget: utility to pull files from a previously defined git remote repository
 #
 #######  Usage  ###################
 #
@@ -34,9 +34,9 @@ declare params=(
 	tag '-t|--tag' 'define which tag should be used to pull the file/directory'
 	path '-p|--path' 'define which file or directory shall be fetched'
 	pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add")'
+	workingDirectory '-w|--working-directory' '(optional) define arg path which gget shall use as working directory -- default: .gget'
 	unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false'
 	forceNoVerification '--unsecure-no-verification' '(optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false'
-	workingDirectory '-w|--working-directory' '(optional) define arg path which gget shall use as working directory -- default: .gget'
 )
 
 declare examples
@@ -59,22 +59,24 @@ source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 2
 declare currentDir
 currentDir=$(pwd)
 
-# parsing once so that we get the workingDirectory
-parseArguments params "$examples" "$@" > /dev/null
+# parsing once so that we get workingDirectory and remote
+# redirecting output to /dev/null because we don't want to see 'ignored argument warnings' twice
+# || true because --help returns 99 and we don't want to exit at this point (because we redirect output)
+parseArguments params "$examples" "$@" >/dev/null || true
 if ! [ -v workingDirectory ]; then workingDirectory="./.gget"; fi
 
-declare pullArgsFile="$workingDirectory/$remote/pull.args"
-
-# parse again in case we have default arguments for pull
-if [ -f "$pullArgsFile" ]; then
-	defaultArguments=$(cat "$pullArgsFile")
-	declare args=()
-	eval 'for arg in '"$defaultArguments"'; do
+declare args=()
+if [ -n "$remote" ]; then
+	declare pullArgsFile="$workingDirectory/$remote/pull.args"
+	if [ -f "$pullArgsFile" ]; then
+		defaultArguments=$(cat "$pullArgsFile")
+		eval 'for arg in '"$defaultArguments"'; do
 			args+=("$arg");
 	done'
-	args+=("$@")
-	parseArguments params "$examples" "${args[@]}"
+	fi
 fi
+args+=("$@")
+parseArguments params "$examples" "${args[@]}"
 
 if ! [ -v forceNoVerification ]; then forceNoVerification=false; fi
 if ! [ -v unsecure ]; then unsecure="$forceNoVerification"; fi
@@ -155,9 +157,6 @@ git checkout "tags/$tag" -- "$path"
 # don't show commands in output anymore
 { set +x; } 2>/dev/null
 
-declare sigExtension="sig"
-
-
 function mentionUnsecure() {
 	if ! [ "$unsecure" == true ]; then
 		printf "Disable this check via --unsecure true\n"
@@ -166,23 +165,33 @@ function mentionUnsecure() {
 	fi
 }
 
-if [ "$doVerification" == "true" ] && [ -f "$repo/$path" ]; then
-	set -x
-	# is arg file, fetch also the corresponding signature
-	if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
+declare sigExtension="sig"
+
+function getSignatureOfSingleFetchedFile() {
+	if [ "$doVerification" == true ] && [ -f "$repo/$path" ]; then
+		set -x
+		# is arg file, fetch also the corresponding signature
+		if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
+			# don't show commands in output anymore
+			{ set +x; } 2>/dev/null
+
+			printf >&2 "\033[1;31mERROR\033[0m: no signature file found, aborting. "
+			mentionUnsecure >&2
+			exit 1
+		fi
+
 		# don't show commands in output anymore
 		{ set +x; } 2>/dev/null
-
-		printf >&2 "\033[1;31mERROR\033[0m: no signature file found, aborting. "
-		mentionUnsecure >&2
-		exit 1
 	fi
+}
+getSignatureOfSingleFetchedFile
 
-	# don't show commands in output anymore
-	{ set +x; } 2>/dev/null
-fi
+function cleanupRepo() {
+	# cleanup the repo in case we exit unexpected
+	find "$repo" -maxdepth 1 -type d -not -path "$repo" -not -name ".git" -exec rm -r {} \;
+}
 
-cd "$repo"
+trap cleanupRepo EXIT
 
 declare numberOfPulledFiles=0
 declare pulledFiles="$remoteDirectory/pulled.txt"
@@ -235,11 +244,8 @@ function moveFile() {
 			printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFiles"
 			rm "$repo/$file"
 			return
-		else
-
-			if [ -f "$absoluteTarget" ]; then
-				printf "\033[0;36mINFO\033[0m: the file was pulled before to same location, going to override \033[0;36m%s\033[0m\n" "$pullDirectory/$file"
-			fi
+		elif [ -f "$absoluteTarget" ]; then
+			printf "\033[0;36mINFO\033[0m: the file was pulled before to the same location, going to override \033[0;36m%s\033[0m\n" "$pullDirectory/$file"
 		fi
 	fi
 	mv "$repo/$file" "$absoluteTarget"
@@ -248,7 +254,7 @@ function moveFile() {
 }
 
 while read -r -d $'\0' file; do
-	if [ "$doVerification" == "true" ] && [ -f "$file.$sigExtension" ]; then
+	if [ "$doVerification" == true ] && [ -f "$file.$sigExtension" ]; then
 		printf "verifying \033[0;36m%s\033[0m\n" "$file"
 		if [ -d "$pullDirectoryAbsolute/$file" ]; then
 			printf >&2 "\033[1;31mERROR\033[0m: there exists a directory with the same name at %s\n" "$pullDirectoryAbsolute/$file"
@@ -257,9 +263,8 @@ while read -r -d $'\0' file; do
 		gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
 		rm "$file.$sigExtension"
 		moveFile "$file"
-	elif [ "$doVerification" == "true" ]; then
+	elif [ "$doVerification" == true ]; then
 		printf "\033[1;33mWARNING\033[0m: there was no corresponding *.%s file for %s, skipping it. " "$sigExtension" "$file"
-
 		rm "$file"
 	else
 		moveFile "$file"

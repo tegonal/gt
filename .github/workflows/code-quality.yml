@@ -10,7 +10,7 @@ jobs:
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@1.1.0
         with:
-          ignore: src/tegonal-scripts
+          ignore: lib/tegonal-scripts
         env:
           SHELLCHECK_OPTS: -x -P ./src
 

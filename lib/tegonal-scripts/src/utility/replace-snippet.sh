@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.3.0
+#                                         Version: v0.4.0
 #
 #######  Description  #############
 #
@@ -16,8 +16,8 @@
 #    #!/usr/bin/env bash
 #
 #    # Assuming replace-snippet.sh is in the same directory as your script
-#    current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
-#    source "$current_dir/replace-snippet.sh"
+#    scriptDir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
+#    source "$scriptDir/replace-snippet.sh"
 #
 #    declare file
 #    file=$(mktemp)
@@ -42,21 +42,21 @@
 set -e
 
 function replaceSnippet() {
-  declare file id dir pattern snippet
-  # args is required for parse-fn-args.sh thus:
-  # shellcheck disable=SC2034
-  declare args=(file id dir pattern snippet)
+	declare file id dir pattern snippet
+	# args is required for parse-fn-args.sh thus:
+	# shellcheck disable=SC2034
+	declare args=(file id dir pattern snippet)
 
-  declare current_dir
-  current_dir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
-  source "$current_dir/parse-fn-args.sh" || exit 1
+	declare scriptDir
+	scriptDir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
+	source "$scriptDir/parse-fn-args.sh" || return 1
 
-  declare quotedSnippet
-  quotedSnippet=$(echo "$snippet" | perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' -pe 's/\\n/\n/g')
+	declare quotedSnippet
+	quotedSnippet=$(echo "$snippet" | perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' -pe 's/\\n/\n/g')
 
-  find "$dir" -name "$pattern" \
-    -exec echo "updating $id in {} " \; \
-    -exec perl -0777 -i \
-      -pe "s@<${id}>[\S\s]+</${id}>@<${id}>\n\n<!-- auto-generated, do not modify here but in $(realpath --relative-to "$PWD" "$file") -->\n$quotedSnippet\n\n</${id}>@g;" \
-      {} \;  2>/dev/null || true
+	find "$dir" -name "$pattern" \
+		-exec echo "updating $id in {} " \; \
+		-exec perl -0777 -i \
+			-pe "s@<${id}>[\S\s]+</${id}>@<${id}>\n\n<!-- auto-generated, do not modify here but in $(realpath --relative-to "$PWD" "$file") -->\n$quotedSnippet\n\n</${id}>@g;" \
+			{} \;	2>/dev/null || true
 }

@@ -50,7 +50,6 @@ if [[ "$command" =~ ^(pull|remote)$ ]]; then
 	"$command" "$@"
 elif [[ "$command" == "--help" ]]; then
 	cat <<-EOM
-
 		Use one of the following commands:
 		pull     pull files from a remote
 		remote   manage remotes

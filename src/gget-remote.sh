@@ -272,7 +272,6 @@ if [[ "$command" =~ ^(add|remove|list)$ ]]; then
 	"$command" "$@"
 elif [[ "$command" == "--help" ]]; then
 	cat <<-EOM
-
 		Use one of the following commands:
 		add      add a remote
 		remove   remove a remote
