@@ -28,10 +28,10 @@
 
 set -e
 
-declare current_dir
-current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-source "$current_dir/gpg-utils.sh"
-source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
+declare scriptDir
+scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+source "$scriptDir/gpg-utils.sh"
+source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
 declare DEFAULT_WORKING_DIR='.gget'
 declare WORKING_DIR_PATTERN='-w|--working-directory'
@@ -41,11 +41,11 @@ function add() {
 	declare remote url pullDirectory workingDirectory unsecure
 	# shellcheck disable=SC2034
 	declare params=(
-		remote '-r|--remote' 'define the name of the remote repository to use'
-		url '-u|--url' 'define the url of the remote repository'
-		pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: lib/<remote>'
+		remote '-r|--remote' 'name to refer to this the remote repository'
+		url '-u|--url' 'url of the remote repository'
+		pullDirectory '-d|--directory' '(optional) directory into which files are pulled -- default: lib/<remote>'
 		unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false'
-		workingDirectory "$WORKING_DIR_PATTERN" '(optional) define a path which gget shall use as working directory -- default: .gget'
+		workingDirectory "$WORKING_DIR_PATTERN" '(optional) path which gget shall use as working directory -- default: .gget'
 	)
 	declare examples
 	examples=$(

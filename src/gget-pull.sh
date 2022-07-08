@@ -30,11 +30,11 @@ set -e
 declare remote tag path pullDirectory unsecure forceNoVerification workingDirectory
 # shellcheck disable=SC2034
 declare params=(
-	remote '-r|--remote' 'define the name of the remote repository to use'
-	tag '-t|--tag' 'define which tag should be used to pull the file/directory'
-	path '-p|--path' 'define which file or directory shall be fetched'
-	pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)'
-	workingDirectory '-w|--working-directory' '(optional) define arg path which gget shall use as working directory -- default: .gget'
+	remote '-r|--remote' 'name of the remote repository'
+	tag '-t|--tag' 'git tag used to pull the file/directory'
+	path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
+	pullDirectory '-d|--directory' '(optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)'
+	workingDirectory '-w|--working-directory' '(optional) path which gget shall use as working directory -- default: .gget'
 	unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false'
 	forceNoVerification '--unsecure-no-verification' '(optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false'
 )
@@ -52,9 +52,9 @@ examples=$(
 	EOM
 )
 
-current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-source "$current_dir/gpg-utils.sh"
-source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
+scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+source "$scriptDir/gpg-utils.sh"
+source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
 declare currentDir
 currentDir=$(pwd)

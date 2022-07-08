@@ -9,14 +9,21 @@
 #
 #######  Description  #############
 #
-#  Utility to get a file or a directory from a public git repository.
-#  Each file is verified against its signature (*.sig file) which needs to be alongside the file.
-#  Corresponding public GPG keys (*.asc) need to be placed in gget's workdir (.gget by default) under WORKDIR/public-keys/<remote>
+#  Utility to pull a file or a directory from a git repository.
+#  Per default, each file is verified against its signature (*.sig file) which needs to be alongside the file.
+#  Corresponding public GPG keys (*.asc) need to be placed in gget's workdir (.gget by default) under WORKDIR/remotes/<remote>/public-keys
 #
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
-#    # see gget-pull.doc.sh and gget-remote.doc.sh for examples
+#
+#    # gget pull ...
+#    # take at look at gget-pull.doc.sh for more information
+#
+#    # gget remote add ...
+#    # gget remote remove ...
+#    # gget remote list ...
+#    # take at look at gget-remote.doc.sh for more information
 #
 ###################################
 
@@ -34,14 +41,14 @@ if [[ $# -lt 1 ]]; then
 	exit 9
 fi
 
-current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 
 function remote() {
-	"$current_dir/gget-remote.sh" "$@"
+	"$scriptDir/gget-remote.sh" "$@"
 }
 
 function pull() {
-	"$current_dir/gget-pull.sh" "$@"
+	"$scriptDir/gget-pull.sh" "$@"
 }
 
 declare command=$1
