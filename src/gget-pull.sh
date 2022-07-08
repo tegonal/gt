@@ -33,7 +33,7 @@ declare params=(
 	remote '-r|--remote' 'define the name of the remote repository to use'
 	tag '-t|--tag' 'define which tag should be used to pull the file/directory'
 	path '-p|--path' 'define which file or directory shall be fetched'
-	pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add")'
+	pullDirectory '-d|--directory' '(optional) define into which directory files of this remote will be pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)'
 	workingDirectory '-w|--working-directory' '(optional) define arg path which gget shall use as working directory -- default: .gget'
 	unsecure '--unsecure' '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false'
 	forceNoVerification '--unsecure-no-verification' '(optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false'
@@ -93,7 +93,7 @@ workingDirectory=$(readlink -m "$workingDirectory")
 declare pullDirectoryAbsolute
 pullDirectoryAbsolute=$(readlink -m "$pullDirectory")
 
-declare remoteDirectory="$workingDirectory/$remote"
+declare remoteDirectory="$workingDirectory/remotes/$remote"
 declare repo="$remoteDirectory/repo"
 declare publicKeys="$remoteDirectory/public-keys"
 declare gpgDir="$publicKeys/gpg"
@@ -194,9 +194,9 @@ function cleanupRepo() {
 trap cleanupRepo EXIT
 
 declare numberOfPulledFiles=0
-declare pulledFiles="$remoteDirectory/pulled.txt"
+declare pulledFiles="$remoteDirectory/pulled"
 if ! [ -f "$pulledFiles" ]; then
-	touch "$pulledFiles" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create pulled.txt at %s\n" "$pulledFiles" && exit 1)
+	touch "$pulledFiles" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create pulled at %s\n" "$pulledFiles" && exit 1)
 fi
 
 function moveFile() {

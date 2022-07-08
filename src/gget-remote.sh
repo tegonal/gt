@@ -74,9 +74,9 @@ function add() {
 	# make directory paths absolute
 	workingDirectory=$(readlink -m "$workingDirectory")
 
-	mkdir -p "$workingDirectory"
+	mkdir -p "$workingDirectory/remotes"
 
-	declare remoteDirectory="$workingDirectory/$remote"
+	declare remoteDirectory="$workingDirectory/remotes/$remote"
 
 	if [ -f "$remoteDirectory" ]; then
 		printf >&2 "\033[1;31mERROR\033[0m: cannot create remote directory, there is a file at this location: %s\n" "$remoteDirectory"
