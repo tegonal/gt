@@ -9,7 +9,8 @@
 #
 #######  Description  #############
 #
-#  utility functions for dealing with gpg
+#  internal utility functions  for dealing with gpg
+#  no backward compatibility guarantees or whatsoever
 #
 ###################################
 

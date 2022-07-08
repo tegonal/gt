@@ -7,9 +7,23 @@
 #         /___/
 #
 #
-set -e
+set -eu
 
 declare scriptDir
 scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 
-find "$scriptDir/../src" "$scriptDir/../scripts" -name '*.sh' -not -path "**tegonal-scripts/*" -exec shellcheck -s bash -S info -x -P "$scriptDir/../src/" {} \;
+declare foundIssues=false
+
+while read -r -d $'\0' script; do
+	declare output=
+	output=$(shellcheck -C -s bash -S info -x -o all -e SC2312 -P "$scriptDir/../src/" "$script" || true)
+	if ! [ "$output" == "" ]; then
+		printf "%s\n" "$output"
+		foundIssues=true
+	fi
+done < <(find "$scriptDir/../src" "$scriptDir/../scripts" -name '*.sh' -not -path "**tegonal-scripts/*" -print0)
+
+if [ "$foundIssues" == true ]; then
+	printf >&2 "\033[1;31mERROR\033[0m: found shellcheck issues, aborting"
+	exit 1
+fi

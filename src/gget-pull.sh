@@ -37,6 +37,7 @@ function gget-pull() {
 
 	source "$scriptDir/shared-patterns.source.sh"
 	source "$scriptDir/gpg-utils.sh"
+	source "$scriptDir/utils.sh"
 
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
@@ -68,6 +69,7 @@ function gget-pull() {
 	# parsing once so that we get workingDirectory and remote
 	# redirecting output to /dev/null because we don't want to see 'ignored argument warnings' twice
 	# || true because --help returns 99 and we don't want to exit at this point (because we redirect output)
+	# shellcheck disable=SC2310
 	parseArguments params "$examples" "$@" >/dev/null || true
 	if ! [ -v workingDirectory ]; then workingDirectory="./.gget"; fi
 
@@ -108,10 +110,9 @@ function gget-pull() {
 		doVerification=true
 		if ! [ -d "$gpgDir" ]; then
 			printf "\033[0;36mINFO\033[0m: no gpg dir in %s\nWe are going to import all public keys which are stored in %s\n" "$gpgDir" "$publicKeys"
-			function findAsc() {
-				find "$publicKeys" -maxdepth 1 -type f -name "*.asc" "$@"
-			}
-			if (($(findAsc | wc -l) == 0)); then
+
+			# shellcheck disable=SC2310
+			if noAscInDir "$publicKeys"; then
 				if [ "$unsecure" == true ]; then
 					printf "\033[1;33mWARNING\033[0m: no GPG key found, won't be able to verify files (which is OK because %s true was specified)\n" "$UNSECURE_PATTERN"
 					doVerification=false
@@ -122,7 +123,7 @@ function gget-pull() {
 			else
 				mkdir "$gpgDir"
 				chmod 700 "$gpgDir"
-				findAsc -print0 |
+				findAscInDir "$publicKeys" -print0 |
 					while read -r -d $'\0' file; do
 						importKey "$gpgDir" "$file" --confirm=false
 					done
@@ -217,6 +218,7 @@ function gget-pull() {
 		function grepByFile() {
 			grep -E "^[^\t]+	$file" "$@" "$pulledFiles"
 		}
+		#shellcheck disable=SC2310,SC2311
 		local -r currentEntry=$(grepByFile || true)
 		local currentVersion
 		currentVersion=$(echo "$currentEntry" | perl -0777 -pe 's/([^\t]+)\t.*/$1/')
