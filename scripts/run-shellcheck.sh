@@ -12,4 +12,4 @@ set -e
 declare current_dir
 current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 
-find "$current_dir/../src" "$current_dir/../scripts" -name '*.sh' -not -path "**tegonal-scripts/*" -exec shellcheck -x -P "$current_dir/../src/" {} \;
+find "$current_dir/../src" "$current_dir/../scripts" -name '*.sh' -not -path "**tegonal-scripts/*" -exec shellcheck -s bash -S info -x -P "$current_dir/../src/" {} \;

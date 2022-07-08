@@ -1,0 +1,5 @@
+v0.4.0	src/utility/replace-snippet.sh	ff68e521d4ff2dec34b4d2d5b314643814441993598c5769c979e904616cc554cd5c5ee752fd5e56cb7364ef37f5d443133e1ccbae52385aad609eca064c2df3	../lib/tegonal-scripts/src/utility/replace-snippet.sh
+v0.4.0	src/utility/parse-fn-args.sh	ca3d27135035c6b28819fec2536051358cb8f1067d225afca29cf6d6623dc6f5a742e9e40b3f167f707043bb2e624e51b3c93c8c5ca2608896a9b2159aebf669	../lib/tegonal-scripts/src/utility/parse-fn-args.sh
+v0.4.0	src/utility/update-bash-docu.sh	b4cbbf7b478e2c83003830601a9996375017eee6a5b7f6d0ba805eade4f30320933b469feba3a1da78f25128b28d657a944cb68cced051a4d95e430399d96049	../lib/tegonal-scripts/src/utility/update-bash-docu.sh
+v0.4.0	src/utility/parse-args.sh	7976106cb8c3c4128ab57a8ab24198e20a6373965d6cd857340b7167776408e43799f11cf9a0296febcb7197c7557ad6bd3c95f6ec943030f70bed690c02a320	../lib/tegonal-scripts/src/utility/parse-args.sh
+v0.4.0	src/utility/replace-help-snippet.sh	0b8428cd98f5e04707892accf51fecbe877362fb3b4e9454246a7c127db60f89be10d179871048f77dc85c050d977b76c9f2e371dd483ef0643c780ab51609a9	../lib/tegonal-scripts/src/utility/replace-help-snippet.sh
