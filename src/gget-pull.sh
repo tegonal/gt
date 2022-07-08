@@ -93,7 +93,7 @@ workingDirectory=$(readlink -m "$workingDirectory")
 declare pullDirectoryAbsolute
 pullDirectoryAbsolute=$(readlink -m "$pullDirectory")
 
-declare remoteDirectory="$workingDirectory/$remote"
+declare remoteDirectory="$workingDirectory/remotes/$remote"
 declare repo="$remoteDirectory/repo"
 declare publicKeys="$remoteDirectory/public-keys"
 declare gpgDir="$publicKeys/gpg"
