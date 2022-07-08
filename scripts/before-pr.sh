@@ -9,8 +9,8 @@
 #
 set -e
 
-declare current_dir
-current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+declare scriptDir
+scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 
-"$current_dir/run-shellcheck.sh"
-"$current_dir/update-docu.sh"
+"$scriptDir/run-shellcheck.sh"
+"$scriptDir/update-docu.sh"

@@ -41,14 +41,14 @@ if [[ $# -lt 1 ]]; then
 	exit 9
 fi
 
-current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 
 function remote() {
-	"$current_dir/gget-remote.sh" "$@"
+	"$scriptDir/gget-remote.sh" "$@"
 }
 
 function pull() {
-	"$current_dir/gget-pull.sh" "$@"
+	"$scriptDir/gget-pull.sh" "$@"
 }
 
 declare command=$1

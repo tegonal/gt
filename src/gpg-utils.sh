@@ -21,9 +21,9 @@ function importKey() {
 	# shellcheck disable=SC2034
 	declare args=(gpgDir file withConfirmation)
 
-	declare current_dir
-	current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	source "$current_dir/../lib/tegonal-scripts/src/utility/parse-fn-args.sh" || exit 1
+	declare scriptDir
+	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-fn-args.sh" || exit 1
 
 	declare outputKey
 	outputKey=$(gpg --homedir "$gpgDir" --keyid-format LONG --import-options show-only --import "$file")

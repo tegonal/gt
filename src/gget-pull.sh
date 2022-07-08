@@ -52,9 +52,9 @@ examples=$(
 	EOM
 )
 
-current_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-source "$current_dir/gpg-utils.sh"
-source "$current_dir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
+scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+source "$scriptDir/gpg-utils.sh"
+source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
 declare currentDir
 currentDir=$(pwd)
