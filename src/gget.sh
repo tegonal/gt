@@ -27,41 +27,48 @@
 #
 ###################################
 
-set -e
+set -eu
 
 if ! [ -x "$(command -v "git")" ]; then
 	printf >&2 "\033[1;31mERROR\033[0m: git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)\n"
 	exit 100
 fi
 
-if [[ $# -lt 1 ]]; then
-	printf >&2 "\033[1;31mERROR\033[0m: At least one parameter needs to be passed\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
-	echo >&2 '1. command     one of: pull, remote'
-	echo >&2 '2... args...   command specific arguments'
-	exit 9
-fi
+function gget() {
 
-scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	if [[ $# -lt 1 ]]; then
+		printf >&2 "\033[1;31mERROR\033[0m: At least one parameter needs to be passed\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
+		echo >&2 '1. command     one of: pull, remote'
+		echo >&2 '2... args...   command specific arguments'
+		return 9
+	fi
 
-function remote() {
-	"$scriptDir/gget-remote.sh" "$@"
+	local scriptDir
+	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	local -r scriptDir
+
+	function remote() {
+		"$scriptDir/gget-remote.sh" "$@"
+	}
+
+	function pull() {
+		"$scriptDir/gget-pull.sh" "$@"
+	}
+
+	local -r command=$1
+	shift
+	if [[ "$command" =~ ^(pull|remote)$ ]]; then
+		"$command" "$@"
+	elif [[ "$command" == "--help" ]]; then
+		cat <<-EOM
+			Use one of the following commands:
+			pull     pull files from a remote
+			remote   manage remotes
+		EOM
+	else
+		printf >&2 "\033[1;31mERROR\033[0m: unknown command %s, expected one of pull, remote\n" "$command"
+		return 9
+	fi
+
 }
-
-function pull() {
-	"$scriptDir/gget-pull.sh" "$@"
-}
-
-declare command=$1
-shift
-if [[ "$command" =~ ^(pull|remote)$ ]]; then
-	"$command" "$@"
-elif [[ "$command" == "--help" ]]; then
-	cat <<-EOM
-		Use one of the following commands:
-		pull     pull files from a remote
-		remote   manage remotes
-	EOM
-else
-	printf >&2 "\033[1;31mERROR\033[0m: unknown command %s, expected one of pull, remote\n" "$command"
-	exit 9
-fi
+gget "$@"

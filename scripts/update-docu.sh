@@ -16,7 +16,8 @@ source "$projectDir/lib/tegonal-scripts/src/utility/replace-help-snippet.sh"
 
 find "$projectDir/src" -maxdepth 1 -name "*.sh" \
 	-not -name "*.doc.sh" \
-	-not -name "gpg-utils.sh" \
+	-not -name "*utils.sh" \
+	-not -name "*.source.sh" \
 	-print0 |
 	while read -r -d $'\0' script; do
 		declare relative
