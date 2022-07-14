@@ -189,8 +189,9 @@ Parameters:
 -p|--path                    path in remote repository which shall be pulled (file or directory)
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)
 -w|--working-directory       (optional) path which gget shall use as working directory -- default: .gget
---unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false
---unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false
+--auto-trust                 (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+--unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at .gget/<remote>/*.asc -- default: false
+--unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gget/<remote>/*.asc -- default: false
 
 Examples:
 # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
