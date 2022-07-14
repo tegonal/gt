@@ -24,7 +24,6 @@
 #    gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 #
 ###################################
-
 set -eu
 
 function gget-pull() {
@@ -37,20 +36,23 @@ function gget-pull() {
 
 	source "$scriptDir/shared-patterns.source.sh"
 	source "$scriptDir/gpg-utils.sh"
+	source "$scriptDir/pulled-utils.sh"
 	source "$scriptDir/utils.sh"
+	source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
-	local remote tag path pullDirectory unsecure forceNoVerification workingDirectory
+	local remote tag path pullDir unsecure forceNoVerification workingDir
 	# shellcheck disable=SC2034
-	local -r params=(
-		remote "$REMOTE_PATTERN" 'name of the remote repository'
+	local -ar params=(
+		remote "$remotePattern" 'name of the remote repository'
 		tag '-t|--tag' 'git tag used to pull the file/directory'
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
-		pullDirectory "$PULL_DIR_PATTERN" '(optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)'
-		workingDirectory "$WORKING_DIR_PATTERN" '(optional) path which gget shall use as working directory -- default: .gget'
-		unsecure "$UNSECURE_PATTERN" '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/<remote>/*.asc -- default: false'
-		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $UNSECURE_PATTERN true and does not verify even if gpg keys were found at .gget/<remote>/*.asc -- default: false"
+		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
+		workingDir "$workingDirPattern" "(optional) path which gget shall use as working directory -- default: $defaultWorkingDir"
+		autoTrust "$autoTrustPattern" "(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false"
+		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecurePattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 	)
 
 	local -r examples=$(
@@ -64,18 +66,17 @@ function gget-pull() {
 			gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 		EOM
 	)
-	source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
 
-	# parsing once so that we get workingDirectory and remote
+	# parsing once so that we get workingDir and remote
 	# redirecting output to /dev/null because we don't want to see 'ignored argument warnings' twice
 	# || true because --help returns 99 and we don't want to exit at this point (because we redirect output)
 	# shellcheck disable=SC2310
 	parseArguments params "$examples" "$@" >/dev/null || true
-	if ! [ -v workingDirectory ]; then workingDirectory="./.gget"; fi
+	if ! [ -v workingDir ]; then workingDir="$defaultWorkingDir"; fi
 
 	local -a args=()
 	if [ -v remote ] && [ -n "$remote" ]; then
-		local -r pullArgsFile="$workingDirectory/remotes/$remote/pull.args"
+		local -r pullArgsFile="$workingDir/remotes/$remote/pull.args"
 		if [ -f "$pullArgsFile" ]; then
 			defaultArguments=$(cat "$pullArgsFile")
 			eval 'for arg in '"$defaultArguments"'; do
@@ -86,22 +87,19 @@ function gget-pull() {
 	args+=("$@")
 	parseArguments params "$examples" "${args[@]}"
 
+	if ! [ -v autoTrust ]; then autoTrust=false; fi
 	if ! [ -v forceNoVerification ]; then forceNoVerification=false; fi
 	if ! [ -v unsecure ]; then unsecure="$forceNoVerification"; fi
 	checkAllArgumentsSet params "$examples"
 
-	if ! [ -d "$workingDirectory" ]; then
-		printf >&2 "\033[1;31mERROR\033[0m: working directory \033[0;36m%s\033[0m does not exist\n" "$workingDirectory"
-		echo >&2 "Check for typos and/or use $WORKING_DIR_PATTERN to specify another"
-		exit 9
-	fi
+	checkWorkingDirExists "$workingDir"
 
 	# make directory paths absolute
-	local -r workingDirectory=$(readlink -m "$workingDirectory")
-	local -r pullDirectoryAbsolute=$(readlink -m "$pullDirectory")
+	local -r workingDir=$(readlink -m "$workingDir")
+	local -r pullDirAbsolute=$(readlink -m "$pullDir")
 
-	declare remoteDirectory publicKeys repo gpgDir
-	source "$scriptDir/directories.source.sh"
+	local remoteDir publicKeysDir repo gpgDir pulledFile
+	source "$scriptDir/paths.source.sh"
 
 	local doVerification
 	if [ "$forceNoVerification" == true ]; then
@@ -109,44 +107,65 @@ function gget-pull() {
 	else
 		doVerification=true
 		if ! [ -d "$gpgDir" ]; then
-			printf "\033[0;36mINFO\033[0m: no gpg dir in %s\nWe are going to import all public keys which are stored in %s\n" "$gpgDir" "$publicKeys"
+			if [ -f "$gpgDir" ]; then
+				printf >&2 "\033[1;31mERROR\033[0m: looks like the remote \033[0;36m%s\033[0m is broken there is a file at the gpg dir's location: %s\n" "$remote" "$gpgDir"
+				exit 1
+			fi
+
+			printf "\033[0;36mINFO\033[0m: gpg directory does not exist at %s\nWe are going to import all public keys which are stored in %s\n" "$gpgDir" "$publicKeysDir"
 
 			# shellcheck disable=SC2310
-			if noAscInDir "$publicKeys"; then
+			if noAscInDir "$publicKeysDir"; then
 				if [ "$unsecure" == true ]; then
-					printf "\033[1;33mWARNING\033[0m: no GPG key found, won't be able to verify files (which is OK because %s true was specified)\n" "$UNSECURE_PATTERN"
+					printf "\033[1;33mWARNING\033[0m: no GPG key found, won't be able to verify files (which is OK because %s true was specified)\n" "$unsecurePattern"
 					doVerification=false
 				else
-					printf >&2 "\033[1;31mERROR\033[0m: no public keys for remote \033[0;36m%s\033[0m defined in %s\n" "$remote" "$publicKeys"
+					printf >&2 "\033[1;31mERROR\033[0m: no public keys for remote \033[0;36m%s\033[0m defined in %s\n" "$remote" "$publicKeysDir"
 					exit 1
 				fi
 			else
 				mkdir "$gpgDir"
 				chmod 700 "$gpgDir"
-				findAscInDir "$publicKeys" -print0 |
-					while read -r -d $'\0' file; do
-						importKey "$gpgDir" "$file" --confirm=false
+				local -r confirm="--confirm=$(set -e; invertBool "$autoTrust")"
+
+				local -i numberOfImportedKeys=0
+				function importKeys() {
+					findAscInDir "$publicKeysDir" -print0 >&3
+					while read -u 4 -r -d $'\0' file; do
+						if importKey "$gpgDir" "$file" "$confirm"; then
+							((numberOfImportedKeys += 1))
+						fi
 					done
+				}
+				withOutput3Input4 importKeys
+				if ((numberOfImportedKeys == 0)); then
+					if [ "$unsecure" == true ]; then
+						printf "\033[1;33mWARNING\033[0m: all GPG keys declined, won't be able to verify files (which is OK because %s true was specified)\n" "$unsecurePattern"
+						doVerification=false
+					else
+						errorNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+					fi
+				fi
 			fi
 		fi
 		if [ "$unsecure" == true ] && [ "$doVerification" == true ]; then
-			printf "\033[0;36mINFO\033[0m: gpg key found going to perform verification even though %s true was specified\n" "$UNSECURE_PATTERN"
+			printf "\033[0;36mINFO\033[0m: gpg key found going to perform verification even though %s true was specified\n" "$unsecurePattern"
 		fi
 	fi
 
-	if ! [ -d "$pullDirectoryAbsolute" ]; then
-		mkdir -p "$pullDirectoryAbsolute" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create the pull directory %s\n" "$pullDirectoryAbsolute" && exit 1)
+	if ! [ -d "$pullDirAbsolute" ]; then
+		mkdir -p "$pullDirAbsolute" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create the pull directory %s\n" "$pullDirAbsolute" && exit 1)
 	fi
 
 	if [ -f "$repo" ]; then
-		printf >&2 "\033[1;31mERROR\033[0m: looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s\n" "$remote" "$remoteDirectory"
+		printf >&2 "\033[1;31mERROR\033[0m: looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s\n" "$remote" "$remoteDir"
 		exit 1
 	elif ! [ -d "$repo" ]; then
 		printf "\033[0;36mINFO\033[0m: repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig\n" "$remote"
 		mkdir -p "$repo"
 		cd "$repo"
 		git init
-		cp "$remoteDirectory/gitconfig" "$repo/.git/config"
+		cp "$remoteDir/gitconfig" "$repo/.git/config"
 	fi
 
 	cd "$repo"
@@ -163,9 +182,9 @@ function gget-pull() {
 
 	function mentionUnsecure() {
 		if ! [ "$unsecure" == true ]; then
-			printf "Disable this check via %s true\n" "$UNSECURE_PATTERN"
+			printf " -- you can disable this check via %s true\n" "$unsecurePattern"
 		else
-			printf "Disable this check via %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
+			printf " -- you can disable this check via %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
 		fi
 	}
 
@@ -179,7 +198,7 @@ function gget-pull() {
 				# don't show commands in output anymore
 				{ set +x; } 2>/dev/null
 
-				printf >&2 "\033[1;31mERROR\033[0m: no signature file found, aborting. "
+				printf >&2 "\033[1;31mERROR\033[0m: no signature file found, aborting"
 				mentionUnsecure >&2
 				exit 1
 			fi
@@ -191,64 +210,58 @@ function gget-pull() {
 	getSignatureOfSingleFetchedFile
 
 	function cleanupRepo() {
-		local repo=$1
+		local -r repo=$1
 		# cleanup the repo in case we exit unexpected
 		find "$repo" -maxdepth 1 -type d -not -path "$repo" -not -name ".git" -exec rm -r {} \;
 	}
 	# local variable repo is not available for trap thus we expand it here via eval
-	eval "trap 'cleanupRepo \"$repo\"' EXIT"
+		eval "trap 'cleanupRepo \"$repo\"' EXIT"
+#	trap 'cleanupRepo $repo' EXIT
+
+	if ! [ -f "$pulledFile" ]; then
+		touch "$pulledFile" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create file pulled at %s\n" "$pulledFile" && exit 1)
+	fi
 
 	local -i numberOfPulledFiles=0
-	local -r pulledFiles="$remoteDirectory/pulled"
-	if ! [ -f "$pulledFiles" ]; then
-		touch "$pulledFiles" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create pulled at %s\n" "$pulledFiles" && exit 1)
-	fi
 
 	function moveFile() {
 		local file=$1
 
 		local relativeTarget
-		relativeTarget=$(realpath --relative-to="$workingDirectory" "$pullDirectoryAbsolute/$file")
-		local -r absoluteTarget="$pullDirectoryAbsolute/$file"
+		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
+		local -r absoluteTarget="$pullDirAbsolute/$file"
 		mkdir -p "$(dirname "$absoluteTarget")"
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
 		local -r entry="$tag	$file	$sha	$relativeTarget"
 
-		function grepByFile() {
-			grep -E "^[^\t]+	$file" "$@" "$pulledFiles"
-		}
 		#shellcheck disable=SC2310,SC2311
-		local -r currentEntry=$(grepByFile || true)
-		local currentVersion
-		currentVersion=$(echo "$currentEntry" | perl -0777 -pe 's/([^\t]+)\t.*/$1/')
+		local -r currentEntry=$(grepPulledEntryByFile "$pulledFile" "$file" || true)
+		local entryTag entrySha
+		setEntryVariables "$currentEntry"
 
 		if [ "$currentEntry" == "" ]; then
-			echo "$entry" >>"$pulledFiles"
-		elif ! [ "$currentVersion" == "$tag" ]; then
-			printf "\033[0;36mINFO\033[0m: the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m\n" "$currentVersion" "$tag" "$pullDirectory/$file"
+			echo "$entry" >>"$pulledFile"
+		elif ! [ "$entryTag" == "$tag" ]; then
+			printf "\033[0;36mINFO\033[0m: the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m\n" "$entryTag" "$tag" "$pullDir/$file"
 			# we could warn about a version which was older
-			grepByFile -v >"$pulledFiles.new"
-			mv "$pulledFiles.new" "$pulledFiles"
-			echo "$entry" >>"$pulledFiles"
+			replacePulledEntry "$pulledFile" "$file" "$entry"
 		else
-			local currentSha
-			currentSha=$(echo "$currentEntry" | perl -0777 -pe 's/[^\t]+\t[^\t]+\t([0-9a-f]+)\t.*/$1/')
-			if ! [ "$currentSha" == "$sha" ]; then
+			if ! [ "$entrySha" == "$sha" ]; then
 				printf "\033[1;33mWARNING\033[0m: looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s\n" "$file" "$tag"
-				git --no-pager diff "$(echo "$currentSha" | git hash-object -w --stdin)" "$(echo "$sha" | git hash-object -w --stdin)" --word-diff=color --word-diff-regex . | grep -A 1 @@ | tail -n +2
-				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFiles"
+				git --no-pager diff "$(echo "$entrySha" | git hash-object -w --stdin)" "$(echo "$sha" | git hash-object -w --stdin)" --word-diff=color --word-diff-regex . | grep -A 1 @@ | tail -n +2
+				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFile"
 				rm "$repo/$file"
 				return
-			elif ! grep "$entry" "$pulledFiles" >/dev/null; then
+			elif ! grep "$entry" "$pulledFile" >/dev/null; then
 				local currentLocation
 				currentLocation=$(echo "$currentEntry" | perl -0777 -pe 's/[^\t]+\t[^\t]+\t[^\t]+\t([^\t]+)/$1/')
-				printf "\033[1;33mWARNING\033[0m: the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)\n" "$(realpath --relative-to="$currentDir" "$workingDirectory/$currentLocation")" "$pullDirectory/$file"
-				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFiles"
+				printf "\033[1;33mWARNING\033[0m: the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)\n" "$(realpath --relative-to="$currentDir" "$workingDir/$currentLocation")" "$pullDir/$file"
+				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFile"
 				rm "$repo/$file"
 				return
 			elif [ -f "$absoluteTarget" ]; then
-				printf "\033[0;36mINFO\033[0m: the file was pulled before to the same location, going to override \033[0;36m%s\033[0m\n" "$pullDirectory/$file"
+				printf "\033[0;36mINFO\033[0m: the file was pulled before to the same location, going to override \033[0;36m%s\033[0m\n" "$pullDir/$file"
 			fi
 		fi
 		mv "$repo/$file" "$absoluteTarget"
@@ -259,15 +272,16 @@ function gget-pull() {
 	while read -r -d $'\0' file; do
 		if [ "$doVerification" == true ] && [ -f "$file.$SIG_EXTENSION" ]; then
 			printf "verifying \033[0;36m%s\033[0m\n" "$file"
-			if [ -d "$pullDirectoryAbsolute/$file" ]; then
-				printf >&2 "\033[1;31mERROR\033[0m: there exists a directory with the same name at %s\n" "$pullDirectoryAbsolute/$file"
+			if [ -d "$pullDirAbsolute/$file" ]; then
+				printf >&2 "\033[1;31mERROR\033[0m: there exists a directory with the same name at %s\n" "$pullDirAbsolute/$file"
 				exit 1
 			fi
 			gpg --homedir="$gpgDir" --verify "$file.$SIG_EXTENSION" "$file"
 			rm "$file.$SIG_EXTENSION"
 			moveFile "$file"
 		elif [ "$doVerification" == true ]; then
-			printf "\033[1;33mWARNING\033[0m: there was no corresponding *.%s file for %s, skipping it. " "$SIG_EXTENSION" "$file"
+			printf "\033[1;33mWARNING\033[0m: there was no corresponding *.%s file for %s, skipping it" "$SIG_EXTENSION" "$file"
+			mentionUnsecure
 			rm "$file"
 		else
 			moveFile "$file"

@@ -9,26 +9,27 @@
 #
 #######  Description  #############
 #
-#  internal utility functions  for dealing with gpg
+#  internal utility functions for dealing with gpg
 #  no backward compatibility guarantees or whatsoever
 #
 ###################################
-
-set -e
+set -eu
 
 function importKey() {
-	declare gpgDir file withConfirmation
+	local gpgDir file withConfirmation
 	# args is required for parse-fn-args.sh thus:
 	# shellcheck disable=SC2034
-	declare args=(gpgDir file withConfirmation)
+	local -ra args=(gpgDir file withConfirmation)
 
-	declare scriptDir
+	local scriptDir
 	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	local -r scriptDir
+
 	source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-fn-args.sh" || exit 1
 
-	declare outputKey
+	local outputKey
 	outputKey=$(gpg --homedir "$gpgDir" --keyid-format LONG --import-options show-only --import "$file")
-	declare isTrusting='y'
+	local isTrusting='y'
 	if [ "$withConfirmation" == "--confirm=true" ]; then
 		echo "$outputKey"
 		printf "\n\033[0;36mThe above key(s) will be used to verify the files you will pull from this remote, do you trust it?\033[0m y/[N]:"
@@ -38,6 +39,7 @@ function importKey() {
 		echo ""
 		echo "Decision: $isTrusting"
 	fi
+
 	if [ "$isTrusting" == "y" ]; then
 		echo "importing key $file"
 		gpg --homedir "$gpgDir" --import "$file"

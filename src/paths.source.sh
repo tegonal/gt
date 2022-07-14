@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2034,SC2168
+# shellcheck disable=SC2034,SC2168,SC2154
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
@@ -10,16 +10,16 @@
 #
 #######  Description  #############
 #
-#  constants intended to be sourced into a function
+#  constants intended to be sourced into a function.
+#	 Requires that $workingDir is defined beforehand
 #
 ###################################
 
-local -r remotePattern='-r|--remote'
-local -r workingDirPattern='-w|--working-directory'
-local -r pullDirPattern='-d|--directory'
-local -r autoTrustPattern='--auto-trust'
 
-# in case you should add alternatives, then you need to modify error messages and the like, search for unsecurePattern
-local -r unsecurePattern='--unsecure'
-
-local -r defaultWorkingDir='.gget'
+# note if you change this structure, then you need to adopt gget-pull => pullArgsFile
+local -r remotesDir="$workingDir/remotes"
+local -r remoteDir="$remotesDir/$remote"
+local -r publicKeysDir="$remoteDir/public-keys"
+local -r repo="$remoteDir/repo"
+local -r gpgDir="$publicKeysDir/gpg"
+local -r pulledFile="$remoteDir/pulled"
