@@ -126,7 +126,7 @@ function gget-pull() {
 			else
 				mkdir "$gpgDir"
 				chmod 700 "$gpgDir"
-				local -r confirm="--confirm=$(set -e; invertBool "$autoTrust")"
+				local -r confirm="--confirm=$(set -e && invertBool "$autoTrust")"
 
 				local -i numberOfImportedKeys=0
 				function importKeys() {
@@ -215,8 +215,7 @@ function gget-pull() {
 		find "$repo" -maxdepth 1 -type d -not -path "$repo" -not -name ".git" -exec rm -r {} \;
 	}
 	# local variable repo is not available for trap thus we expand it here via eval
-		eval "trap 'cleanupRepo \"$repo\"' EXIT"
-#	trap 'cleanupRepo $repo' EXIT
+	eval "trap 'cleanupRepo \"$repo\"' EXIT"
 
 	if ! [ -f "$pulledFile" ]; then
 		touch "$pulledFile" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create file pulled at %s\n" "$pulledFile" && exit 1)
@@ -227,10 +226,11 @@ function gget-pull() {
 	function moveFile() {
 		local file=$1
 
+		local -r absoluteTarget="$pullDirAbsolute/$file"
+		# parent dir needs to be created before relativeTarget as realpath expects existing parent dirs
+		mkdir -p "$(dirname "$absoluteTarget")"
 		local relativeTarget
 		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
-		local -r absoluteTarget="$pullDirAbsolute/$file"
-		mkdir -p "$(dirname "$absoluteTarget")"
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
 		local -r entry="$tag	$file	$sha	$relativeTarget"
