@@ -10,13 +10,13 @@
 ###################################
 set -eu
 
-if ! [[ -v scriptDir ]]; then
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	declare -r scriptDir
+if ! [[ -v scriptsDir ]]; then
+	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r scriptsDir
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$scriptDir/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$(realpath "$scriptsDir/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
@@ -24,7 +24,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 
 declare projectDir
-projectDir="$(realpath "$scriptDir/../")"
+projectDir="$(realpath "$scriptsDir/../")"
 
 find "$projectDir/src" -maxdepth 1 -name "*.sh" \
 	-not -name "*.doc.sh" \

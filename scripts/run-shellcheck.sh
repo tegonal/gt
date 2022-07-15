@@ -10,21 +10,21 @@
 ###################################
 set -eu
 
-if ! [[ -v scriptDir ]]; then
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	declare -r scriptDir
+if ! [[ -v scriptsDir ]]; then
+	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r scriptsDir
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$scriptDir/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$(realpath "$scriptsDir/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
 sourceOnce "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
 
-declare srcDir="$scriptDir/../src"
+declare srcDir="$scriptsDir/../src"
 
 # shellcheck disable=SC2034
-declare -a dirs=("$srcDir" "$scriptDir")
-declare sourcePath="$srcDir:$scriptDir:$dir_of_tegonal_scripts"
+declare -a dirs=("$srcDir" "$scriptsDir")
+declare sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
 runShellcheck dirs "$sourcePath"

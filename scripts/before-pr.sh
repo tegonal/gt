@@ -10,10 +10,10 @@
 ###################################
 set -eu
 
-if ! [[ -v scriptDir ]]; then
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	declare -r scriptDir
+if ! [[ -v scriptsDir ]]; then
+	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r scriptsDir
 fi
 
-source "$scriptDir/run-shellcheck.sh"
-source "$scriptDir/update-docu.sh"
+source "$scriptsDir/run-shellcheck.sh"
+source "$scriptsDir/update-docu.sh"
