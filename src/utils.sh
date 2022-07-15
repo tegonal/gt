@@ -15,6 +15,13 @@
 ###################################
 set -eu
 
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+
+sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
+
 function deleteDirChmod777() {
 	local -r dir=$1
 	# e.g files in .git will be write-protected and we don't want sudo for this command
@@ -28,10 +35,10 @@ function errorNoGpgKeysImported() {
 	local -r gpgDir=$3
 	local -r unsecurePattern=$4
 
-	printf >&2 "\033[1;31mERROR\033[0m: no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecurePattern"
+	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecurePattern"
 	printf >&2 "Alternatively, you can place public keys in %s or setup a gpg store yourself at %s\n" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
-	exit 1
+	return 1
 }
 
 function findAscInDir() {
@@ -57,16 +64,16 @@ function checkWorkingDirExists() {
 	local -r scriptDir
 	source "$scriptDir/shared-patterns.source.sh"
 
-	if ! [ -d "$workingDir" ]; then
-		printf >&2 "\033[1;31mERROR\033[0m: working directory \033[0;36m%s\033[0m does not exist\n" "$workingDir"
+	if ! [[ -d $workingDir ]]; then
+		logError "working directory \033[0;36m%s\033[0m does not exist\n" "$workingDir"
 		echo >&2 "Check for typos and/or use $workingDirPattern to specify another"
-		exit 9
+		return 9
 	fi
 }
 
 function invertBool() {
 	local b=$1
-	if [ "$b" == true ]; then
+	if [[ $b == true ]]; then
 		echo "false"
 	else
 		echo "true"

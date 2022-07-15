@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.4.0
+#                                         Version: v0.7.1
 #
 #######  Description  #############
 #
@@ -15,10 +15,12 @@
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
+#    set -eu
+#    # Assuming tegonal's scripts were fetched with gget - adjust location accordingly
+#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    # Assuming replace-help-snippet.sh is in the same directory as your script
-#    scriptDir="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )"
-#    source "$scriptDir/replace-help-snippet.sh"
+#    source "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 #
 #    declare file
 #    file=$(mktemp)
@@ -40,24 +42,26 @@
 #    # </my-script-help>
 #
 ###################################
-set -e
+set -eu
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/replace-snippet.sh"
 
 function replaceHelpSnippet() {
-	declare script id dir pattern varargs
-	# args is required for parse-fn-args.sh thus:
+	local script id dir pattern varargs
 	# shellcheck disable=SC2034
-	declare args=(script id dir pattern)
-
-	declare scriptDir
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	source "$scriptDir/parse-fn-args.sh" || return 1
-	source "$scriptDir/replace-snippet.sh"
+	local -ra params=(script id dir pattern varargs)
+	parseFnArgs params "$@"
 
 	if ((${#varargs[@]} == 0)); then
 		varargs=("--help")
 	fi
 
-	declare snippet
+	local snippet
 	# shellcheck disable=SC2145
 	echo "capturing output of calling: $script ${varargs[@]}"
 	# we actually want that the array is passed as multiple arguments
@@ -66,9 +70,9 @@ function replaceHelpSnippet() {
 	snippet=$("$script" ${varargs[@]})
 	set -e
 
-	declare quotedSnippet
+	local quotedSnippet
 	# remove ansi colour codes form snippet
-	quotedSnippet=$(echo "$snippet" | perl -0777 -pe "s/\033\[(1;\d{2}|0)m//g")
+	quotedSnippet=$(echo "$snippet" | perl -0777 -pe "s/\033\[([01];\d{2}|0)m//g")
 
-	replaceSnippet "$script" "$id" "$dir" "$pattern" "\`\`\`text\n$quotedSnippet\n\`\`\`"
+	replaceSnippet "$script" "$id" "$dir" "$pattern" "$(printf "\`\`\`text\n%s\n\`\`\`" "$quotedSnippet")"
 }

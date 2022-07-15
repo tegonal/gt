@@ -29,30 +29,37 @@
 
 set -eu
 
-if ! [ -x "$(command -v "git")" ]; then
+if ! [[ -v dir_of_gget ]]; then
+	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r dir_of_gget
+fi
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
+
+if ! [[ -x "$(command -v "git")" ]]; then
 	printf >&2 "\033[1;31mERROR\033[0m: git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)\n"
 	exit 100
 fi
 
 function gget() {
 
-	if [[ $# -lt 1 ]]; then
-		printf >&2 "\033[1;31mERROR\033[0m: At least one parameter needs to be passed\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
+	if (($# < 1)); then
+		logError "At least one parameter needs to be passed to \`gget\`\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
 		echo >&2 '1. command     one of: pull, remote'
 		echo >&2 '2... args...   command specific arguments'
 		return 9
 	fi
 
-	local scriptDir
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	local -r scriptDir
-
 	function remote() {
-		"$scriptDir/gget-remote.sh" "$@"
+		"$dir_of_gget/gget-remote.sh" "$@"
 	}
 
 	function pull() {
-		"$scriptDir/gget-pull.sh" "$@"
+		"$dir_of_gget/gget-pull.sh" "$@"
 	}
 
 	local -r command=$1
@@ -66,9 +73,7 @@ function gget() {
 			remote   manage remotes
 		EOM
 	else
-		printf >&2 "\033[1;31mERROR\033[0m: unknown command %s, expected one of pull, remote\n" "$command"
-		return 9
+		returnDying "unknown command \033[0;36m%s\033[0m, expected one of pull, remote" "$command"
 	fi
-
 }
 gget "$@"

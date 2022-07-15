@@ -5,12 +5,15 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
+#                                         Version: v0.1.0-SNAPSHOT
 #
-#
+###################################
 set -eu
 
-declare scriptDir
-scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+if ! [[ -v scriptDir ]]; then
+	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r scriptDir
+fi
 
-"$scriptDir/run-shellcheck.sh"
-"$scriptDir/update-docu.sh"
+source "$scriptDir/run-shellcheck.sh"
+source "$scriptDir/update-docu.sh"

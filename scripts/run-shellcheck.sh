@@ -5,25 +5,26 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
+#                                         Version: v0.1.0-SNAPSHOT
 #
-#
+###################################
 set -eu
 
-declare scriptDir
-scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-
-declare foundIssues=false
-
-while read -r -d $'\0' script; do
-	declare output=
-	output=$(shellcheck -C -s bash -S info -x -o all -e SC2312 -P "$scriptDir/../src/" "$script" || true)
-	if ! [ "$output" == "" ]; then
-		printf "%s\n" "$output"
-		foundIssues=true
-	fi
-done < <(find "$scriptDir/../src" "$scriptDir/../scripts" -name '*.sh' -not -path "**tegonal-scripts/*" -print0)
-
-if [ "$foundIssues" == true ]; then
-	printf >&2 "\033[1;31mERROR\033[0m: found shellcheck issues, aborting"
-	exit 1
+if ! [[ -v scriptDir ]]; then
+	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r scriptDir
 fi
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$scriptDir/../lib/tegonal-scripts/src")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+
+sourceOnce "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
+
+declare srcDir="$scriptDir/../src"
+
+# shellcheck disable=SC2034
+declare -a dirs=("$srcDir" "$scriptDir")
+declare sourcePath="$srcDir:$scriptDir:$dir_of_tegonal_scripts"
+runShellcheck dirs "$sourcePath"

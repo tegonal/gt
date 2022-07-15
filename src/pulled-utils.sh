@@ -17,7 +17,7 @@ set -eu
 
 function setEntryVariables() {
 	# shellcheck disable=SC2034
-	IFS=- read -r entryTag entryFile entrySha entryRelativePath <<< "$1"
+	IFS=$'\t' read -r entryTag entryFile entrySha entryRelativePath <<< "$1"
 }
 
 function grepPulledEntryByFile() {

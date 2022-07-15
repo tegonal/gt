@@ -5,16 +5,24 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.4.0
+#                                         Version: v0.7.1
 #
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
-#  if one uses the parameter `--help`
+#  if one uses the parameter `--help` and shows the version if one uses --version.
+#  I.e. that also means that `--help` and `--version` are reserved patterns and should not be used by your
+#  script/function.
 #
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
+#    set -eu
+#    # Assuming tegonal's scripts were fetched with gget - adjust location accordingly
+#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+#
+#    sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 #
 #    # declare the variables where the arguments shall be stored (used as identifier afterwards)
 #    declare directory pattern version
@@ -26,9 +34,9 @@
 #    # as shellcheck doesn't get that we are passing `params` to parseArguments ¯\_(ツ)_/¯ (an open issue of shellcheck)
 #    # shellcheck disable=SC2034
 #    declare params=(
+#    	pattern '-p|--pattern' ''
+#    	version '-v' 'the version'
 #    	directory '-d|--directory' '(optional) the working directory -- default: .'
-#    	pattern '-p|--pattern' 'pattern used during analysis'
-#    	version '-v|--version' ''
 #    )
 #    # optional: you can define examples which are included in the help text -- use an empty string for no example
 #    declare examples
@@ -40,14 +48,9 @@
 #    EOM
 #    )
 #
-#    declare scriptDir
-#    scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-#    # Assuming parse-args.sh is in the same directory as your script
-#    source "$scriptDir/parse-args.sh"
-#
 #    parseArguments params "$examples" "$@"
 #    # in case there are optional parameters, then fill them in here before calling checkAllArgumentsSet
-#    if ! [ -v directory ]; then directory="."; fi
+#    if ! [[ -v directory ]]; then directory="."; fi
 #    checkAllArgumentsSet params "$examples"
 #
 #    # pass your variables storing the arguments to other scripts
@@ -61,8 +64,14 @@
 #	=> take a look at https://github.com/ko1nksm/getoptions if you need something more powerful
 #
 ###################################
+set -eu
 
-set -e
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function describeParameterTriple() {
 	echo >&2 "The array needs to contain parameter definitions where a parameter definition consist of 3 values:"
@@ -81,24 +90,23 @@ function describeParameterTriple() {
 
 function checkParameterDefinitionIsTriple() {
 	if ! (($# == 1)); then
-		printf >&2 "\033[1;31mERROR\033[0m: One parameter needs to be passed to checkParameterDefinitionIsTriple\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]}"
-		echo >&2 '1. params		 an array with the parameter definitions'
+		logError "One parameter needs to be passed to checkParameterDefinitionIsTriple\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
+		echo >&2 '1. params   the name of an array which contains the parameter definitions'
 		return 9
 	fi
 
-	local -n paramArr2=$1
-	local arrLength=${#paramArr2[@]}
+	local -rn paramArr2=$1
+	local -r arrLength=${#paramArr2[@]}
 
 	local arrayDefinition
-	arrayDefinition=$(declare -p paramArr2)
-	local reg='^declare -n [^=]+=\"([^\"]+)\"$'
-	while [[ $arrayDefinition =~ $reg ]]; do
-		arrayDefinition=$(declare -p "${BASH_REMATCH[1]}")
-	done
+	arrayDefinition="$(
+		set -e
+		recursiveDeclareP paramArr2
+	)"
 	reg='declare -a.*'
 	if ! [[ "$arrayDefinition" =~ $reg ]]; then
-		printf >&2 "\033[1;31mERROR: array with parameter definitions is broken\033[0m for \033[1;34m%s\033[0m in %s\n" "${!paramArr2}" "${BASH_SOURCE[2]}"
-		echo >&2 "the first argument needs to be a non-associative array, given:"
+		logError "the array \033[1;34m%s\033[0m is broken, is defined in %s" "${!paramArr2}" "${BASH_SOURCE[2]}"
+		echo >&2 "the first argument needs to be a non-associative array containing the parameter definitions, given:"
 		echo >&2 "$arrayDefinition"
 		echo >&2 ""
 		describeParameterTriple
@@ -106,12 +114,12 @@ function checkParameterDefinitionIsTriple() {
 	fi
 
 	if ((arrLength == 0)); then
-		printf >&2 "\033[1;31mERROR:array with parameter definitions is broken, length was 0\033[0m in %s\n" "${BASH_SOURCE[2]}"
+		logError "array with parameter definitions is broken, length was 0\033[0m in %s" "${BASH_SOURCE[2]}"
 		describeParameterTriple
 	fi
 
 	if ! ((arrLength % 3 == 0)); then
-		printf >&2 "\033[1;31mERROR: array with parameter definitions is broken\033[0m for \033[1;34m%s\033[0m in %s\n" "${!paramArr2}" "${BASH_SOURCE[2]}"
+		logError "array with parameter definitions is broken for \033[1;34m%s\033[0m in %s" "${!paramArr2}" "${BASH_SOURCE[2]}"
 		describeParameterTriple
 		echo >&2 ""
 		echo >&2 "given:"
@@ -135,70 +143,104 @@ function checkParameterDefinitionIsTriple() {
 }
 
 function parseArguments {
-	if (($# < 2)); then
-		printf >&2 "\033[1;31mERROR\033[0m: At least two arguments need to be passed to parseArguments.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]}"
-		echo >&2 '1. params		 an array with the parameter definitions'
-		echo >&2 '2. examples	 a string containing examples (or an empty string)'
-		echo >&2 '3... args...	the arguments as such, typically "$@"'
+	if (($# < 3)); then
+		logError "At least three arguments need to be passed to parseArguments.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
+		echo >&2 '1. params     the name of an array which contains the parameter definitions'
+		echo >&2 '2. examples   a string containing examples (or an empty string)'
+		echo >&2 '3. version    the version which shall be shown if one uses --version'
+		echo >&2 '4... args...  the arguments as such, typically "$@"'
 		return 9
 	fi
 
-	local -n paramArr1=$1
-	local examples=$2
-	shift 2
+	local -rn parseArguments_paramArr1=$1
+	local -r parseArguments_examples=$2
+	local -r parseArguments_version=$3
+	shift 3
 
-	checkParameterDefinitionIsTriple paramArr1 || return $?
+	# we want to be sure that we return at this point even if someone has `set +e` thus the or clause
+	# shellcheck disable=SC2310
+	checkParameterDefinitionIsTriple parseArguments_paramArr1 || return $?
 
-	local arrLength="${#paramArr1[@]}"
+	local -r parseArguments_arrLength="${#parseArguments_paramArr1[@]}"
 
+	local -i parseArguments_numOfArgumentsParsed=0
 	while (($# > 0)); do
-		argName="$1"
-		if [[ "$argName" == "--help" ]]; then
-			printHelp paramArr1 "$examples"
+		parseArguments_argName="$1"
+		if [[ $parseArguments_argName == --help ]]; then
+			if ! ((parseArguments_numOfArgumentsParsed == 0)); then
+				logWarning "there were arguments defined prior to --help, they will all be ignored and instead printHelp will be called"
+			fi
+			printHelp parseArguments_paramArr1 "$parseArguments_examples" "$parseArguments_version"
+			return 99
+		fi
+		if [[ $parseArguments_argName == --version ]]; then
+			if ! ((parseArguments_numOfArgumentsParsed == 0)); then
+				logWarning "there were arguments defined prior to --version, they will all be ignored and instead printVersion will be called"
+			fi
+			printVersion "$parseArguments_version"
 			return 99
 		fi
 
-		expectedName=0
-		for ((i = 0; i < arrLength; i += 3)); do
-			local paramName="${paramArr1[i]}"
-			local pattern="${paramArr1[i + 1]}"
-			regex="^($pattern)$"
-			if [[ "$argName" =~ $regex ]]; then
-				# that's where the black magic happens, we are assigning to global variables here
-				if [ -z "$2" ]; then
-					printf >&2 "\033[1;31mERROR\033[0m: no value defined for parameter \033[1;34m%s\033[0m in %s\n" "$pattern" "${BASH_SOURCE[1]}"
+		local -i parseArguments_expectedName=0
+		for ((parseArguments_i = 0; parseArguments_i < parseArguments_arrLength; parseArguments_i += 3)); do
+			local parseArguments_paramName="${parseArguments_paramArr1[parseArguments_i]}"
+			local parseArguments_pattern="${parseArguments_paramArr1[parseArguments_i + 1]}"
+			local parseArguments_regex="^($parseArguments_pattern)$"
+			if [[ $parseArguments_argName =~ $parseArguments_regex ]]; then
+				if (($# < 2)); then
+					logError "no value defined for parameter \033[1;36m%s\033[0m (pattern %s) in %s" "$parseArguments_paramName" "$parseArguments_pattern" "${BASH_SOURCE[1]}"
 					echo >&2 "following the help documentation:"
 					echo >&2 ""
-					printHelp >&2 paramArr1 "$examples"
+					printHelp >&2 parseArguments_paramArr1 "$parseArguments_examples" "$parseArguments_version"
 					return 1
 				fi
-				printf -v "${paramName}" "%s" "$2"
-				expectedName=1
+				# that's where the black magic happens, we are assigning to global variables here
+				printf -v "$parseArguments_paramName" "%s" "$2"
+				parseArguments_expectedName=1
+				((++parseArguments_numOfArgumentsParsed))
 				shift
+			elif [[ "$parseArguments_argName" =~ $parseArguments_regex ]]; then
+				echo "ou shit"
+				exit 3
 			fi
 		done
 
-		if ((expectedName == 0)); then
-			if [[ "$argName" =~ ^- ]]; then
-				printf "\033[1;33mWARNING: ignored argument %s (and its value %s)\033[0m\n" "$argName" "$2"
+		if ((parseArguments_expectedName == 0)); then
+			if [[ $parseArguments_argName =~ ^- ]]; then
+				logWarning "ignored argument \033[1;36m%s\033[0m (and its value %s)" "$parseArguments_argName" "$2"
 				shift
 			else
-				printf "\033[1;33mWARNING: ignored argument %s\033[0m\n" "$argName"
+				logWarning "ignored argument \033[1;36m%s\033[0m" "$parseArguments_argName"
 			fi
 		fi
 		shift
 	done
 }
 
-function printHelp {
-	if ! (($# == 2)); then
-		printf >&2 "\033[1;31mERROR\033[0m: Two arguments need to be passed to printHelp.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]}"
-		echo >&2 '1. params		 an array with the parameter definitions'
-		echo >&2 '2. examples	 a string containing examples (or an empty string)'
+function printVersion() {
+	if ! (($# == 1)); then
+		logError "One argument needs to be passed to printVersion.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
+		echo >&2 '1. version   the version which shall be shown if one uses --version'
 		return 9
 	fi
-	local -n paramArr3=$1
-	local examples=$2
+	local version=$1
+	logInfo "Version of %s is:\n%s" "$(basename "${BASH_SOURCE[3]:-${BASH_SOURCE[2]}}")" "$version"
+}
+
+function printHelp {
+	if ! (($# == 3)); then
+		logError "Three arguments need to be passed to printHelp.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
+		echo >&2 '1. params    the name of an array which contains the parameter definitions'
+		echo >&2 '2. examples  a string containing examples (or an empty string)'
+		echo >&2 '3. version   the version which shall be shown if one uses --version'
+		return 9
+	fi
+	local -rn paramArr3=$1
+	local -r examples=$2
+	local -r version=$3
+
+	# we want to be sure that we return at this point even if someone has `set +e` thus the or clause
+	# shellcheck disable=SC2310
 	checkParameterDefinitionIsTriple paramArr3 || return $?
 
 	local arrLength="${#paramArr3[@]}"
@@ -223,38 +265,51 @@ function printHelp {
 			echo "$pattern"
 		fi
 	done
-	if [ -n "$examples" ]; then
+	echo ""
+	echo "--help     prints this help"
+	echo "--version  prints the version of this script"
+
+	if [[ -n $examples ]]; then
 		printf "\n\033[1;33mExamples:\033[0m\n"
 		echo "$examples"
 	fi
+	echo ""
+	printVersion "$version"
 }
 
 function checkAllArgumentsSet {
-	if ! (($# == 2)); then
-		printf >&2 "\033[1;31mERROR\033[0m: Two arguments need to be passed to checkAllArgumentsSet.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]}"
-		echo >&2 '1. params		 an array with the parameter definitions'
-		echo >&2 '2. examples	 a string containing examples (or an empty string)'
+	if ! (($# == 3)); then
+		logError "Three arguments need to be passed to checkAllArgumentsSet.\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
+		echo >&2 '1. params    the name of an array which contains the parameter definitions'
+		echo >&2 '2. examples  a string containing examples (or an empty string)'
+		echo >&2 '3. version    the version which shall be shown if one uses --version'
 		return 9
 	fi
-	local -n paramArr4=$1
-	local examples=$2
-	checkParameterDefinitionIsTriple paramArr4 || return $?
 
-	local arrLength="${#paramArr4[@]}"
-	local good=1
-	for ((i = 0; i < arrLength; i += 3)); do
-		local paramName="${paramArr4[i]}"
-		if ! [ -v "$paramName" ]; then
-			printf >&2 "\033[1;31mERROR\033[0m: %s not set\n" "$paramName"
-			good=0
+	# using unconventional naming in order to avoid name clashes with the variables we will check further below
+	local -rn checkAllArgumentsSet_paramArr4=$1
+	local -r checkAllArgumentsSet_examples=$2
+	local -r checkAllArgumentsSet_version=$3
+
+	# we want to be sure that we return at this point even if someone has `set +e` thus the or clause
+	# shellcheck disable=SC2310
+	checkParameterDefinitionIsTriple checkAllArgumentsSet_paramArr4 || return $?
+
+	local -r checkAllArgumentsSet_arrLength="${#checkAllArgumentsSet_paramArr4[@]}"
+	local -i checkAllArgumentsSet_good=1
+	for ((checkAllArgumentsSet_i = 0; checkAllArgumentsSet_i < checkAllArgumentsSet_arrLength; checkAllArgumentsSet_i += 3)); do
+		local checkAllArgumentsSet_paramName="${checkAllArgumentsSet_paramArr4[checkAllArgumentsSet_i]}"
+		local checkAllArgumentsSet_pattern="${checkAllArgumentsSet_paramArr4[checkAllArgumentsSet_i + 1]}"
+		if ! [[ -v "$checkAllArgumentsSet_paramName" ]]; then
+			logError "%s not set via %s" "$checkAllArgumentsSet_paramName" "$checkAllArgumentsSet_pattern"
+			checkAllArgumentsSet_good=0
 		fi
 	done
-	if ((good == 0)); then
+	if ((checkAllArgumentsSet_good == 0)); then
 		echo >&2 ""
 		echo >&2 "following the help documentation:"
-		printHelp >&2 paramArr4 "$examples"
 		echo >&2 ""
-		echo >&2 "use --help to see this list"
+		printHelp >&2 checkAllArgumentsSet_paramArr4 "$checkAllArgumentsSet_examples" "$checkAllArgumentsSet_version"
 		return 1
 	fi
 }
