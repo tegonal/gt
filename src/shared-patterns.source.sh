@@ -23,3 +23,4 @@ local -r autoTrustPattern='--auto-trust'
 local -r unsecurePattern='--unsecure'
 
 local -r defaultWorkingDir='.gget'
+local -r workingDirParamDocu="(optional) path which gget shall use as working directory -- default: $defaultWorkingDir"

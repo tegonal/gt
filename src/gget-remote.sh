@@ -26,21 +26,29 @@
 #
 ###################################
 set -eu
+declare -x GGET_VERSION='v0.1.0-SNAPSHOT'
+
+if ! [[ -v dir_of_gget ]]; then
+	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r dir_of_gget
+fi
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+
+sourceOnce "$dir_of_gget/gpg-utils.sh"
+sourceOnce "$dir_of_gget/utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget-remote() {
+	source "$dir_of_gget/shared-patterns.source.sh"
 
-	local scriptDir
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	local -r scriptDir
 	local currentDir
 	currentDir=$(pwd)
 	local -r currentDir
-
-	source "$scriptDir/shared-patterns.source.sh"
-	source "$scriptDir/gpg-utils.sh"
-	source "$scriptDir/utils.sh"
-	source "$scriptDir/../lib/tegonal-scripts/src/utility/parse-args.sh" || exit 200
-
 
 	function add() {
 
@@ -51,7 +59,7 @@ function gget-remote() {
 			url '-u|--url' 'url of the remote repository'
 			pullDir "$pullDirPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
 			unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
-			workingDir "$workingDirPattern" "(optional) path which gget shall use as working directory -- default: $defaultWorkingDir"
+			workingDir "$workingDirPattern" "$workingDirParamDocu"
 		)
 		local -r examples=$(
 			cat <<-EOM
@@ -70,11 +78,11 @@ function gget-remote() {
 				gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/$defaultWorkingDir
 			EOM
 		)
-		parseArguments params "$examples" "$@"
-		if ! [ -v pullDir ]; then pullDir="lib/$remote"; fi
-		if ! [ -v unsecure ]; then unsecure=false; fi
-		if ! [ -v workingDir ]; then workingDir="$defaultWorkingDir"; fi
-		checkAllArgumentsSet params "$examples"
+		parseArguments params "$examples" "$GGET_VERSION" "$@"
+		if ! [[ -v pullDir ]]; then pullDir="lib/$remote"; fi
+		if ! [[ -v unsecure ]]; then unsecure=false; fi
+		if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+		checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 		# make directory paths absolute
 		local -r workingDir=$(readlink -m "$workingDir")
@@ -82,17 +90,15 @@ function gget-remote() {
 		mkdir -p "$workingDir/remotes"
 
 		local remoteDir publicKeysDir repo gpgDir
-		source "$scriptDir/paths.source.sh"
+		source "$dir_of_gget/paths.source.sh"
 
-		if [ -f "$remoteDir" ]; then
-			printf >&2 "\033[1;31mERROR\033[0m: cannot create remote directory, there is a file at this location: %s\n" "$remoteDir"
-			exit 9
-		elif [ -d "$remoteDir" ]; then
-			printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m already exists, remove with: gget remote remove %s\n" "$remote" "$remote"
-			exit 9
+		if [[ -f $remoteDir ]]; then
+			returnDying "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
+		elif [[ -d $remoteDir ]]; then
+			returnDying "remote \033[0;36m%s\033[0m already exists, remove with: gget remote remove %s" "$remote" "$remote"
 		fi
 
-		mkdir "$remoteDir" || (printf >&2 "\033[1;31mERROR\033[0m: failed to create remote directory %s\n" "$remoteDir" && exit 1)
+		mkdir "$remoteDir" || returnDying "failed to create remote directory %s" "$remoteDir"
 		echo "--directory \"$pullDir\"" >"$remoteDir/pull.args"
 
 		mkdir "$publicKeysDir"
@@ -126,41 +132,41 @@ function gget-remote() {
 		set -e
 
 		if ! ((checkoutResult == 0)); then
-			if [ "$unsecure" == true ]; then
-				printf "\033[1;33mWARNING\033[0m: no GPG key found, ignoring it because %s true was specified\n" "$unsecurePattern"
+			if [[ $unsecure == true ]]; then
+				logWarning "no GPG key found, ignoring it because %s true was specified" "$unsecurePattern"
 				echo "$unsecurePattern true" >>"$workingDir/pull.args"
-				exit 0
+				return 0
 			else
-				printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true\n" "$remote" "$defaultBranch" "$unsecurePattern"
+				logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
 				deleteDirChmod777 "$remoteDir"
-				exit 1
+				return 1
 			fi
 		fi
 
 		# shellcheck disable=SC2310
 		if noAscInDir "$repo/.gget"; then
-			if [ "$unsecure" == true ]; then
-				printf "\033[1;33mWARNING\033[0m: remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified\n" "$remote" "$unsecurePattern"
+			if [[ $unsecure == true ]]; then
+				logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
 				echo "$unsecurePattern true" >>"$workingDir/pull.args"
-				exit 0
+				return 0
 			else
-				printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true\n" "$remote" "$unsecurePattern"
+				logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecurePattern"
 				deleteDirChmod777 "$remoteDir"
-				exit 1
+				return 1
 			fi
 		fi
 
 		local -i numberOfImportedKeys=0
 
 		function importKeys() {
-			findAsc "$repo/.gget" -print0 >&3
+			findAscInDir "$repo/.gget" -print0 >&3
 
 			echo ""
 			while read -u 4 -r -d $'\0' file; do
 				# shellcheck disable=SC2310
 				if importKey "$gpgDir" "$file" --confirm=true; then
 					mv "$file" "$publicKeysDir/"
-					((numberOfImportedKeys += 1))
+					((++numberOfImportedKeys))
 				else
 					echo "deleting key $file"
 					rm "$file"
@@ -172,23 +178,23 @@ function gget-remote() {
 		deleteDirChmod777 "$repo/.gget"
 
 		if ((numberOfImportedKeys == 0)); then
-			if [ "$unsecure" == true ]; then
-				printf "\033[1;33mWARNING\033[0m: no GPG keys imported, ignoring it because %s true was specified\n" "$unsecurePattern"
-				exit 0
+			if [[ $unsecure == true ]]; then
+				logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecurePattern"
+				return 0
 			else
 				errorNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
 			fi
 		fi
 
 		gpg --homedir "$gpgDir" --list-sig
-		printf "\033[1;32mSUCCESS\033[0m: remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -t <VERSION> -p <PATH>\n" "$remote" "$numberOfImportedKeys" "$remote"
+		logSuccess "remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -t <VERSION> -p <PATH>" "$remote" "$numberOfImportedKeys" "$remote"
 	}
 
 	function list() {
 		local workingDir
 		# shellcheck disable=SC2034
 		local -ra params=(
-			workingDir "$workingDirPattern" '(optional) define a path which gget shall use as working directory -- default: .gget'
+			workingDir "$workingDirPattern" "$workingDirParamDocu"
 		)
 		local -r examples=$(
 			cat <<-EOM
@@ -200,22 +206,23 @@ function gget-remote() {
 			EOM
 		)
 
-		parseArguments params "$examples" "$@"
-		if ! [ -v workingDir ]; then workingDir="$defaultWorkingDir"; fi
-		checkAllArgumentsSet params "$examples"
+		parseArguments params "$examples" "$GGET_VERSION" "$@"
+		if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+		checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 		checkWorkingDirExists "$workingDir"
 
 		local remotesDir
-		source "$scriptDir/paths.source.sh"
+		local -r remote="not really a remote but paths.source.sh requires it, hence we set it here"
+		source "$dir_of_gget/paths.source.sh"
 
 		cd "$remotesDir"
 		local output
 		output="$(find . -maxdepth 1 -type d -not -path "." | cut -c 3-)"
-		if [ "$output" == "" ]; then
-			printf "\033[1;33mNo remote define yet.\033[0m\n"
+		if [[ $output == "" ]]; then
+			logInfo "No remote define yet."
 			echo "To add one, use: gget remote add ..."
-			echo "Following the corresponding documentation of the parameters:"
+			echo "Following the corresponding documentation of \`gget remote add\`:"
 			add "--help"
 		else
 			echo "$output"
@@ -226,8 +233,8 @@ function gget-remote() {
 		local workingDir
 		# shellcheck disable=SC2034
 		local -ra params=(
-			remote '-r|--remote' 'define the name of the remote which shall be removed'
-			workingDir "$workingDirPattern" '(optional) define a path which gget shall use as working directory -- default: .gget'
+			remote "$remotePattern" 'define the name of the remote which shall be removed'
+			workingDir "$workingDirPattern" "$workingDirParamDocu"
 		)
 		local -r examples=$(
 			cat <<-EOM
@@ -239,30 +246,29 @@ function gget-remote() {
 			EOM
 		)
 
-		parseArguments params "$examples" "$@"
-		if ! [ -v workingDir ]; then workingDir="$defaultWorkingDir"; fi
-		checkAllArgumentsSet params "$examples"
+		parseArguments params "$examples" "$GGET_VERSION" "$@"
+		if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+		checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 		checkWorkingDirExists "$workingDir"
 
 		local remoteDir
-		source "$scriptDir/paths.source.sh"
+		source "$dir_of_gget/paths.source.sh"
 
-		if [ -f "$remoteDir" ]; then
-			printf >&2 "\033[1;31mERROR\033[0m: cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s\n" "$remote" "$remoteDir"
-			exit 9
-		elif ! [ -d "$remoteDir" ]; then
-			printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:\n" "$remote"
+		if [[ -f $remoteDir ]]; then
+			returnDying "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"
+		elif ! [[ -d $remoteDir ]]; then
+			logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
 			list -w "$workingDir"
-			exit 9
+			return 9
 		fi
 
 		deleteDirChmod777 "$remoteDir"
-		printf "\033[1;32mSUCCESS\033[0m: removed remote \033[0;36m%s\033[0m\n" "$remote"
+		logSuccess "removed remote \033[0;36m%s\033[0m" "$remote"
 	}
 
-	if [[ $# -lt 1 ]]; then
-		printf >&2 "\033[1;31mERROR\033[0m: At least one parameter needs to be passed\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
+	if (( $# < 1 )); then
+		logError "At least one parameter needs to be passed to \`gget remote\`\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
 		echo >&2 '1. command     one of: add, remove, list'
 		echo >&2 '2... args...   command specific arguments'
 		exit 9
@@ -280,8 +286,7 @@ function gget-remote() {
 			list     list all existing remotes
 		EOM
 	else
-		printf >&2 "\033[1;31mERROR\033[0m: unknown command %s, expected one of add, list, remove\n" "$command"
-		exit 9
+		returnDying "unknown command \033[0;36m%s\033[0m, expected one of add, list, remove -- as in gget remote list" "$command"
 	fi
 }
 gget-remote "$@"

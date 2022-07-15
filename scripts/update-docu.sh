@@ -5,14 +5,26 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
+#                                         Version: v0.1.0-SNAPSHOT
 #
-#
+###################################
 set -eu
 
+if ! [[ -v scriptDir ]]; then
+	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r scriptDir
+fi
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$scriptDir/../lib/tegonal-scripts/src")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+
+sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
+
 declare projectDir
-projectDir="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../")"
-source "$projectDir/lib/tegonal-scripts/src/utility/update-bash-docu.sh"
-source "$projectDir/lib/tegonal-scripts/src/utility/replace-help-snippet.sh"
+projectDir="$(realpath "$scriptDir/../")"
 
 find "$projectDir/src" -maxdepth 1 -name "*.sh" \
 	-not -name "*.doc.sh" \

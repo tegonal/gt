@@ -6,21 +6,28 @@
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
 
 <!-- for main end -->
-<!-- for a specific release -->
+<!-- for release -->
 <!--
 [![Download](https://img.shields.io/badge/Download-v0.1.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.1.0)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
 -->
-<!-- for a specific release end -->
+<!-- for release end -->
 # gget
 
-g(it)get is a bash based script which fetches a file or a directory stored in a git repository including automatic verification via GPG signature.
+g(it)get is a bash based script which pulles a file or a directory stored in a git repository.
+It including automatic verification via GPG signature.
 
 **The initial idea behind this project**:  
 You have scripts you use in multiple projects and would like to have a single place where you maintain them.
-Maybe you even made them public so that others can use them as well (as we have done with [Tegonal scripts](https://github.com/tegonal/gget)).
-This tool provides an easy way to fetch them into your project. 
+Maybe you even made them public so that others can use them as well 
+(as we have done with [Tegonal scripts](https://github.com/tegonal/scripts)).
+This tool provides an easy way to fetch them into your project.
+
+Likewise, you can use gget to pull config files, templates etc. which you use in multiple projects and want to maintain 
+in a single repository.
+
+In this sense, gget is a bit like a package manager which is based on git repositories but without dependency resolution and such. 
 
 ---
 
@@ -114,6 +121,9 @@ Parameters:
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false
 -w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
 
+--help     prints this help
+--version  prints the version of this script
+
 Examples:
 # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
 # uses the default location lib/tegonal-scripts for the files which will be pulled from this remote
@@ -128,6 +138,9 @@ gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsec
 
 # uses a custom working directory
 gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/.gget
+
+INFO: Version of gget-remote.sh is:
+v0.1.0-SNAPSHOT
 ```
 
 </gget-remote-add-help>
@@ -142,7 +155,10 @@ Following the output of running `gget remote remove --help`:
 ```text
 Parameters:
 -r|--remote              define the name of the remote which shall be removed
--w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+-w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
+
+--help     prints this help
+--version  prints the version of this script
 
 Examples:
 # removes the remote tegonal-scripts
@@ -150,6 +166,9 @@ gget remote remove -r tegonal-scripts
 
 # uses a custom working directory
 gget remote remove -r tegonal-scripts -w .github/.gget
+
+INFO: Version of gget-remote.sh is:
+v0.1.0-SNAPSHOT
 ```
 
 </gget-remote-remove-help>
@@ -163,7 +182,10 @@ Following the output of running `gget remote list --help`:
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
 Parameters:
--w|--working-directory   (optional) define a path which gget shall use as working directory -- default: .gget
+-w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
+
+--help     prints this help
+--version  prints the version of this script
 
 Examples:
 # lists all defined remotes in .gget
@@ -171,6 +193,9 @@ gget remote list
 
 # uses a custom working directory
 gget remote list -w .github/.gget
+
+INFO: Version of gget-remote.sh is:
+v0.1.0-SNAPSHOT
 ```
 
 </gget-remote-list-help>
@@ -193,6 +218,9 @@ Parameters:
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at .gget/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gget/<remote>/*.asc -- default: false
 
+--help     prints this help
+--version  prints the version of this script
+
 Examples:
 # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
@@ -201,6 +229,9 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 # pull the directory src/utility/ from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
 gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+
+INFO: Version of gget-pull.sh is:
+v0.1.0-SNAPSHOT
 ```
 
 </gget-pull-help>
