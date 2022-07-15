@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.7.0
+#                                         Version: v0.7.1
 #
 #######  Description  #############
 #
@@ -16,13 +16,13 @@
 #
 #    #!/usr/bin/env bash
 #    set -eu
-#    declare dir_of_tegonal_scripts
-#    # Assuming tegonal's scripts are in the same directory as your script
-#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+#    # Assuming tegonal's scripts were fetched with gget - adjust location accordingly
+#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+#
+#    sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 #
 #    function foo() {
-#    	source "$dir_of_tegonal_scripts/utility/checks.sh"
-#
 #    	# shellcheck disable=SC2034
 #    	local -rn arr=$1
 #    	checkArgIsArray arr 1

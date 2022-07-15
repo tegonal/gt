@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.7.0
+#                                         Version: v0.7.1
 #
 #######  Description  #############
 #
@@ -16,10 +16,10 @@
 #
 #    #!/usr/bin/env bash
 #    set -eu
+#    # Assuming tegonal's scripts were fetched with gget - adjust location accordingly
+#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    declare dir_of_tegonal_scripts
-#    # Assuming tegonal's scripts are in the same directory as your script
-#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 #    source "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 #
 #    declare file
@@ -54,7 +54,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/replace-snippet.sh"
 function replaceHelpSnippet() {
 	local script id dir pattern varargs
 	# shellcheck disable=SC2034
-	local -ra params=(script id dir pattern)
+	local -ra params=(script id dir pattern varargs)
 	parseFnArgs params "$@"
 
 	if ((${#varargs[@]} == 0)); then
