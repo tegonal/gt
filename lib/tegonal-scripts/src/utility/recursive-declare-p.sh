@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.8.0
+#                                         Version: v0.9.0
 #
 #######  Description  #############
 #
@@ -17,7 +17,7 @@
 #
 #    #!/usr/bin/env bash
 #    # shellcheck disable=SC2034
-#    set -eu
+#    set -euo pipefail
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
 #    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -40,7 +40,7 @@
 #    # declare -i tmp="1"
 #
 ###################################
-set -eu
+set -euo pipefail
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
@@ -50,8 +50,9 @@ sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 function recursiveDeclareP() {
 	if ! (($# == 1)); then
-		logError "One parameter needs to be passed to recursiveDeclareP\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
+		logError "One parameter needs to be passed to recursiveDeclareP, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1. variableName		 the name of the variable whose declaration statement shall be determined'
+		printStackTrace
 		return 9
 	fi
 

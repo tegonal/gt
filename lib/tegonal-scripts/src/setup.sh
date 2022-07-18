@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.8.0
+#                                         Version: v0.9.0
 #
 #######  Description  #############
 #
@@ -14,7 +14,7 @@
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
-#    set -eu
+#    set -euo pipefail
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
 #    	# Assumes your script is in (root is project folder) e.g. /src or /scripts and

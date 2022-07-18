@@ -10,7 +10,7 @@
 #
 #######  Description  #############
 #
-#  Functions to check declarations
+#  Utility functions to ask the user something via input.
 #
 #######  Usage  ###################
 #
@@ -20,13 +20,11 @@
 #    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
+#    sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 #
-#    function foo() {
-#    	# shellcheck disable=SC2034
-#    	local -rn arr=$1
-#    	checkArgIsArray arr 1
-#    }
+#    if askYesOrNo "shall I say hello"; then
+#    	echo "hello"
+#    fi
 #
 ###################################
 set -euo pipefail
@@ -35,21 +33,22 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
-function checkArgIsArray() {
-	local -rn arr1=$1
-	local argNumber=$2
-
-	reg='declare -a.*'
-	local arrayDefinition
-	arrayDefinition="$(set -e && recursiveDeclareP arr1)"
-	if ! [[ $arrayDefinition =~ $reg ]]; then
-		logError "the passed array \033[0;36m%s\033[0m is broken." "${!arr1}"
-		printf >&2 "the %s argument to %s needs to be a non-associative array, given:\n" "$argNumber" "${FUNCNAME[1]}"
-		echo >&2 "$arrayDefinition"
+function askYesOrNo() {
+	if (($# == 0)); then
+		logError "At least one argument needs to be passed to askYesOrNo, given \033[0;36m%s\033[0m\n" "$#"
+		echo >&2 '1: question  the question which the user should answer with y or n'
 		printStackTrace
 		return 9
 	fi
+	local -r question=$1
+	shift
+
+	printf "\n\033[0;36m$question\033[0m y/[N]:" "$@"
+	local answer='n'
+	while read -t 20 -r answer; do
+		break
+	done
+	[[ $answer == "y" ]]
 }

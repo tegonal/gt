@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.8.0
+#                                         Version: v0.9.0
 #
 #######  Description  #############
 #
@@ -15,7 +15,7 @@
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
-#    set -eu
+#    set -euo pipefail
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
 #    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -32,7 +32,7 @@
 #    runShellcheck dirs "$sourcePath"
 #
 ###################################
-set -eu
+set -euo pipefail
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
@@ -44,9 +44,10 @@ sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function runShellcheck() {
 	if ! (($# == 2)); then
-		logError "Two parameter need to be passed to runShellcheck\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]}"
-		echo >&2 '1. dirs		 name of array which contains directories in which *.sh files are searched'
-		echo >&2 '2. sourcePath		 equivalent to shellcheck''s -P, path to search for sourced files, separated by :'
+		logError "Two parameters need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		echo >&2 '1: dirs         name of array which contains directories in which *.sh files are searched'
+		echo >&2 '2: sourcePath   equivalent to shellcheck''s -P, path to search for sourced files, separated by :'
+		printStackTrace
 		return 9
 	fi
 	local -rn directories=$1

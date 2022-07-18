@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.8.0
+#                                         Version: v0.9.0
 #
 #######  Description  #############
 #
@@ -14,7 +14,7 @@
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
-#    set -eu
+#    set -euo pipefail
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
 #    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -41,7 +41,7 @@
 #    # </my-script-help>
 #
 ###################################
-set -eu
+set -euo pipefail
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
