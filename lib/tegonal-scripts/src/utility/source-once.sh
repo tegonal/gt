@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.7.1
+#                                         Version: v0.8.0
 #
 #######  Description  #############
 #
@@ -17,7 +17,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -eu
-#    # Assuming tegonal's scripts were fetched with gget - adjust location accordingly
+#    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
 #    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
@@ -53,7 +53,10 @@ function sourceOnce() {
 
 	if ! [[ -v "$guard" ]]; then
 		printf -v "$guard" "%s" "true"
+		# shellcheck disable=SC2034
+		declare __SOURCED__=true
 		# shellcheck disable=SC1090
 		source "$@"
+		unset __SOURCED__
 	fi
 }

@@ -15,19 +15,23 @@
 <!-- for release end -->
 # gget
 
-g(it)get is a bash based script which pulles a file or a directory stored in a git repository.
-It including automatic verification via GPG signature.
+g(it)get is a bash based script which pulls a file or a directory stored in a git repository.
+It includes automatic verification via GPG signature.  
+It enables that files can be maintained at a single places and pulled into multiple projects (e.g. scripts, config files etc.)
+In this sense, gget is a bit like a package manager which is based on git repositories but without dependency resolution and such.
 
-**The initial idea behind this project**:  
+<details>
+<summary>The initial idea behind this project:</summary>
+
 You have scripts you use in multiple projects and would like to have a single place where you maintain them.
 Maybe you even made them public so that others can use them as well 
 (as we have done with [Tegonal scripts](https://github.com/tegonal/scripts)).
 This tool provides an easy way to fetch them into your project.
 
-Likewise, you can use gget to pull config files, templates etc. which you use in multiple projects and want to maintain 
-in a single repository.
+Likewise, you can use gget to pull config files, templates etc. which you use in multiple projects but want to maintain 
+at a single place.
 
-In this sense, gget is a bit like a package manager which is based on git repositories but without dependency resolution and such. 
+</details>
 
 ---
 

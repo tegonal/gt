@@ -38,8 +38,8 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
-sourceOnce "$dir_of_gget/gpg-utils.sh"
 sourceOnce "$dir_of_gget/utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
@@ -50,7 +50,7 @@ function gget-remote() {
 	currentDir=$(pwd)
 	local -r currentDir
 
-	function add() {
+	function gget-remote-add() {
 
 		local remote url pullDir workingDir unsecure
 		# shellcheck disable=SC2034
@@ -158,13 +158,13 @@ function gget-remote() {
 
 		local -i numberOfImportedKeys=0
 
-		function importKeys() {
+		function gget-remote-importGpgKeys() {
 			findAscInDir "$repo/.gget" -print0 >&3
 
 			echo ""
 			while read -u 4 -r -d $'\0' file; do
 				# shellcheck disable=SC2310
-				if importKey "$gpgDir" "$file" --confirm=true; then
+				if importGpgKey "$gpgDir" "$file" --confirm=true; then
 					mv "$file" "$publicKeysDir/"
 					((++numberOfImportedKeys))
 				else
@@ -173,7 +173,7 @@ function gget-remote() {
 				fi
 			done
 		}
-		withOutput3Input4 importKeys
+		withOutput3Input4 gget-remote-importGpgKeys
 
 		deleteDirChmod777 "$repo/.gget"
 
@@ -190,7 +190,7 @@ function gget-remote() {
 		logSuccess "remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -t <VERSION> -p <PATH>" "$remote" "$numberOfImportedKeys" "$remote"
 	}
 
-	function list() {
+	function gget-remote-list() {
 		local workingDir
 		# shellcheck disable=SC2034
 		local -ra params=(
@@ -223,13 +223,13 @@ function gget-remote() {
 			logInfo "No remote define yet."
 			echo "To add one, use: gget remote add ..."
 			echo "Following the corresponding documentation of \`gget remote add\`:"
-			add "--help"
+			gget-remote-add "--help"
 		else
 			echo "$output"
 		fi
 	}
 
-	function remove() {
+	function gget-remote-remove() {
 		local workingDir
 		# shellcheck disable=SC2034
 		local -ra params=(
@@ -259,7 +259,7 @@ function gget-remote() {
 			returnDying "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"
 		elif ! [[ -d $remoteDir ]]; then
 			logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
-			list -w "$workingDir"
+			gget-remote-list -w "$workingDir"
 			return 9
 		fi
 
@@ -277,7 +277,7 @@ function gget-remote() {
 	declare command=$1
 	shift
 	if [[ "$command" =~ ^(add|remove|list)$ ]]; then
-		"$command" "$@"
+		"gget-remote-$command" "$@"
 	elif [[ "$command" == "--help" ]]; then
 		cat <<-EOM
 			Use one of the following commands:
