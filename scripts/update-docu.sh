@@ -8,42 +8,47 @@
 #                                         Version: v0.1.0-SNAPSHOT
 #
 ###################################
-set -eu
-
-if ! [[ -v scriptsDir ]]; then
-	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	declare -r scriptsDir
-fi
+set -euo pipefail
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$scriptsDir/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
-sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
+if ! [[ -v projectDir ]]; then
+	projectDir="$(realpath "$dir_of_tegonal_scripts/../../../")"
+	declare -r projectDir
+fi
+
+sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
 
-declare projectDir
-projectDir="$(realpath "$scriptsDir/../")"
+function updateDocu() {
+	find "$projectDir/src" -maxdepth 1 -name "*.sh" \
+		-not -name "*.doc.sh" \
+		-not -name "*utils.sh" \
+		-not -name "*.source.sh" \
+		-print0 |
+		while read -r -d $'\0' script; do
+			declare relative
+			relative="$(realpath --relative-to="$projectDir" "$script")"
+			declare id="${relative:4:-3}"
+			updateBashDocumentation "$script" "${id////-}" . README.md
+			replaceHelpSnippet "$script" "${id////-}-help" . README.md
+		done
 
-find "$projectDir/src" -maxdepth 1 -name "*.sh" \
-	-not -name "*.doc.sh" \
-	-not -name "*utils.sh" \
-	-not -name "*.source.sh" \
-	-print0 |
-	while read -r -d $'\0' script; do
-		declare relative
-		relative="$(realpath --relative-to="$projectDir" "$script")"
-		declare id="${relative:4:-3}"
-		updateBashDocumentation "$script" "${id////-}" . README.md
-		replaceHelpSnippet "$script" "${id////-}-help" . README.md
+	declare additionalHelp=(
+		gget-remote-add "src/gget-remote.sh" "add --help"
+		gget-remote-remove "src/gget-remote.sh" "remove --help"
+		gget-remote-list "src/gget-remote.sh" "list --help"
+	)
+	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
+		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i + 2]}"
 	done
 
-declare additionalHelp=(
-	gget-remote-add "src/gget-remote.sh" "add --help"
-	gget-remote-remove "src/gget-remote.sh" "remove --help"
-	gget-remote-list "src/gget-remote.sh" "list --help"
-)
-for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
-	replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i + 2]}"
-done
+	logSuccess "Updating bash docu and README completed"
+}
+
+${__SOURCED__:+return}
+updateDocu "$@"

@@ -26,8 +26,8 @@
 #    # take at look at gget-remote.doc.sh for more information
 #
 ###################################
-
-set -eu
+set -euo pipefail
+declare -x GGET_VERSION='v0.1.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
 	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
@@ -40,32 +40,23 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
-if ! [[ -x "$(command -v "git")" ]]; then
-	printf >&2 "\033[1;31mERROR\033[0m: git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)\n"
-	exit 100
-fi
-
 function gget() {
-
 	if (($# < 1)); then
-		logError "At least one parameter needs to be passed to \`gget\`\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
+		logError "At least one parameter needs to be passed to gget, given \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
 		echo >&2 '1. command     one of: pull, remote'
 		echo >&2 '2... args...   command specific arguments'
 		return 9
 	fi
 
-	function remote() {
-		"$dir_of_gget/gget-remote.sh" "$@"
-	}
-
-	function pull() {
-		"$dir_of_gget/gget-pull.sh" "$@"
-	}
+	if ! [[ -x "$(command -v "git")" ]]; then
+		die "git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)"
+	fi
 
 	local -r command=$1
 	shift
 	if [[ "$command" =~ ^(pull|remote)$ ]]; then
-		"$command" "$@"
+		sourceOnce "$dir_of_gget/gget-$command.sh"
+		"gget-$command" "$@"
 	elif [[ "$command" == "--help" ]]; then
 		cat <<-EOM
 			Use one of the following commands:
@@ -76,4 +67,6 @@ function gget() {
 		returnDying "unknown command \033[0;36m%s\033[0m, expected one of pull, remote" "$command"
 	fi
 }
+
+${__SOURCED__:+return}
 gget "$@"

@@ -8,12 +8,23 @@
 #                                         Version: v0.1.0-SNAPSHOT
 #
 ###################################
-set -eu
+set -euo pipefail
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
 	declare -r scriptsDir
 fi
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(realpath "$scriptsDir/../lib/tegonal-scripts/src")"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+fi
+sourceOnce "$scriptsDir/run-shellcheck.sh"
+sourceOnce "$scriptsDir/update-docu.sh"
 
-source "$scriptsDir/run-shellcheck.sh"
-source "$scriptsDir/update-docu.sh"
+function beforePr() {
+	customRunShellcheck
+	updateDocu
+}
+
+${__SOURCED__:+return}
+beforePr "$@"

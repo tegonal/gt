@@ -8,7 +8,7 @@
 #                                         Version: v0.1.0-SNAPSHOT
 #
 ###################################
-set -eu
+set -euo pipefail
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
@@ -19,12 +19,17 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$scriptsDir/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-
 sourceOnce "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
 
-declare srcDir="$scriptsDir/../src"
+function customRunShellcheck() {
+	declare srcDir="$scriptsDir/../src"
 
-# shellcheck disable=SC2034
-declare -a dirs=("$srcDir" "$scriptsDir")
-declare sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
-runShellcheck dirs "$sourcePath"
+	# shellcheck disable=SC2034
+  declare -a dirs=("$srcDir" "$scriptsDir")
+  declare sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
+  runShellcheck dirs "$sourcePath"
+}
+
+${__SOURCED__:+return}
+customRunShellcheck "$@"
+

@@ -24,7 +24,7 @@
 #    gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 #
 ###################################
-set -eu
+set -euo pipefail
 declare -x GGET_VERSION='v0.1.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
@@ -84,7 +84,6 @@ function gget-pull() {
 	# parsing once so that we get workingDir and remote
 	# redirecting output to /dev/null because we don't want to see 'ignored argument warnings' twice
 	# || true because --help returns 99 and we don't want to exit at this point (because we redirect output)
-	# shellcheck disable=SC2310
 	parseArguments params "$examples" "$GGET_VERSION" "$@" >/dev/null || true
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 
@@ -127,7 +126,6 @@ function gget-pull() {
 
 			logInfo "gpg directory does not exist at %s\nWe are going to import all public keys which are stored in %s" "$gpgDir" "$publicKeysDir"
 
-			# shellcheck disable=SC2310
 			if noAscInDir "$publicKeysDir"; then
 				if [[ $unsecure == true ]]; then
 					logWarning "no GPG key found, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"
@@ -199,13 +197,13 @@ function gget-pull() {
 		fi
 	}
 
-	local -r SIG_EXTENSION="sig"
+	local -r sigExtension="sig"
 
-	function gget-pull-getSignatureOfSingleFetchedFile() {
+	function gget-pull-pullSignatureOfSingleFetchedFile() {
+		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
 			set -x
-			# is arg file, fetch also the corresponding signature
-			if ! git checkout "tags/$tag" -- "$path.$SIG_EXTENSION"; then
+			if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
 				# don't show commands in output anymore
 				{ set +x; } 2>/dev/null
 
@@ -218,9 +216,11 @@ function gget-pull() {
 			{ set +x; } 2>/dev/null
 		fi
 	}
-	gget-pull-getSignatureOfSingleFetchedFile
+	gget-pull-pullSignatureOfSingleFetchedFile
 
-	trap 'gget-pull-cleanupRepo $repo' EXIT
+	# we want to expand $repo here and not when EXIT happens (as $repo might be out of scope)
+	# shellcheck disable=SC2064
+	trap "gget-pull-cleanupRepo '$repo'" EXIT
 
 	if ! [[ -f $pulledFile ]]; then
 		touch "$pulledFile" || returnDying "failed to create file pulled at %s" "$pulledFile"
@@ -232,7 +232,7 @@ function gget-pull() {
 		local file=$1
 
 		local -r absoluteTarget="$pullDirAbsolute/$file"
-		# parent dir needs to be created before relativeTarget as realpath expects existing parent dirs
+		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
 		mkdir -p "$(dirname "$absoluteTarget")"
 		local relativeTarget
 		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
@@ -275,22 +275,22 @@ function gget-pull() {
 	}
 
 	while read -r -d $'\0' file; do
-		if [[ $doVerification == true && -f "$file.$SIG_EXTENSION" ]]; then
+		if [[ $doVerification == true && -f "$file.$sigExtension" ]]; then
 			printf "verifying \033[0;36m%s\033[0m\n" "$file"
 			if [[ -d "$pullDirAbsolute/$file" ]]; then
 				returnDying "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
 			fi
-			gpg --homedir="$gpgDir" --verify "$file.$SIG_EXTENSION" "$file"
-			rm "$file.$SIG_EXTENSION"
+			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
+			rm "$file.$sigExtension"
 			gget-pull-moveFile "$file"
 		elif [[ $doVerification == true ]]; then
-			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$SIG_EXTENSION" "$file"
+			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
 			gget-pull-mentionUnsecure
 			rm "$file"
 		else
 			gget-pull-moveFile "$file"
 		fi
-	done < <(find "$path" -type f -not -name "*.$SIG_EXTENSION" -print0)
+	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0)
 
 	if ((numberOfPulledFiles > 1)); then
 		logSuccess "%s files pulled from %s %s" "$numberOfPulledFiles" "$remote" "$path"
@@ -302,4 +302,5 @@ function gget-pull() {
 	exit 0
 }
 
+${__SOURCED__:+return}
 gget-pull "$@"

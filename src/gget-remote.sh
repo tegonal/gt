@@ -25,7 +25,7 @@
 #    gget remote remove -r tegonal-scripts
 #
 ###################################
-set -eu
+set -eu -o pipefail
 declare -x GGET_VERSION='v0.1.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
@@ -43,12 +43,18 @@ sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
+function gget-remote-cleanup-remote-on-unexpected-exit() {
+	# maybe we still show commands at this point due to unexpected exit, thus turn it of just in case
+	{ set +x; } 2>/dev/null
+
+	# shellcheck disable=SC2181
+	if ! (($? == 0)) && [[ -d $1 ]]; then
+		deleteDirChmod777 "$1"
+	fi
+}
+
 function gget-remote() {
 	source "$dir_of_gget/shared-patterns.source.sh"
-
-	local currentDir
-	currentDir=$(pwd)
-	local -r currentDir
 
 	function gget-remote-add() {
 
@@ -99,6 +105,11 @@ function gget-remote() {
 		fi
 
 		mkdir "$remoteDir" || returnDying "failed to create remote directory %s" "$remoteDir"
+
+		# we want to expand $remoteDir here and not when EXIT happens (as $remoteDir might be out of scope)
+		# shellcheck disable=SC2064
+		trap "gget-remote-cleanup-remote-on-unexpected-exit '$remoteDir'" EXIT
+
 		echo "--directory \"$pullDir\"" >"$remoteDir/pull.args"
 
 		mkdir "$publicKeysDir"
@@ -113,12 +124,11 @@ function gget-remote() {
 		git init
 		git remote add "$remote" "$url"
 
-		cd "$currentDir"
 		# we need to copy the git config away in order that one can commit it
 		# this file will be used to restore the config for those who have not setup the remote on their machine
 		cp "$repo/.git/config" "$remoteDir/gitconfig"
 
-		cd "$repo"
+		local defaultBranch
 		defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p')"
 
 		git fetch --depth 1 "$remote" "$defaultBranch"
@@ -126,24 +136,17 @@ function gget-remote() {
 		# don't show commands in output anymore
 		{ set +x; } 2>/dev/null
 
-		set +e
-		git checkout "$remote/$defaultBranch" -- '.gget'
-		local -ri checkoutResult=$?
-		set -e
-
-		if ! ((checkoutResult == 0)); then
+		if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
 			if [[ $unsecure == true ]]; then
 				logWarning "no GPG key found, ignoring it because %s true was specified" "$unsecurePattern"
 				echo "$unsecurePattern true" >>"$workingDir/pull.args"
 				return 0
 			else
 				logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
-				deleteDirChmod777 "$remoteDir"
 				return 1
 			fi
 		fi
 
-		# shellcheck disable=SC2310
 		if noAscInDir "$repo/.gget"; then
 			if [[ $unsecure == true ]]; then
 				logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
@@ -151,7 +154,6 @@ function gget-remote() {
 				return 0
 			else
 				logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecurePattern"
-				deleteDirChmod777 "$remoteDir"
 				return 1
 			fi
 		fi
@@ -163,7 +165,6 @@ function gget-remote() {
 
 			echo ""
 			while read -u 4 -r -d $'\0' file; do
-				# shellcheck disable=SC2310
 				if importGpgKey "$gpgDir" "$file" --confirm=true; then
 					mv "$file" "$publicKeysDir/"
 					((++numberOfImportedKeys))
@@ -267,7 +268,7 @@ function gget-remote() {
 		logSuccess "removed remote \033[0;36m%s\033[0m" "$remote"
 	}
 
-	if (( $# < 1 )); then
+	if (($# < 1)); then
 		logError "At least one parameter needs to be passed to \`gget remote\`\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
 		echo >&2 '1. command     one of: add, remove, list'
 		echo >&2 '2... args...   command specific arguments'
@@ -289,4 +290,6 @@ function gget-remote() {
 		returnDying "unknown command \033[0;36m%s\033[0m, expected one of add, list, remove -- as in gget remote list" "$command"
 	fi
 }
+
+${__SOURCED__:+return}
 gget-remote "$@"
