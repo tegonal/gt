@@ -9,7 +9,6 @@
 #
 ###################################
 set -euo pipefail
-declare -x GGET_VERSION='v0.2.0-SNAPSHOT'
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"

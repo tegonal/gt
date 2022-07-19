@@ -26,7 +26,7 @@
 #
 ###################################
 set -eu -o pipefail
-declare -x GGET_VERSION='v0.2.0-SNAPSHOT'
+export -x GGET_VERSION='v0.2.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
 	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
