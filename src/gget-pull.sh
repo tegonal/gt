@@ -56,7 +56,7 @@ function gget-pull() {
 	currentDir=$(pwd)
 	local -r currentDir
 
-	local remote tag path pullDir unsecure forceNoVerification workingDir
+	local remote tag path pullDir workingDir autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name of the remote repository'
@@ -64,7 +64,7 @@ function gget-pull() {
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false"
+		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
 		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecurePattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 	)
@@ -232,17 +232,17 @@ function gget-pull() {
 		local file=$1
 
 		local -r absoluteTarget="$pullDirAbsolute/$file"
-		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
+		# parent dir needs to be created before relativePullDir is determined because realpath expects an existing parent dir
 		mkdir -p "$(dirname "$absoluteTarget")"
-		local relativeTarget
-		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
+		local relativePullDir
+		relativePullDir=$(realpath --relative-to="$workingDir" "$pullDirAbsolute")
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
-		local -r entry="$tag	$file	$sha	$relativeTarget"
+		local -r entry="$tag	$file	$sha	$relativePullDir"
 
 		#shellcheck disable=SC2310,SC2311
 		local -r currentEntry=$(grepPulledEntryByFile "$pulledFile" "$file" || true)
-		local entryTag entrySha
+		local entryTag entrySha entryRelativePullDir
 		setEntryVariables "$currentEntry"
 
 		if [[ $currentEntry == "" ]]; then
@@ -258,10 +258,9 @@ function gget-pull() {
 				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFile"
 				rm "$repo/$file"
 				return
-			elif ! grep "$entry" "$pulledFile" >/dev/null; then
-				local currentLocation
-				currentLocation=$(echo "$currentEntry" | perl -0777 -pe 's/[^\t]+\t[^\t]+\t[^\t]+\t([^\t]+)/$1/')
-				logWarning "the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)" "$(realpath --relative-to="$currentDir" "$workingDir/$currentLocation")" "$pullDir/$file"
+			elif ! grep --line-regexp "$entry" "$pulledFile" >/dev/null; then
+				local -r currentLocation=$(realpath --relative-to="$currentDir" "$workingDir/$entryRelativePullDir/$file" || echo "$workingDir/$entryRelativePullDir/$file")
+				logWarning "the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)" "$currentLocation" "$pullDir/$file"
 				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFile"
 				rm "$repo/$file"
 				return
