@@ -67,9 +67,7 @@ Following the output of running `gget --help`:
 
 <!-- auto-generated, do not modify here but in src/gget.sh -->
 ```text
-Use one of the following commands:
-pull     pull files from a remote
-remote   manage remotes
+
 ```
 
 </gget-help>
@@ -82,10 +80,7 @@ Following the output of running `gget remote --help`:
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
-Use one of the following commands:
-add      add a remote
-remove   remove a remote
-list     list all existing remotes
+
 ```
 
 </gget-remote-help>
@@ -118,33 +113,7 @@ Following the output of running `gget remote add --help`:
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
-Parameters:
--r|--remote              name to refer to this the remote repository
--u|--url                 url of the remote repository
--d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
---unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gget/*.asc -- default: false
--w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
-# uses the default location lib/tegonal-scripts for the files which will be pulled from this remote
-gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
-
-# uses a custom pull directory, files of the remote tegonal-scripts will now
-# be placed into scripts/lib/tegonal-scripts instead of default location lib/tegonal-scripts
-gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -d scripts/lib/tegonal-scripts
-
-# Does not complain if the remote does not provide a GPG key for verification (but still tries to fetch one)
-gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecure true
-
-# uses a custom working directory
-gget remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/.gget
-
-INFO: Version of gget-remote.sh is:
-v0.2.0-SNAPSHOT
 ```
 
 </gget-remote-add-help>
@@ -157,22 +126,7 @@ Following the output of running `gget remote remove --help`:
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
-Parameters:
--r|--remote              define the name of the remote which shall be removed
--w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# removes the remote tegonal-scripts
-gget remote remove -r tegonal-scripts
-
-# uses a custom working directory
-gget remote remove -r tegonal-scripts -w .github/.gget
-
-INFO: Version of gget-remote.sh is:
-v0.2.0-SNAPSHOT
 ```
 
 </gget-remote-remove-help>
@@ -185,21 +139,7 @@ Following the output of running `gget remote list --help`:
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
-Parameters:
--w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# lists all defined remotes in .gget
-gget remote list
-
-# uses a custom working directory
-gget remote list -w .github/.gget
-
-INFO: Version of gget-remote.sh is:
-v0.2.0-SNAPSHOT
 ```
 
 </gget-remote-list-help>
@@ -212,30 +152,7 @@ Following the output of running `gget pull --help`:
 
 <!-- auto-generated, do not modify here but in src/gget-pull.sh -->
 ```text
-Parameters:
--r|--remote                  name of the remote repository
--t|--tag                     git tag used to pull the file/directory
--p|--path                    path in remote repository which shall be pulled (file or directory)
--d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)
--w|--working-directory       (optional) path which gget shall use as working directory -- default: .gget
---auto-trust                 (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
---unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at .gget/<remote>/*.asc -- default: false
---unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gget/<remote>/*.asc -- default: false
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
-# in version v0.1.0 (i.e. tag v0.1.0 is used)
-gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
-
-# pull the directory src/utility/ from remote tegonal-scripts
-# in version v0.1.0 (i.e. tag v0.1.0 is used)
-gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
-
-INFO: Version of gget-pull.sh is:
-v0.2.0-SNAPSHOT
 ```
 
 </gget-pull-help>
