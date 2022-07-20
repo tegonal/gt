@@ -39,6 +39,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 
 sourceOnce "$dir_of_gget/utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
@@ -92,6 +93,14 @@ function gget-remote() {
 
 		# make directory paths absolute
 		local -r workingDir=$(readlink -m "$workingDir")
+
+		if ! checkWorkingDirExists "$workingDir"; then
+			if askYesOrNo "Shall I create the work directory for you and continue?"; then
+				mkdir -p "$workingDir"
+			else
+				return 9
+			fi
+		fi
 
 		mkdir -p "$workingDir/remotes"
 
