@@ -42,10 +42,11 @@ sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 function gget() {
 	if (($# < 1)); then
-		logError "At least one parameter needs to be passed to gget, given \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
+		logError "At least one parameter needs to be passed to gget, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1. command     one of: pull, remote'
 		echo >&2 '2... args...   command specific arguments'
-		return 9
+		printStackTrace
+		exit 9
 	fi
 
 	if ! [[ -x "$(command -v "git")" ]]; then
@@ -64,7 +65,7 @@ function gget() {
 			remote   manage remotes
 		EOM
 	else
-		returnDying "unknown command \033[0;36m%s\033[0m, expected one of pull, remote" "$command"
+		die "unknown command \033[0;36m%s\033[0m, expected one of pull, remote" "$command"
 	fi
 }
 

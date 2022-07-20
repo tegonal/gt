@@ -278,9 +278,10 @@ function gget-remote() {
 	}
 
 	if (($# < 1)); then
-		logError "At least one parameter needs to be passed to \`gget remote\`\nGiven \033[0;36m%s\033[0m in \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#" "${BASH_SOURCE[1]:-${BASH_SOURCE[0]}}"
+		logError "At least one parameter needs to be passed to \`gget remote\`, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#"
 		echo >&2 '1. command     one of: add, remove, list'
 		echo >&2 '2... args...   command specific arguments'
+		printStackTrace
 		exit 9
 	fi
 
@@ -296,7 +297,7 @@ function gget-remote() {
 			list     list all existing remotes
 		EOM
 	else
-		returnDying "unknown command \033[0;36m%s\033[0m, expected one of add, list, remove -- as in gget remote list" "$command"
+		die "unknown command \033[0;36m%s\033[0m, expected one of add, list, remove -- as in gget remote list" "$command"
 	fi
 }
 
