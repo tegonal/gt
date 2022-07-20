@@ -16,7 +16,7 @@
 ###################################
 
 
-# note if you change this structure, then you need to adopt gget-pull => pullArgsFile
+# note if you change this structure, then you need to adopt gget_pull => pullArgsFile
 local -r remotesDir="$workingDir/remotes"
 local -r remoteDir="$remotesDir/$remote"
 local -r publicKeysDir="$remoteDir/public-keys"

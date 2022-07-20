@@ -39,9 +39,9 @@ function updateDocu() {
 		done
 
 	declare additionalHelp=(
-		gget-remote-add "src/gget-remote.sh" "add --help"
-		gget-remote-remove "src/gget-remote.sh" "remove --help"
-		gget-remote-list "src/gget-remote.sh" "list --help"
+		gget_remote_add "src/gget_remote.sh" "add --help"
+		gget_remote_remove "src/gget_remote.sh" "remove --help"
+		gget_remote_list "src/gget_remote.sh" "list --help"
 	)
 	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
 		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i + 2]}"

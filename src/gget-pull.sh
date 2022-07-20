@@ -43,12 +43,12 @@ sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function gget-pull-cleanupRepo() {
+function gget_pull_cleanupRepo() {
 	local -r repository=$1
 	find "$repository" -maxdepth 1 -type d -not -path "$repo" -not -name ".git" -exec rm -r {} \;
 }
 
-function gget-pull() {
+function gget_pull() {
 	source "$dir_of_gget/shared-patterns.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
@@ -113,6 +113,7 @@ function gget-pull() {
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	checkWorkingDirExists "$workingDir"
+	checkRemoteDirExists "$workingDir" "$remote"
 
 	# make directory paths absolute
 	local -r workingDir=$(readlink -m "$workingDir")
@@ -166,7 +167,7 @@ function gget-pull() {
 				local -r confirm="--confirm=$(set -e && invertBool "$autoTrust")"
 
 				local -i numberOfImportedKeys=0
-				function gget-pull-importGpgKeys() {
+				function gget_pull_importGpgKeys() {
 					findAscInDir "$publicKeysDir" -print0 >&3
 					while read -u 4 -r -d $'\0' file; do
 						if importGpgKey "$gpgDir" "$file" "$confirm"; then
@@ -174,7 +175,7 @@ function gget-pull() {
 						fi
 					done
 				}
-				withOutput3Input4 gget-pull-importGpgKeys
+				withOutput3Input4 gget_pull_importGpgKeys
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
 						logWarning "all GPG keys declined, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"
@@ -192,7 +193,7 @@ function gget-pull() {
 
 	# we want to expand $repo here and not when EXIT happens (as $repo might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gget-pull-cleanupRepo '$repo'" EXIT
+	trap "gget_pull_cleanupRepo '$repo'" EXIT
 
 	cd "$repo"
 	local remoteTags
@@ -208,7 +209,7 @@ function gget-pull() {
 	# don't show commands in output anymore
 	{ set +x; } 2>/dev/null
 
-	function gget-pull-mentionUnsecure() {
+	function gget_pull_mentionUnsecure() {
 		if ! [[ $unsecure == true ]]; then
 			printf " -- you can disable this check via %s true\n" "$unsecurePattern"
 		else
@@ -218,7 +219,7 @@ function gget-pull() {
 
 	local -r sigExtension="sig"
 
-	function gget-pull-pullSignatureOfSingleFetchedFile() {
+	function gget_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
 			set -x
@@ -227,7 +228,7 @@ function gget-pull() {
 				{ set +x; } 2>/dev/null
 
 				logErrorWithoutNewline "no signature file found, aborting"
-				gget-pull-mentionUnsecure >&2
+				gget_pull_mentionUnsecure >&2
 				return 1
 			fi
 
@@ -235,11 +236,11 @@ function gget-pull() {
 			{ set +x; } 2>/dev/null
 		fi
 	}
-	gget-pull-pullSignatureOfSingleFetchedFile
+	gget_pull_pullSignatureOfSingleFetchedFile
 
 	local -i numberOfPulledFiles=0
 
-	function gget-pull-moveFile() {
+	function gget_pull_moveFile() {
 		local file=$1
 
 		local targetFile
@@ -305,13 +306,13 @@ function gget-pull() {
 			fi
 			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
 			rm "$file.$sigExtension"
-			gget-pull-moveFile "$file"
+			gget_pull_moveFile "$file"
 		elif [[ $doVerification == true ]]; then
 			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
-			gget-pull-mentionUnsecure
+			gget_pull_mentionUnsecure
 			rm "$file"
 		else
-			gget-pull-moveFile "$file"
+			gget_pull_moveFile "$file"
 		fi
 	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0)
 
@@ -326,4 +327,4 @@ function gget-pull() {
 }
 
 ${__SOURCED__:+return}
-gget-pull "$@"
+gget_pull "$@"
