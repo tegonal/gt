@@ -56,7 +56,7 @@ function gget-pull() {
 	currentDir=$(pwd)
 	local -r currentDir
 
-	local remote tag path pullDir unsecure forceNoVerification workingDir
+	local remote tag path pullDir workingDir autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name of the remote repository'
@@ -64,7 +64,7 @@ function gget-pull() {
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false"
+		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
 		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecurePattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 	)
@@ -111,8 +111,28 @@ function gget-pull() {
 	local -r workingDir=$(readlink -m "$workingDir")
 	local -r pullDirAbsolute=$(readlink -m "$pullDir")
 
-	local remoteDir publicKeysDir repo gpgDir pulledFile
+	local remoteDir publicKeysDir repo gpgDir pulledTsv
 	source "$dir_of_gget/paths.source.sh"
+
+	if ! [[ -d $pullDirAbsolute ]]; then
+		mkdir -p "$pullDirAbsolute" || returnDying "failed to create the pull directory %s" "$pullDirAbsolute"
+	fi
+
+	if ! [[ -f $pulledTsv ]]; then
+		pulledTsvHeader >"$pulledTsv" || returnDying "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
+	else
+		checkHeaderOfPulledTsv "$pulledTsv"
+	fi
+
+	if [[ -f $repo ]]; then
+		returnDying "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
+	elif ! [[ -d $repo ]]; then
+		logInfo "repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
+		mkdir -p "$repo"
+		cd "$repo"
+		git init
+		cp "$remoteDir/gitconfig" "$repo/.git/config"
+	fi
 
 	local doVerification
 	if [[ $forceNoVerification == true ]]; then
@@ -163,22 +183,14 @@ function gget-pull() {
 		fi
 	fi
 
-	if ! [[ -d $pullDirAbsolute ]]; then
-		mkdir -p "$pullDirAbsolute" || returnDying "failed to create the pull directory %s" "$pullDirAbsolute"
-	fi
-
-	if [[ -f $repo ]]; then
-		returnDying "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
-	elif ! [[ -d $repo ]]; then
-		logInfo "repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
-		mkdir -p "$repo"
-		cd "$repo"
-		git init
-		cp "$remoteDir/gitconfig" "$repo/.git/config"
-	fi
+	# we want to expand $repo here and not when EXIT happens (as $repo might be out of scope)
+	# shellcheck disable=SC2064
+	trap "gget-pull-cleanupRepo '$repo'" EXIT
 
 	cd "$repo"
-	git ls-remote -t "$remote" | grep "$tag" >/dev/null || (printf >&2 "\033[1;31mERROR\033[0m: remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n" "$remote" "$tag" && git ls-remote -t "$remote" && exit 1)
+	local remoteTags
+	remoteTags=$(git ls-remote -t "$remote" || (logInfo >&2 "check your internet connection" && return 1))
+	echo "$remoteTags" | grep "$tag" >/dev/null || (returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags")
 
 	# show commands as output
 	set -x
@@ -218,14 +230,6 @@ function gget-pull() {
 	}
 	gget-pull-pullSignatureOfSingleFetchedFile
 
-	# we want to expand $repo here and not when EXIT happens (as $repo might be out of scope)
-	# shellcheck disable=SC2064
-	trap "gget-pull-cleanupRepo '$repo'" EXIT
-
-	if ! [[ -f $pulledFile ]]; then
-		touch "$pulledFile" || returnDying "failed to create file pulled at %s" "$pulledFile"
-	fi
-
 	local -i numberOfPulledFiles=0
 
 	function gget-pull-moveFile() {
@@ -238,37 +242,38 @@ function gget-pull() {
 		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
-		local -r entry="$tag	$file	$sha	$relativeTarget"
-
+		local -r entry="$(printf "%s\t" "$tag" "$file" "$sha")$relativeTarget"
 		#shellcheck disable=SC2310,SC2311
-		local -r currentEntry=$(grepPulledEntryByFile "$pulledFile" "$file" || true)
-		local entryTag entrySha
+		local -r currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file")
+		local entryTag entrySha entryRelativePath
 		setEntryVariables "$currentEntry"
 
 		if [[ $currentEntry == "" ]]; then
-			echo "$entry" >>"$pulledFile"
+			echo "$entry" >>"$pulledTsv"
 		elif ! [[ $entryTag == "$tag" ]]; then
 			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tag" "$pullDir/$file"
 			# we could warn about a version which was older
-			replacePulledEntry "$pulledFile" "$file" "$entry"
+			replacePulledEntry "$pulledTsv" "$file" "$entry"
 		else
 			if ! [[ $entrySha == "$sha" ]]; then
 				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tag"
-				git --no-pager diff "$(echo "$entrySha" | git hash-object -w --stdin)" "$(echo "$sha" | git hash-object -w --stdin)" --word-diff=color --word-diff-regex . | grep -A 1 @@ | tail -n +2
-				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFile"
+				gitDiffChars "$entrySha" "$sha"
+				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$repo/$file"
 				return
-			elif ! grep "$entry" "$pulledFile" >/dev/null; then
-				local currentLocation
-				currentLocation=$(echo "$currentEntry" | perl -0777 -pe 's/[^\t]+\t[^\t]+\t[^\t]+\t([^\t]+)/$1/')
-				logWarning "the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)" "$(realpath --relative-to="$currentDir" "$workingDir/$currentLocation")" "$pullDir/$file"
-				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledFile"
+			elif ! grep --line-regexp "$entry" "$pulledTsv" >/dev/null; then
+				local -r currentLocation=$(realpath --relative-to="$currentDir" "$workingDir/$entryRelativePath" || echo "$workingDir/$entryRelativePath")
+				logWarning "the file was previously pulled to a different location"
+				echo "current location: $currentLocation"
+				echo "    new location: $pullDir/$file"
+				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$repo/$file"
 				return
 			elif [[ -f $absoluteTarget ]]; then
 				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$pullDir/$file"
 			fi
 		fi
+
 		mv "$repo/$file" "$absoluteTarget"
 
 		((++numberOfPulledFiles))

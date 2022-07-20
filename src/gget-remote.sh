@@ -58,7 +58,7 @@ function gget-remote() {
 
 	function gget-remote-add() {
 
-		local remote url pullDir workingDir unsecure
+		local remote url pullDir unsecure workingDir
 		# shellcheck disable=SC2034
 		local -ra params=(
 			remote "$remotePattern" 'name to refer to this the remote repository'
@@ -231,7 +231,7 @@ function gget-remote() {
 	}
 
 	function gget-remote-remove() {
-		local workingDir
+		local remote workingDir
 		# shellcheck disable=SC2034
 		local -ra params=(
 			remote "$remotePattern" 'define the name of the remote which shall be removed'
