@@ -217,6 +217,7 @@ Parameters:
 -t|--tag                     git tag used to pull the file/directory
 -p|--path                    path in remote repository which shall be pulled (file or directory)
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gget/<remote>/pull.args)
+--chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
 -w|--working-directory       (optional) path which gget shall use as working directory -- default: .gget
 --auto-trust                 (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at .gget/<remote>/*.asc -- default: false
@@ -233,6 +234,11 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 # pull the directory src/utility/ from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
 gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+
+# pull the file .github/CODE_OF_CONDUCT.md and put it into the pull directory .github
+# without repeating the path (option --chop-path), i.e is pulled directly into .github/CODE_OF_CONDUCT.md
+# and not into .github/.github/CODE_OF_CONDUCT.md
+gget pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 
 INFO: Version of gget-pull.sh is:
 v0.2.0-SNAPSHOT
