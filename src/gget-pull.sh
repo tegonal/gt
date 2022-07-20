@@ -56,13 +56,14 @@ function gget-pull() {
 	currentDir=$(pwd)
 	local -r currentDir
 
-	local remote tag path pullDir workingDir autoTrust unsecure forceNoVerification
+	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name of the remote repository'
 		tag '-t|--tag' 'git tag used to pull the file/directory'
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
+		chopPath "--chop-path" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
 		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
 		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
@@ -78,6 +79,11 @@ function gget-pull() {
 			# pull the directory src/utility/ from remote tegonal-scripts
 			# in version v0.1.0 (i.e. tag v0.1.0 is used)
 			gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+
+			# pull the file .github/CODE_OF_CONDUCT.md and put it into the pull directory .github
+			# without repeating the path (option --chop-path), i.e is pulled directly into .github/CODE_OF_CONDUCT.md
+			# and not into .github/.github/CODE_OF_CONDUCT.md
+			gget pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 		EOM
 	)
 
@@ -100,6 +106,7 @@ function gget-pull() {
 	args+=("$@")
 	parseArguments params "$examples" "$GGET_VERSION" "${args[@]}"
 
+	if ! [[ -v chopPath ]]; then chopPath=false; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v forceNoVerification ]]; then forceNoVerification=false; fi
 	if ! [[ -v unsecure ]]; then unsecure="$forceNoVerification"; fi
@@ -235,11 +242,22 @@ function gget-pull() {
 	function gget-pull-moveFile() {
 		local file=$1
 
-		local -r absoluteTarget="$pullDirAbsolute/$file"
+		local targetFile
+		if [[ $chopPath == true ]]; then
+			if [[ -d "$repo/$path" ]]; then
+				local -r offset=$(if [[ $path == */ ]]; then echo 1; else echo 2; fi)
+				targetFile="$(echo "$file" | cut -c "$((${#path} + offset))"-)"
+			else
+				targetFile="$(basename "$file")"
+			fi
+		else
+			targetFile="$file"
+		fi
+		local -r absoluteTarget="$pullDirAbsolute/$targetFile"
 		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
 		mkdir -p "$(dirname "$absoluteTarget")"
 		local relativeTarget
-		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
+		relativeTarget=$(realpath --relative-to="$workingDir" "$absoluteTarget")
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
 		local -r entry="$(printf "%s\t" "$tag" "$file" "$sha")$relativeTarget"
@@ -251,7 +269,7 @@ function gget-pull() {
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv"
 		elif ! [[ $entryTag == "$tag" ]]; then
-			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tag" "$pullDir/$file"
+			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tag" "$file"
 			# we could warn about a version which was older
 			replacePulledEntry "$pulledTsv" "$file" "$entry"
 		else
@@ -265,7 +283,7 @@ function gget-pull() {
 				local -r currentLocation=$(realpath --relative-to="$currentDir" "$workingDir/$entryRelativePath" || echo "$workingDir/$entryRelativePath")
 				logWarning "the file was previously pulled to a different location"
 				echo "current location: $currentLocation"
-				echo "    new location: $pullDir/$file"
+				echo "    new location: $pullDir/$targetFile"
 				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$repo/$file"
 				return
