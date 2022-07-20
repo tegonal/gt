@@ -13,7 +13,7 @@
 #  no backward compatibility guarantees or whatsoever
 #
 ###################################
-set -eu
+set -euo pipefail
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
@@ -92,4 +92,10 @@ function withOutput3Input4() {
 
 	exec 3>&-
 	exec 4<&-
+}
+
+function gitDiffChars() {
+	git --no-pager diff "$(echo "$1" | git hash-object -w --stdin)" "$(echo "$2" | git hash-object -w --stdin)" \
+		--word-diff=color --word-diff-regex . --ws-error-highlight=all |
+		grep -A 1 @@ | tail -n +2
 }

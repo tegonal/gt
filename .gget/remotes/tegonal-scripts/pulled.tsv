@@ -1,3 +1,4 @@
+tag	file	sha512	relativePullDir
 v0.9.0	src/setup.sh	d9252eeab9a88ea7535add17c0c6b5d51c6b592e7caa3c35e2644ecccf36d18d04c4358ee0f38048387de2a407a2af1e0eb42289ca5fd69a81d9deff85d41bbc	../lib/tegonal-scripts
 v0.9.0	src/qa/run-shellcheck.sh	05cfda89057236e5e9c7f94762c85227d52539be4f88bf6e02579fbc4a2825801c057c4ee8be1f805ebddee5c45e5014c9861764c66662c297055f02a5fd3c12	../lib/tegonal-scripts
 v0.9.0	src/utility/git-utils.sh	fb36e7e9e76700ff19b4d8573fc15fdafcd1d2fb28e3e1908e6471aa3904a6a040299fe7e0db838382591de6d1baa98d87c7205cb2a1f3eafe2137aa8d5898f4	../lib/tegonal-scripts
