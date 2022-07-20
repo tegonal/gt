@@ -188,7 +188,9 @@ function gget-pull() {
 	trap "gget-pull-cleanupRepo '$repo'" EXIT
 
 	cd "$repo"
-	git ls-remote -t "$remote" | grep "$tag" >/dev/null || (logError "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n" "$remote" "$tag" && git ls-remote -t "$remote" && return 1)
+	local remoteTags
+	remoteTags=$(git ls-remote -t "$remote" || (logInfo >&2 "check your internet connection" && return 1))
+	echo "$remoteTags" | grep "$tag" >/dev/null || (returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags")
 
 	# show commands as output
 	set -x
@@ -234,16 +236,16 @@ function gget-pull() {
 		local file=$1
 
 		local -r absoluteTarget="$pullDirAbsolute/$file"
-		# parent dir needs to be created before relativePullDir is determined because realpath expects an existing parent dir
+		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
 		mkdir -p "$(dirname "$absoluteTarget")"
-		local relativePullDir
-		relativePullDir=$(realpath --relative-to="$workingDir" "$pullDirAbsolute")
+		local relativeTarget
+		relativeTarget=$(realpath --relative-to="$workingDir" "$pullDirAbsolute/$file")
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
-		local -r entry="$(printf "%s\t" "$tag" "$file" "$sha")$relativePullDir"
+		local -r entry="$(printf "%s\t" "$tag" "$file" "$sha")$relativeTarget"
 		#shellcheck disable=SC2310,SC2311
 		local -r currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file")
-		local entryTag entrySha entryRelativePullDir
+		local entryTag entrySha entryRelativePath
 		setEntryVariables "$currentEntry"
 
 		if [[ $currentEntry == "" ]]; then
@@ -260,8 +262,10 @@ function gget-pull() {
 				rm "$repo/$file"
 				return
 			elif ! grep --line-regexp "$entry" "$pulledTsv" >/dev/null; then
-				local -r currentLocation=$(realpath --relative-to="$currentDir" "$workingDir/$entryRelativePullDir/$file" || echo "$workingDir/$entryRelativePullDir/$file")
-				logWarning "the file was previously pulled to \033[0;36m%s\033[0m (new location would have been %s)" "$currentLocation" "$pullDir/$file"
+				local -r currentLocation=$(realpath --relative-to="$currentDir" "$workingDir/$entryRelativePath" || echo "$workingDir/$entryRelativePath")
+				logWarning "the file was previously pulled to a different location"
+				echo "current location: $currentLocation"
+				echo "    new location: $pullDir/$file"
 				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$repo/$file"
 				return

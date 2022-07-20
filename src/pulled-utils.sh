@@ -29,8 +29,10 @@ function pulledTsvHeader() {
 
 function checkHeaderOfPulledTsv() {
 	local -r pulledTsv=$1
-	local -r currentHeader="$(head -n 1 "$pulledTsv")"
-	local -r expectedHeader="$(pulledTsvHeader)"
+	local currentHeader
+	currentHeader="$(head -n 1 "$pulledTsv")"
+	local expectedHeader
+	expectedHeader=$(set -e && pulledTsvHeader)
 	if ! [[ "$currentHeader" == "$expectedHeader" ]]; then
 		logError "looks like the format of \033[0;36m%s\033[0m changed:" "$pulledTsv"
 		echo "Expected Header: $expectedHeader" | cat -A >&2
@@ -44,7 +46,7 @@ function checkHeaderOfPulledTsv() {
 
 function setEntryVariables() {
 	# shellcheck disable=SC2034
-	IFS=$'\t' read -r entryTag entryFile entrySha entryRelativePullDir <<<"$1"
+	IFS=$'\t' read -r entryTag entryFile entrySha entryRelativePath <<<"$1"
 }
 
 function grepPulledEntryByFile() {
