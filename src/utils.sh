@@ -65,7 +65,7 @@ function checkWorkingDirExists() {
 	source "$scriptDir/shared-patterns.source.sh"
 
 	if ! [[ -d $workingDir ]]; then
-		logError "working directory \033[0;36m%s\033[0m does not exist\n" "$workingDir"
+		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDir"
 		echo >&2 "Check for typos and/or use $workingDirPattern to specify another"
 		return 9
 	fi
