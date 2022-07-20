@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.9.0
+#                                         Version: v0.10.0
 #
 #######  Description  #############
 #
@@ -57,7 +57,7 @@
 #
 ###################################
 set -euo pipefail
-export TEGONAL_SCRIPTS_VERSION='v0.9.0'
+export TEGONAL_SCRIPTS_VERSION='v0.10.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
@@ -134,7 +134,7 @@ function releaseFiles() {
 	local -r expectedDefaultBranch="main"
 	if ! [[ $branch == "$expectedDefaultBranch" ]]; then
 		logError "you need to be on the \033[0;36m%s\033[0m branch to release, check that you have merged all changes from your current branch \033[0;36m%s\033[0m." "$expectedDefaultBranch" "$branch"
-		if askYesOrNo "Shall I switch to %s for you?" "$branch"; then
+		if askYesOrNo "Shall I switch to %s for you?" "$expectedDefaultBranch"; then
 			git checkout "$expectedDefaultBranch"
 		else
 			return 1
@@ -146,6 +146,7 @@ function releaseFiles() {
 		git -P log origin/main..main
 		if askYesOrNo "Shall I git push for you?"; then
 			git push
+			logInfo "please check if your push passes CI and re-execute the release command afterwards"
 		fi
 		return 1
 	fi

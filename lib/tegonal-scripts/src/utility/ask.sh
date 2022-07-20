@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.9.0
+#                                         Version: v0.10.0
 #
 #######  Description  #############
 #
@@ -40,7 +40,7 @@ function askYesOrNo() {
 		logError "At least one argument needs to be passed to askYesOrNo, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: question  the question which the user should answer with y or n'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 	local -r question=$1
 	shift
@@ -50,5 +50,5 @@ function askYesOrNo() {
 	while read -t 20 -r answer; do
 		break
 	done
-	[[ $answer == "y" ]]
+	[[ $answer == y ]]
 }
