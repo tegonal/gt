@@ -18,12 +18,12 @@
 #    #!/usr/bin/env bash
 #
 #    # gget pull ...
-#    # take at look at gget-pull.doc.sh for more information
+#    # take at look at gget_pull.doc.sh for more information
 #
 #    # gget remote add ...
 #    # gget remote remove ...
 #    # gget remote list ...
-#    # take at look at gget-remote.doc.sh for more information
+#    # take at look at gget_remote.doc.sh for more information
 #
 ###################################
 set -euo pipefail
@@ -55,9 +55,9 @@ function gget() {
 
 	local -r command=$1
 	shift
-	if [[ "$command" =~ ^(pull|remote)$ ]]; then
+	if [[ "$command" =~ ^(pull|remote|reset)$ ]]; then
 		sourceOnce "$dir_of_gget/gget-$command.sh"
-		"gget-$command" "$@"
+		"gget_$command" "$@"
 	elif [[ "$command" == "--help" ]]; then
 		cat <<-EOM
 			Use one of the following commands:

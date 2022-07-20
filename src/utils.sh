@@ -15,8 +15,13 @@
 ###################################
 set -euo pipefail
 
+if ! [[ -v dir_of_gget ]]; then
+	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	declare -r dir_of_gget
+fi
+
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
@@ -71,6 +76,22 @@ function checkWorkingDirExists() {
 	fi
 }
 
+function checkRemoteDirExists() {
+	local -r workingDir=$1
+	local -r remote=$2
+	local remoteDir
+	source "$dir_of_gget/paths.source.sh"
+
+	if ! [[ -d $remoteDir ]]; then
+		logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
+		sourceOnce "$dir_of_gget/gget-remote.sh"
+		gget_remote_list -w "$workingDir"
+		return 9
+	else
+		return 0
+	fi
+}
+
 function invertBool() {
 	local b=$1
 	if [[ $b == true ]]; then
@@ -80,18 +101,26 @@ function invertBool() {
 	fi
 }
 
-function withOutput3Input4() {
-	local fun=$1
+function withCustomOutputInput() {
+	local outputNr=$1
+	local inputNr=$2
+	local fun=$3
+	shift 3
+
 	local tmpFile
 	tmpFile=$(mktemp /tmp/gget.XXXXXXXXX)
-	exec 3>"$tmpFile"
-	exec 4<"$tmpFile"
+	eval "exec${outputNr}>\"$tmpFile\""
+	eval "exec${inputNr}<\"$tmpFile\""
 	rm "$tmpFile"
 
 	$fun
 
-	exec 3>&-
-	exec 4<&-
+	eval "exec ${outputNr}>&-"
+	eval "exec ${inputNr}<&-"
+}
+
+function withOutput3Input4() {
+	withCustomOutputInput 3 4 "$@"
 }
 
 function gitDiffChars() {
