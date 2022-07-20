@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.9.0
+#                                         Version: v0.10.0
 #
 #######  Description  #############
 #
@@ -37,27 +37,37 @@
 #    # i.e. the corresponding guard is bar__foo__sh and thus this file is not sourced
 #    sourceOnce "asdf/bar/foo.sh"
 #
+#    # In case you have a cyclic dependency (a.sh sources b.sh and b.sh source a.sh),
+#    # then you can define the guard in file a yourself (before sourcing b.sh) so that b.sh does no longer source file a
+#    printf -v "$(set -e && determineSourceOnceGuard "src/b.sh")" "%s" "true"
+#
 ###################################
 set -euo pipefail
+
+function determineSourceOnceGuard() {
+	readlink -m "$1" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@\$1__\$2@;" -pe "s/[-.]/_/g"
+}
 
 function sourceOnce() {
 	if (($# < 1)); then
 		printf >&2 "you need to pass at least the file you want to source to sourceOnce in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "${BASH_SOURCE[1]}"
 		echo >&2 '1. file       the file to source'
 		echo >&2 '2... args...  additional parameters which are passed to the source command'
-		return 9
+		exit 9
 	fi
 
+	local -r file="$1"
+
 	local guard
-	guard=$(readlink -m "$1" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@\$1__\$2@;" -pe "s/[-.]/_/g")
+	guard=$(set -e && determineSourceOnceGuard "$file")
 
 	if ! [[ -v "$guard" ]]; then
 		printf -v "$guard" "%s" "true"
-		if ! [[ -f $1 ]]; then
-			if [[ -d $1 ]]; then
-				traceAndDie "file is a directory, cannot source %s" "$1"
+		if ! [[ -f $file ]]; then
+			if [[ -d $file ]]; then
+				traceAndDie "file is a directory, cannot source %s" "$file"
 			fi
-			traceAndDie "file does not exist, cannot source %s" "$1"
+			traceAndDie "file does not exist, cannot source %s" "$file"
 		fi
 
 		# shellcheck disable=SC2034

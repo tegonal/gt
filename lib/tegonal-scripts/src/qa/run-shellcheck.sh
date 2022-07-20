@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.9.0
+#                                         Version: v0.10.0
 #
 #######  Description  #############
 #
@@ -48,7 +48,7 @@ function runShellcheck() {
 		echo >&2 '1: dirs         name of array which contains directories in which *.sh files are searched'
 		echo >&2 '2: sourcePath   equivalent to shellcheck''s -P, path to search for sourced files, separated by :'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 	local -rn directories=$1
 	local -r sourcePath=$2

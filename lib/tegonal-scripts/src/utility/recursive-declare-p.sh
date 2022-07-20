@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.9.0
+#                                         Version: v0.10.0
 #
 #######  Description  #############
 #
@@ -53,7 +53,7 @@ function recursiveDeclareP() {
 		logError "One parameter needs to be passed to recursiveDeclareP, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1. variableName		 the name of the variable whose declaration statement shall be determined'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 
 	definition=$(declare -p "$1")

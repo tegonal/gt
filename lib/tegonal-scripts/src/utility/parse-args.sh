@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.9.0
+#                                         Version: v0.10.0
 #
 #######  Description  #############
 #
@@ -93,7 +93,7 @@ function checkParameterDefinitionIsTriple() {
 		logError "One parameter needs to be passed to checkParameterDefinitionIsTriple, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1. params   the name of an array which contains the parameter definitions'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 
 	local -rn paramArr2=$1
@@ -154,7 +154,7 @@ function parseArguments {
 		echo >&2 '3. version    the version which shall be shown if one uses --version'
 		echo >&2 '4... args...  the arguments as such, typically "$@"'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 
 	local -rn parseArguments_paramArr1=$1
@@ -225,7 +225,7 @@ function printVersion() {
 		logError "One argument needs to be passed to printVersion, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1. version   the version which shall be shown if one uses --version'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 	local version=$1
 	logInfo "Version of %s is:\n%s" "$(basename "${BASH_SOURCE[3]:-${BASH_SOURCE[2]}}")" "$version"
@@ -238,7 +238,7 @@ function printHelp {
 		echo >&2 '2. examples  a string containing examples (or an empty string)'
 		echo >&2 '3. version   the version which shall be shown if one uses --version'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 	local -rn paramArr3=$1
 	local -r examples=$2
@@ -289,7 +289,7 @@ function checkAllArgumentsSet {
 		echo >&2 '2. examples  a string containing examples (or an empty string)'
 		echo >&2 '3. version    the version which shall be shown if one uses --version'
 		printStackTrace
-		return 9
+		exit 9
 	fi
 
 	# using unconventional naming in order to avoid name clashes with the variables we will check further below
