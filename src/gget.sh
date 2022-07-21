@@ -18,12 +18,15 @@
 #    #!/usr/bin/env bash
 #
 #    # gget pull ...
-#    # take at look at gget_pull.doc.sh for more information
+#    # take at look at gget-pull.doc.sh for more information
 #
 #    # gget remote add ...
 #    # gget remote remove ...
 #    # gget remote list ...
-#    # take at look at gget_remote.doc.sh for more information
+#    # take at look at gget-remote.doc.sh for more information
+#
+#    # gget reset ...
+#    # take at look at gget-reset.doc.sh for more information
 #
 ###################################
 set -euo pipefail
