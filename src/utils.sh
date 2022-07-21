@@ -41,7 +41,7 @@ function errorNoGpgKeysImported() {
 	local -r unsecurePattern=$4
 
 	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecurePattern"
-	printf >&2 "Alternatively, you can place public keys in %s or setup a gpg store yourself at %s\n" "$publicKeysDir" "$gpgDir"
+	printf >&2 "Alternatively, you can:\n- place public keys in %s or\n- setup a gpg store yourself at %s\n" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
 	return 1
 }

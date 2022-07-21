@@ -192,9 +192,9 @@ function gget_pull() {
 		fi
 	fi
 
-	# we want to expand $repo here and not when EXIT happens (as $repo might be out of scope)
+	# we want to expand $repo here and not when signal happens (as $repo might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gget_pull_cleanupRepo '$repo'" EXIT
+	trap "gget_pull_cleanupRepo '$repo'" EXIT SIGINT
 
 	cd "$repo"
 	local remoteTags

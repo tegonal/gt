@@ -48,11 +48,12 @@ sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_remote_cleanupRemoteOnUnexpectedExit() {
+	local -r result=$?
 	# maybe we still show commands at this point due to unexpected exit, thus turn it of just in case
 	{ set +x; } 2>/dev/null
 
 	# shellcheck disable=SC2181
-	if ! (($? == 0)) && [[ -d $1 ]]; then
+	if ! ((result == 0)) && [[ -d $1 ]]; then
 		deleteDirChmod777 "$1"
 	fi
 }
@@ -118,7 +119,7 @@ function gget_remote_add() {
 
 	# we want to expand $remoteDir here and not when EXIT happens (as $remoteDir might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gget_remote_cleanupRemoteOnUnexpectedExit '$remoteDir'" EXIT
+	trap "gget_remote_cleanupRemoteOnUnexpectedExit '$remoteDir'" EXIT SIGINT
 
 	echo "--directory \"$pullDir\"" >"$remoteDir/pull.args"
 
@@ -234,6 +235,7 @@ function gget_remote_list() {
 	output="$(find . -maxdepth 1 -type d -not -path "." | cut -c 3-)"
 	if [[ $output == "" ]]; then
 		logInfo "No remote define yet."
+		echo ""
 		echo "To add one, use: gget remote add ..."
 		echo "Following the corresponding documentation of \`gget remote add\`:"
 		gget_remote_add "--help"
