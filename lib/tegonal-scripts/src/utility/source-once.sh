@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.0
+#                                         Version: v0.11.1
 #
 #######  Description  #############
 #
@@ -53,21 +53,23 @@ function sourceOnce() {
 		printf >&2 "you need to pass at least the file you want to source to sourceOnce in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "${BASH_SOURCE[1]}"
 		echo >&2 '1. file       the file to source'
 		echo >&2 '2... args...  additional parameters which are passed to the source command'
+		printStackTraced
 		exit 9
 	fi
 
-	local -r file="$1"
+	local -r sourceOnce_file="$1"
 
-	local guard
-	guard=$(set -e && determineSourceOnceGuard "$file")
+	local sourceOnce_guard
+	sourceOnce_guard=$(set -e && determineSourceOnceGuard "$sourceOnce_file")
+	local -r sourceOnce_guard
 
-	if ! [[ -v "$guard" ]]; then
-		printf -v "$guard" "%s" "true"
-		if ! [[ -f $file ]]; then
-			if [[ -d $file ]]; then
-				traceAndDie "file is a directory, cannot source %s" "$file"
+	if ! [[ -v "$sourceOnce_guard" ]]; then
+		printf -v "$sourceOnce_guard" "%s" "true"
+		if ! [[ -f $sourceOnce_file ]]; then
+			if [[ -d $sourceOnce_file ]]; then
+				traceAndDie "file is a directory, cannot source %s" "$sourceOnce_file"
 			fi
-			traceAndDie "file does not exist, cannot source %s" "$file"
+			traceAndDie "file does not exist, cannot source %s" "$sourceOnce_file"
 		fi
 
 		# shellcheck disable=SC2034

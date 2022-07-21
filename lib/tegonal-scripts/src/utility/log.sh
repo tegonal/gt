@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.0
+#                                         Version: v0.11.1
 #
 #######  Description  #############
 #
@@ -140,6 +140,7 @@ function printStackTrace() {
 	echo >&2 ""
 	echo >&2 "Stacktrace:"
 	local -i frame=${1:-1}
+	local line sub file
 	while read -r line sub file < <(caller "$frame"); do
 		printf >&2 '%20s @ %s:%s:1\n' "$sub" "$(realpath "$file" || echo "$file")" "$line"
 		((++frame))
