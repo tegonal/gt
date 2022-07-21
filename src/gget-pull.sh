@@ -40,6 +40,7 @@ fi
 sourceOnce "$dir_of_gget/pulled-utils.sh"
 sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
@@ -175,7 +176,7 @@ function gget_pull() {
 						fi
 					done
 				}
-				withOutput3Input4 gget_pull_importGpgKeys
+				withCustomOutputInput 3 4 gget_pull_importGpgKeys
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
 						logWarning "all GPG keys declined, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"

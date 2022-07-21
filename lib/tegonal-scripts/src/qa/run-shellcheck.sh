@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.0
+#                                         Version: v0.11.1
 #
 #######  Description  #############
 #
@@ -57,6 +57,7 @@ function runShellcheck() {
 
 	local -i fileWithIssuesCounter=0
 	local -i fileCounter=0
+	local script
 	while read -r -d $'\0' script; do
 		((++fileCounter))
 		declare output

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2059
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
@@ -10,7 +9,7 @@
 #
 #######  Description  #############
 #
-#  Utility functions to ask the user something via input.
+#  utility function dealling with Input/Ouput
 #
 #######  Usage  ###################
 #
@@ -20,11 +19,20 @@
 #    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
+#    sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 #
-#    if askYesOrNo "shall I say hello"; then
-#    	echo "hello"
-#    fi
+#    function readFile() {
+#    	cat "$1" >&3
+#    	echo "reading from 4 which was written to 3"
+#    	local line
+#    	while read -u 4 -r line; do
+#    		echo "$line"
+#    	done
+#    }
+#
+#    # creates file descriptors 3 (output) and 4 (input) based on temporary files
+#    # executes readFile and closes the file descriptors again
+#    withCustomOutputInput 3 4 readFile "my-file.txt"
 #
 ###################################
 set -euo pipefail
@@ -33,22 +41,24 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
-function askYesOrNo() {
-	if (($# == 0)); then
-		logError "At least one argument needs to be passed to askYesOrNo, given \033[0;36m%s\033[0m\n" "$#"
-		echo >&2 '1: question  the question which the user should answer with y or n'
-		printStackTrace
-		exit 9
-	fi
-	local -r question=$1
-	shift
+function withCustomOutputInput() {
+	local outputNr=$1
+	local inputNr=$2
+	local fun=$3
+	shift 3
 
-	printf "\n\033[0;36m$question\033[0m y/[N]:" "$@"
-	local answer='n'
-	while read -t 20 -r answer; do
-		break
-	done
-	[[ $answer == y ]]
+	checkArgIsFunction "$fun" 3
+
+	local tmpFile
+	tmpFile=$(mktemp /tmp/tegonal-scripts-io.XXXXXXXXX)
+	eval "exec ${outputNr}>\"$tmpFile\""
+	eval "exec ${inputNr}<\"$tmpFile\""
+	rm "$tmpFile"
+
+	$fun "$@"
+
+	eval "exec ${outputNr}>&-"
+	eval "exec ${inputNr}<&-"
 }

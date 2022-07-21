@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.0
+#                                         Version: v0.11.1
 #
 #######  Description  #############
 #
@@ -57,7 +57,7 @@
 #
 ###################################
 set -euo pipefail
-export TEGONAL_SCRIPTS_VERSION='v0.10.0'
+export TEGONAL_SCRIPTS_VERSION='v0.11.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
@@ -105,6 +105,8 @@ function releaseFiles() {
 	if ! [[ "$version" =~ $versionRegex ]]; then
 		returnDying "--version should match vX.Y.Z(-RC...), was %s" "$version"
 	fi
+
+	checkArgIsFunction "$findForSigning" "--sign-fn"
 
 	if hasGitChanges; then
 		logError "you have uncommitted changes, please commit/stash first, following the output of git status:"
@@ -193,6 +195,7 @@ function releaseFiles() {
 	gpg --homedir "$gpgDir" --import "$ggetDir/signing-key.public.asc"
 	trustGpgKey "$gpgDir" "info@tegonal.com"
 
+	local script
 	"$findForSigning" -print0 |
 		while read -r -d $'\0' script; do
 			echo "signing $script"

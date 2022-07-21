@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.0
+#                                         Version: v0.11.1
 #
 #######  Description  #############
 #
@@ -48,6 +48,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/replace-snippet.sh"
 
@@ -57,6 +58,14 @@ function replaceHelpSnippet() {
 	local -ra params=(script id dir pattern varargs)
 	parseFnArgs params "$@"
 
+	if ! [[ -f $script ]] && ! checkCommandExists "$script" >/dev/null; then
+		returnDying "$script is neither a file nor a command"
+	fi
+
+	if [[ -f $script ]] && ! [[ -x $script ]]; then
+		returnDying "$script is not executable"
+	fi
+
 	if ((${#varargs[@]} == 0)); then
 		varargs=("--help")
 	fi
@@ -64,8 +73,8 @@ function replaceHelpSnippet() {
 	local snippet
 	# shellcheck disable=SC2145
 	echo "capturing output of calling: $script ${varargs[@]}"
-	# we actually want that the array is passed as multiple arguments
 	set +e
+	# we actually want that the array is passed as multiple arguments
 	# shellcheck disable=SC2068
 	snippet=$("$script" ${varargs[@]})
 	set -e

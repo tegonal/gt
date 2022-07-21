@@ -101,28 +101,6 @@ function invertBool() {
 	fi
 }
 
-function withCustomOutputInput() {
-	local outputNr=$1
-	local inputNr=$2
-	local fun=$3
-	shift 3
-
-	local tmpFile
-	tmpFile=$(mktemp /tmp/gget.XXXXXXXXX)
-	eval "exec${outputNr}>\"$tmpFile\""
-	eval "exec${inputNr}<\"$tmpFile\""
-	rm "$tmpFile"
-
-	$fun
-
-	eval "exec ${outputNr}>&-"
-	eval "exec ${inputNr}<&-"
-}
-
-function withOutput3Input4() {
-	withCustomOutputInput 3 4 "$@"
-}
-
 function gitDiffChars() {
 	git --no-pager diff "$(echo "$1" | git hash-object -w --stdin)" "$(echo "$2" | git hash-object -w --stdin)" \
 		--word-diff=color --word-diff-regex . --ws-error-highlight=all |

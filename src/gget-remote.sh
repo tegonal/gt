@@ -43,6 +43,7 @@ printf -v "$(set -e && determineSourceOnceGuard "$dir_of_gget/gget-remote.sh")" 
 sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
@@ -183,7 +184,7 @@ function gget_remote_add() {
 			fi
 		done
 	}
-	withOutput3Input4 gget_remote_importGpgKeys
+	withCustomOutputInput 3 4 gget_remote_importGpgKeys
 
 	deleteDirChmod777 "$repo/.gget"
 

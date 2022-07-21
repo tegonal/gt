@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.0
+#                                         Version: v0.11.1
 #
 #######  Description  #############
 #
@@ -64,7 +64,7 @@ function importGpgKey() {
 	local isTrusting='y'
 	if [[ $withConfirmation == "--confirm=true" ]]; then
 		echo "$outputKey"
-		if askYesNo "The above key(s) will be used to verify the files you will pull from this remote, do you trust it?"; then
+		if askYesOrNo "The above key(s) will be used to verify the files you will pull from this remote, do you trust it?"; then
 			isTrusting='y'
 		else
 			isTrusting='n'
@@ -76,6 +76,7 @@ function importGpgKey() {
 	if [[ $isTrusting == y ]]; then
 		echo "importing key $file"
 		gpg --homedir "$gpgDir" --import "$file"
+		local keyId
 		echo "$outputKey" | grep pub | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
 			while read -r keyId; do
 				trustGpgKey "$gpgDir" "$keyId"
