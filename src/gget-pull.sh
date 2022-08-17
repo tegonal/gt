@@ -44,6 +44,9 @@ sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_pull_cleanupRepo() {
+	# maybe we still show commands at this point due to unexpected exit, thus turn it of just in case
+	{ set +x; } 2>/dev/null
+
 	local -r repository=$1
 	find "$repository" -maxdepth 1 -type d -not -path "$repo" -not -name ".git" -exec rm -r {} \;
 }
