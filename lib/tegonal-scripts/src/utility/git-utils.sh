@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -15,13 +15,16 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 #
-#    echo "current git branch is: $(currentGitBranch)"
+#    declare currentBranch
+#    currentBranch=$(currentGitBranch)
+#    echo "current git branch is: $currentBranch"
 #
 #    if hasGitChanges; then
 #    	echo "do whatever you want to do..."
@@ -47,45 +50,77 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function currentGitBranch() {
 	git rev-parse --abbrev-ref HEAD
 }
 
 function hasGitChanges() {
-	local -r gitStatus=$(git status --porcelain)
+	local gitStatus
+	gitStatus=$(git status --porcelain) || die "the following command failed (see above): git status --porcelain"
 	! [[ $gitStatus == "" ]]
+}
+
+function exitIfGitHasChanges() {
+	# we are aware of that `if` will disable set -e for hasGitChanges
+	# shellcheck disable=SC2310
+	if hasGitChanges; then
+		logError "you have uncommitted changes, please commit/stash first, following the output of git status:"
+		git status || exit $?
+		exit 1
+	fi
+}
+
+function countCommits() {
+	local from to
+	# params is required for parseFnArgs thus:
+	# shellcheck disable=SC2034
+	local -ra params=(from to)
+	parseFnArgs params "$@"
+	git rev-list --count "$from..$to" || die "could not count commits for $from..$to, see above"
 }
 
 function localGitIsAhead() {
 	if ! (($# == 0)) && ! (($# == 1)); then
-		die "you need to pass at least the branch name to localGitIsAhead and optionally the name of the remote (defaults to origin)"
+		traceAndDie "you need to pass at least the branch name to localGitIsAhead and optionally the name of the remote (defaults to origin)"
 	fi
 	local -r branch=$1
 	local -r remote=${2-"origin"}
-	! (($(git rev-list --count "$remote/${branch}..$branch") == 0))
+	local -i count
+	# we know that set -e is disabled for countCommits, that OK
+	# shellcheck disable=SC2310
+	count=$(countCommits "$remote/$branch" "$branch") || die "the following command failed (see above): countCommits \"$remote/$branch\" \"$branch\""
+	! ((count == 0))
 }
 
 function localGitIsBehind() {
 	if ! (($# == 0)) && ! (($# == 1)); then
-		die "you need to pass at least the branch name to localGitIsBehind and optionally the name of the remote (defaults to origin)"
+		traceAndDie "you need to pass at least the branch name to localGitIsBehind and optionally the name of the remote (defaults to origin)"
 	fi
 	local -r branch=$1
 	local -r remote=${2-"origin"}
-	! (($(git rev-list --count "${branch}..$remote/$branch") == 0))
+	local -i count
+	# we know that set -e is disabled for countCommits, that OK
+	# shellcheck disable=SC2310
+	count=$(countCommits "$branch" "$remote/$branch") || die "the following command failed (see above): countCommits \"$branch\" \"$remote/$branch\""
+	! ((count == 0))
 }
 
 function hasRemoteTag() {
 	if ! (($# == 0)) && ! (($# == 1)); then
-		die "you need to pass at least the tag to hasRemoteTag and optionally the name of the remote (defaults to origin)"
+		traceAndDie "you need to pass at least the tag to hasRemoteTag and optionally the name of the remote (defaults to origin)"
 	fi
 	local -r tag=$1
 	local -r remote=${2-"origin"}
-	git ls-remote -t "$remote" | grep "$tag" >/dev/null || false
+	shift 1
+	local output
+	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"$remote\""
+	grep "$tag" >/dev/null <<<"$output" || false
 }

@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -15,8 +15,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
@@ -36,9 +37,10 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
@@ -49,16 +51,26 @@ function withCustomOutputInput() {
 	local fun=$3
 	shift 3
 
-	checkArgIsFunction "$fun" 3
+	exitIfArgIsNotFunction "$fun" 3
 
 	local tmpFile
 	tmpFile=$(mktemp /tmp/tegonal-scripts-io.XXXXXXXXX)
-	eval "exec ${outputNr}>\"$tmpFile\""
-	eval "exec ${inputNr}<\"$tmpFile\""
-	rm "$tmpFile"
+	eval "exec ${outputNr}>\"$tmpFile\"" || die "could not create output file descriptor %s" "$outputNr"
+	eval "exec ${inputNr}<\"$tmpFile\"" || die "could not create input file descriptor %s" "$inputNr"
+	# don't fail if we cannot delete the tmp file, if this should happened, then the system should clean-up the file when the process ends
+	rm "$tmpFile" || true
 
 	$fun "$@"
 
 	eval "exec ${outputNr}>&-"
 	eval "exec ${inputNr}<&-"
+}
+
+function deleteDirChmod777() {
+	local -r dir=$1
+	shift
+	# e.g files in .git will be write-protected and we don't want sudo for this command
+	# yet, if it fails, then we ignore the problem and still try to delete the folder
+	chmod -R 777 "$dir" || true
+	rm -r "$dir"
 }

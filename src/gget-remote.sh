@@ -29,12 +29,12 @@ set -eu -o pipefail
 export GGET_VERSION='v0.2.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
 	declare -r dir_of_gget
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 # because "$dir_of_gget/utils.sh" sources this file and we don't have at this point
@@ -44,7 +44,6 @@ sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_remote_cleanupRemoteOnUnexpectedExit() {

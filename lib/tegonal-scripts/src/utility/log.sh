@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -17,8 +17,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
@@ -82,6 +83,7 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 function logInfo() {
 	local msg=$1
@@ -131,6 +133,11 @@ function die() {
 	logError "$@"
 	exit 1
 }
+
+# note that this function has not the effect of a return if set -e is not in place
+# (either not set or function call tree passed an if while until or was on the left side of an || &&)
+# in such a case you either need to make sure that your returnDying is the last call in your function
+# or you need to add `|| return $?`.
 function returnDying() {
 	logError "$@"
 	return 1
@@ -139,10 +146,14 @@ function returnDying() {
 function printStackTrace() {
 	echo >&2 ""
 	echo >&2 "Stacktrace:"
-	local -i frame=${1:-1}
+	local -i frame=${1:-0}
 	local line sub file
+	# we want that the while loop ends in case caller "$frame" returns non-zero, thus
+	# shellcheck disable=SC2312
 	while read -r line sub file < <(caller "$frame"); do
-		printf >&2 '%20s @ %s:%s:1\n' "$sub" "$(realpath "$file" || echo "$file")" "$line"
+		local path
+		path=$(realpath "$file" || echo "$file")
+		printf >&2 '%20s @ %s:%s:1\n' "$sub" "$path" "$line"
 		((++frame))
 		if ((frame > 10)); then
 			echo >&2 " ..."

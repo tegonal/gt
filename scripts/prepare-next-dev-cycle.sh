@@ -11,12 +11,12 @@
 set -euo pipefail
 
 if ! [[ -v scriptsDir ]]; then
-	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
 	declare -r scriptsDir
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$scriptsDir/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh"

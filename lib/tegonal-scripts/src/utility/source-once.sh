@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -17,8 +17,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    source "$dir_of_tegonal_scripts/utility/source-once.sh"
@@ -28,8 +29,6 @@
 #    unset foo__sh          # unsets the guard
 #    sourceOnce "foo.sh"    # is sourced again and the guard established
 #
-#
-#
 #    # creates a variable named bar__foo__sh which acts as guard and sources bar/foo.sh
 #    sourceOnce "bar/foo.sh"
 #
@@ -37,15 +36,22 @@
 #    # i.e. the corresponding guard is bar__foo__sh and thus this file is not sourced
 #    sourceOnce "asdf/bar/foo.sh"
 #
+#    declare guard
+#    guard=$(determineSourceOnceGuard "src/b.sh")
 #    # In case you have a cyclic dependency (a.sh sources b.sh and b.sh source a.sh),
 #    # then you can define the guard in file a yourself (before sourcing b.sh) so that b.sh does no longer source file a
-#    printf -v "$(set -e && determineSourceOnceGuard "src/b.sh")" "%s" "true"
+#    printf -v "$guard" "%s" "true"
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 function determineSourceOnceGuard() {
-	readlink -m "$1" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@\$1__\$2@;" -pe "s/[-.]/_/g"
+	if ! (($# == 1)); then
+  		traceAndDie "you need to pass the file name, for which we shall calculate the guard, to determineSourceOnceGuard"
+  	fi
+	local -r file="$1"
+	readlink -m "$file" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
 }
 
 function sourceOnce() {
@@ -58,9 +64,10 @@ function sourceOnce() {
 	fi
 
 	local -r sourceOnce_file="$1"
+	shift
 
 	local sourceOnce_guard
-	sourceOnce_guard=$(set -e && determineSourceOnceGuard "$sourceOnce_file")
+	sourceOnce_guard=$(determineSourceOnceGuard "$sourceOnce_file")
 	local -r sourceOnce_guard
 
 	if ! [[ -v "$sourceOnce_guard" ]]; then
@@ -75,12 +82,12 @@ function sourceOnce() {
 		# shellcheck disable=SC2034
 		declare __SOURCED__=true
 		# shellcheck disable=SC1090
-		source "$@"
+		source "$sourceOnce_file" "$@" || die "there was an error sourcing %s, see above" "$sourceOnce_file"
 		unset __SOURCED__
 	fi
 }
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"

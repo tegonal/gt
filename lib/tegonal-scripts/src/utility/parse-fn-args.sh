@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -15,10 +15,11 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
 #    	# Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #    fi
 #    sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
@@ -54,18 +55,18 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 function parseFnArgs() {
 	if (($# < 2)); then
 		logError "At least two arguments need to be passed to parseFnArgs, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1. params     the name of an array which contains the parameter names'
+		echo >&2 '1: params     the name of an array which contains the parameter names'
 		echo >&2 '2... args...  the arguments as such, typically "$@"'
 		printStackTrace
 		exit 9
@@ -73,9 +74,9 @@ function parseFnArgs() {
 
 	# using unconventional naming in order to avoid name clashes with the variables we will initialise further below
 	local -rn parseFnArgs_paramArr1=$1
-	shift
+	shift 1
 
-	checkArgIsArray parseFnArgs_paramArr1 1
+	exitIfArgIsNotArray parseFnArgs_paramArr1 1
 
 	local parseFnArgs_withVarArgs
 	if [[ ${parseFnArgs_paramArr1[$((${#parseFnArgs_paramArr1[@]} - 1))]} == "varargs" ]]; then
@@ -84,12 +85,18 @@ function parseFnArgs() {
 		parseFnArgs_withVarArgs=false
 	fi
 
-	local -r minExpected=$( ([[ $parseFnArgs_withVarArgs == false ]] && echo "${#parseFnArgs_paramArr1[@]}") || echo "$((${#parseFnArgs_paramArr1[@]} - 1))")
-	if (($# < minExpected)); then
+	local parseFnArgs_minExpected
+	if [[ $parseFnArgs_withVarArgs == false ]]; then
+		parseFnArgs_minExpected="${#parseFnArgs_paramArr1[@]}"
+	else
+		parseFnArgs_minExpected="$((${#parseFnArgs_paramArr1[@]} - 1))"
+	fi
+	local -r parseFnArgs_minExpected
+	if (($# < parseFnArgs_minExpected)); then
 		logError "Not enough arguments supplied to \033[0m\033[0;36m%s\033[0m\nExpected %s, given %s\nFollowing a listing of the expected arguments (red means missing):" \
 			"${FUNCNAME[1]}" "${#parseFnArgs_paramArr1[@]}" "$#"
 
-		for ((parseFnArgs_i = 0; parseFnArgs_i < minExpected; ++parseFnArgs_i)); do
+		for ((parseFnArgs_i = 0; parseFnArgs_i < parseFnArgs_minExpected; ++parseFnArgs_i)); do
 			local parseFnArgs_name=${parseFnArgs_paramArr1[parseFnArgs_i]}
 			printf "\033[0m"
 			if ((parseFnArgs_i < $#)); then
@@ -104,7 +111,7 @@ function parseFnArgs() {
 			printf >&2 "%2s: %s\n" "$((parseFnArgs_i + 1))" "varargs"
 		fi
 		printStackTrace
-		return 9
+		exit 9
 	fi
 
 	if [[ $parseFnArgs_withVarArgs == false ]] && ! (($# == ${#parseFnArgs_paramArr1[@]})); then
@@ -112,18 +119,19 @@ function parseFnArgs() {
 			"${FUNCNAME[1]}" "${#parseFnArgs_paramArr1[@]}" "$#"
 		echo >&2 "in case you wanted your last parameter to be a vararg parameter, then use 'varargs' as last variable name in your array containing the parameter names."
 		echo >&2 "Following a listing of the expected arguments:"
-		for ((parseFnArgs_i = 0; parseFnArgs_i < minExpected; ++parseFnArgs_i)); do
+		for ((parseFnArgs_i = 0; parseFnArgs_i < parseFnArgs_minExpected; ++parseFnArgs_i)); do
 			local parseFnArgs_name=${parseFnArgs_paramArr1[parseFnArgs_i]}
 			printf >&2 "%2s: %s\n" "$((parseFnArgs_i + 1))" "$parseFnArgs_name"
 		done
 		printStackTrace
-		return 9
+		exit 9
 	fi
 
-	for ((parseFnArgs_i = 0; parseFnArgs_i < minExpected; ++parseFnArgs_i)); do
+	for ((parseFnArgs_i = 0; parseFnArgs_i < parseFnArgs_minExpected; ++parseFnArgs_i)); do
 		local parseFnArgs_name=${parseFnArgs_paramArr1[parseFnArgs_i]}
 		# assign arguments to specified variables
-		printf -v "$parseFnArgs_name" "%s" "$1"
+		printf -v "$parseFnArgs_name" "%s" "$1" || die "could not assign value to $parseFnArgs_name"
+		local -r "$parseFnArgs_name"
 		shift
 	done
 
@@ -131,6 +139,6 @@ function parseFnArgs() {
 	if [[ $parseFnArgs_withVarArgs == true ]]; then
 		# is used afterwards
 		# shellcheck disable=SC2034
-		varargs=("$@")
+		varargs=("$@") || die "could not assign the rest of arguments to varargs"
 	fi
 }

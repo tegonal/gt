@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -24,8 +24,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    function findScripts() {
@@ -57,16 +58,16 @@
 #
 ###################################
 set -euo pipefail
-export TEGONAL_SCRIPTS_VERSION='v0.11.1'
+shopt -s inherit_errexit
+export TEGONAL_SCRIPTS_VERSION='v0.12.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/sneak-peek-banner.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/toggle-sections.sh"
@@ -74,13 +75,13 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-README.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function releaseFiles() {
-	local version key findForSigning projectDir additionalPattern nextVersion prepareOnly
+	local version key findForSigning projectsRootDir additionalPattern nextVersion prepareOnly
 	# shellcheck disable=SC2034
 	local -ra params=(
 		version '-v' "The version to release in the format vX.Y.Z(-RC...)"
 		key '-k|--key' 'The GPG private key which shall be used to sign the files'
 		findForSigning '--sign-fn' 'Function which is called to determine what files should be signed. It should be based find and allow to pass further arguments (we will i.a. pass -print0)'
-		projectDir '--project-dir' '(optional) The projects directory -- default: .'
+		projectsRootDir '--project-dir' '(optional) The projects directory -- default: .'
 		additionalPattern '-p|--pattern' '(optional) pattern which is used in a perl command (separator /) to search & replace additional occurrences. It should define two match groups and the replace operation looks as follows: '"\\\${1}\$version\\\${2}"
 		nextVersion '-nv|--next-version' '(optional) the version to use for prepare-next-dev-cycle -- default: is next minor based on version'
 		prepareOnly '--prepare-only' '(optional) defines whether the release shall only be prepared (i.e. no push, no tag, no prepare-next-dev-cycle) -- default: false'
@@ -97,24 +98,21 @@ function releaseFiles() {
 			logInfo "cannot deduce nextVersion from version as it does not follow format vX.Y.Z(-RC...): $version"
 		fi
 	fi
-	if ! [[ -v projectDir ]]; then projectDir=$(realpath "."); fi
+	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
 	if ! [[ -v prepareOnly ]] || ! [[ "$prepareOnly" == "true" ]]; then prepareOnly=false; fi
 	checkAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 
 	if ! [[ "$version" =~ $versionRegex ]]; then
-		returnDying "--version should match vX.Y.Z(-RC...), was %s" "$version"
+		die "--version should match vX.Y.Z(-RC...), was %s" "$version"
 	fi
 
-	checkArgIsFunction "$findForSigning" "--sign-fn"
+	exitIfArgIsNotFunction "$findForSigning" "--sign-fn"
+	exitIfGitHasChanges
 
-	if hasGitChanges; then
-		logError "you have uncommitted changes, please commit/stash first, following the output of git status:"
-		git status
-		return 1
-	fi
-
-	if git tag | grep "$version" >/dev/null; then
+	local tags
+	tags=$(git tag) || die "The following command failed (see above): git tag"
+	if grep "$version" <<< "$tags" >/dev/null; then
 		logError "tag %s already exists locally, adjust version or delete it with git tag -d %s" "$version" "$version"
 		if hasRemoteTag "$version"; then
 			printf >&2 "Note, it also exists on the remote which means you also need to delete it there -- e.g. via git push origin :%s\n" "$version"
@@ -122,22 +120,24 @@ function releaseFiles() {
 		fi
 		logInfo "looks like the tag only exists locally."
 		if askYesOrNo "Shall I \`git tag -d %s\` and continue with the release?" "$version"; then
-			git tag -d "$version"
+			git tag -d "$version" || die "deleting tag %s failed" "$version"
 		else
 			return 1
 		fi
 	fi
 
 	if hasRemoteTag "$version"; then
-		returnDying "tag %s already exists on remote origin, adjust version or delete it with git push origin :%s\n" "$version" "$version"
+		logError "tag %s already exists on remote origin, adjust version or delete it with git push origin :%s\n" "$version" "$version"
+		return 1
 	fi
 
-	local -r branch="$(currentGitBranch)"
-	local -r expectedDefaultBranch="main"
+	local branch
+	branch="$(currentGitBranch)" || die "could not determine current git branch, see above"
+	local -r expectedDefaultBranch="main" branch
 	if ! [[ $branch == "$expectedDefaultBranch" ]]; then
 		logError "you need to be on the \033[0;36m%s\033[0m branch to release, check that you have merged all changes from your current branch \033[0;36m%s\033[0m." "$expectedDefaultBranch" "$branch"
 		if askYesOrNo "Shall I switch to %s for you?" "$expectedDefaultBranch"; then
-			git checkout "$expectedDefaultBranch"
+			git checkout "$expectedDefaultBranch" || die "checking out branch %s failed" "$expectedDefaultBranch"
 		else
 			return 1
 		fi
@@ -153,7 +153,7 @@ function releaseFiles() {
 		return 1
 	fi
 
-	if localGitIsBehind "$expectedDefaultBranch"; then
+	while localGitIsBehind "$expectedDefaultBranch"; do
 		git fetch
 		logError "you are behind of origin. I already fetched the changes for you, please check if you still want to release. Following the additional changes in origin/main:"
 		git -P log "${expectedDefaultBranch}..origin/$expectedDefaultBranch"
@@ -165,54 +165,63 @@ function releaseFiles() {
 		else
 			return 1
 		fi
-	fi
+	done
 
-	local -r projectsScriptsDir="$projectDir/scripts"
-	sourceOnce "$projectsScriptsDir/before-pr.sh"
+	local -r projectsScriptsDir="$projectsRootDir/scripts"
+	# we are aware of that || will disable set -e for sourceOnce
+	# shellcheck disable=SC2310
+	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
 
 	# make sure everything is up-to-date and works as it should
-	beforePr
+	beforePr || return $?
 
-	sneakPeekBanner -c hide
-	toggleSections -c release
-	updateVersionReadme -v "$version" -p "$additionalPattern"
-	updateVersionScripts -v "$version" -p "$additionalPattern"
-	updateVersionScripts -v "$version" -p "$additionalPattern" -d "$projectsScriptsDir"
+	sneakPeekBanner -c hide || return $?
+	toggleSections -c release || return $?
+	updateVersionReadme -v "$version" -p "$additionalPattern" || return $?
+	updateVersionScripts -v "$version" -p "$additionalPattern" || return $?
+	updateVersionScripts -v "$version" -p "$additionalPattern" -d "$projectsScriptsDir" || return $?
 	local -r additionalSteps="$projectsScriptsDir/additional-release-files-preparations.sh"
 	if [[ -f $additionalSteps ]]; then
-		sourceOnce "$additionalSteps"
+		# we are aware of that || will disable set -e for sourceOnce
+		# shellcheck disable=SC2310
+		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
 	fi
 
 	# run again since we made changes
-	beforePr
+	beforePr || return $?
 
-	local -r ggetDir="$projectDir/.gget"
+	local -r ggetDir="$projectsRootDir/.gget"
 	local -r gpgDir="$ggetDir/gpg"
-	rm -rf "$gpgDir"
+	if ! rm -rf "$gpgDir"; then
+		logError "was not able to remove gpg directory %s\nPlease do this manually and re-run the release command" "$gpgDir"
+		git reset --hard "origin/$expectedDefaultBranch"
+	fi
 	mkdir "$gpgDir"
 	chmod 700 "$gpgDir"
 
-	gpg --homedir "$gpgDir" --import "$ggetDir/signing-key.public.asc"
-	trustGpgKey "$gpgDir" "info@tegonal.com"
+	gpg --homedir "$gpgDir" --import "$ggetDir/signing-key.public.asc" || die "was not able to import %s" "$ggetDir/signing-key.public.asc"
+	trustGpgKey "$gpgDir" "info@tegonal.com" || logInfo "could not trust key with id info@tegonal.com, you will see warnings due to this during signing the files"
 
 	local script
 	"$findForSigning" -print0 |
 		while read -r -d $'\0' script; do
 			echo "signing $script"
-			gpg --detach-sign --batch --yes -u "$key" -o "${script}.sig" "$script"
-			gpg --homedir "$gpgDir" --batch --verify "${script}.sig" "$script"
-		done
+			gpg --detach-sign --batch --yes -u "$key" -o "${script}.sig" "$script" || die "was not able to sign %s" "$script"
+			gpg --homedir "$gpgDir" --batch --verify "${script}.sig" "$script" || die "verification via previously imported %s failed" "$ggetDir/signing-key.public.asc"
+		done || die $?
 
 	if ! [[ $prepareOnly == true ]]; then
-		git add .
-		git commit -m "$version"
-		git tag "$version"
+		git add . || return $?
+		git commit -m "$version" || return $?
+		git tag "$version" || return $?
 
-		sourceOnce "$projectsScriptsDir/prepare-next-dev-cycle.sh"
-		prepareNextDevCycle -v "$nextVersion" -p "$additionalPattern"
+		# we are aware of that || will disable set -e for sourceOnce
+		# shellcheck disable=SC2310
+		sourceOnce "$projectsScriptsDir/prepare-next-dev-cycle.sh" || die "could not source prepare-next-dev-cycle.sh"
+		prepareNextDevCycle -v "$nextVersion" -p "$additionalPattern" || die "could not prepare next dev cycle for version %s" "$nextVersion"
 
-		git push origin "$version"
-		git push
+		git push origin "$version" || die "could not push tag to origin"
+		git push || die "could not push commits on %s to origin" "$expectedDefaultBranch"
 	else
 		printf "\033[1;33mskipping commit, creating tag and prepare-next-dev-cylce due to --prepare-only\033[0m\n"
 	fi

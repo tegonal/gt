@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -15,8 +15,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    source "$dir_of_tegonal_scripts/utility/replace-snippet.sh"
@@ -25,8 +26,13 @@
 #    file=$(mktemp)
 #    echo "<my-script></my-script>" > "$file"
 #
+#    declare dir fileName output
+#    dir=$(dirname "$file")
+#    fileName=$(basename "$file")
+#    output=$(echo "replace with your command" | grep "command")
+#
 #    # replaceSnippet file id dir pattern snippet
-#    replaceSnippet my-script.sh my-script-help "$(dirname "$file")" "$(basename "$file")" "$(echo "replace with your command" | grep "command")"
+#    replaceSnippet my-script.sh my-script-help "$dir" "$fileName" "$output"
 #
 #    echo "content"
 #    cat "$file"
@@ -42,9 +48,10 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
@@ -56,7 +63,7 @@ function replaceSnippet() {
 	parseFnArgs params "$@"
 
 	local quotedSnippet
-	quotedSnippet=$(echo "$snippet" | perl -0777 -pe 's/(@|\$|\\)/\\$1/g;')
+	quotedSnippet=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' <<< "$snippet" ) || die "could not quote snippet for file \033[1;36m%s\033[0m and id %s" "$file" "$id"
 
 	find "$dir" -name "$pattern" \
 		-exec echo "updating $id in {} " \; \

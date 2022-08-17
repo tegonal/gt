@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -21,8 +21,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    # prepare dev cycle for version v0.2.0
@@ -47,51 +48,58 @@
 #
 ###################################
 set -euo pipefail
-export TEGONAL_SCRIPTS_VERSION='v0.11.1'
+shopt -s inherit_errexit
+export TEGONAL_SCRIPTS_VERSION='v0.12.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/sneak-peek-banner.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/toggle-sections.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-README.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function prepareFilesNextDevCycle() {
-	local version projectDir additionalPattern
+	local version projectsRootDir additionalPattern
 	# shellcheck disable=SC2034
 	local -ra params=(
 		version '-v' 'the version for which we prepare the dev cycle'
-		projectDir '--project-dir' '(optional) The projects directory -- default: .'
+		projectsRootDir '--project-dir' '(optional) The projects directory -- default: .'
 		additionalPattern '-p|--pattern' '(optional) pattern which is used in a perl command (separator /) to search & replace additional occurrences. It should define two match groups and the replace operation looks as follows: '"\\\${1}\$version\\\${2}"
 	)
 	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
-	if ! [[ -v projectDir ]]; then projectDir=$(realpath "."); fi
+	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
 	checkAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 
 	if ! [[ "$version" =~ ^(v[0-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$ ]]; then
-		returnDying "version should match vX.Y.Z(-RC...), was %s" "$version"
+		die "version should match vX.Y.Z(-RC...), was %s" "$version"
 	fi
 
-	local -r projectsScriptsDir="$projectDir/scripts"
-	sourceOnce "$projectsScriptsDir/before-pr.sh"
+	exitIfGitHasChanges
+
+	local -r projectsScriptsDir="$projectsRootDir/scripts"
+	# we are aware of that || will disable set -e for sourceOnce
+	# shellcheck disable=SC2310
+	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
+
 
 	logInfo "prepare next dev cycle for version $version"
 
-	sneakPeekBanner -c show
-	toggleSections -c main
-	updateVersionScripts -v "$version-SNAPSHOT" -p "$additionalPattern"
-	updateVersionScripts -v "$version-SNAPSHOT" -p "$additionalPattern" -d "$projectsScriptsDir"
+	sneakPeekBanner -c show || return $?
+	toggleSections -c main || return $?
+	updateVersionScripts -v "$version-SNAPSHOT" -p "$additionalPattern" || return $?
+	updateVersionScripts -v "$version-SNAPSHOT" -p "$additionalPattern" -d "$projectsScriptsDir" || return $?
 
 	# check if we accidentally have broken something, run formatting or whatever is done in beforePr
-	beforePr
+	beforePr || return $?
 
 	local -r additionalSteps="$projectsScriptsDir/additional-prepare-files-next-dev-cycle-steps.sh"
 	if [[ -f $additionalSteps ]]; then
-		sourceOnce "$additionalSteps"
+		# we are aware of that || will disable set -e for sourceOnce
+		# shellcheck disable=SC2310
+		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
 	fi
 
 	git commit -a -m "prepare next dev cycle for $version"

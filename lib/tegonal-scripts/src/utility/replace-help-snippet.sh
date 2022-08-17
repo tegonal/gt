@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -16,8 +16,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    source "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
@@ -43,9 +44,10 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
@@ -59,29 +61,29 @@ function replaceHelpSnippet() {
 	parseFnArgs params "$@"
 
 	if ! [[ -f $script ]] && ! checkCommandExists "$script" >/dev/null; then
-		returnDying "$script is neither a file nor a command"
+		logError "$script is neither a file nor a command"
+		return 1
 	fi
 
 	if [[ -f $script ]] && ! [[ -x $script ]]; then
-		returnDying "$script is not executable"
+		logError "$script is not executable"
+		return 1
 	fi
 
 	if ((${#varargs[@]} == 0)); then
 		varargs=("--help")
 	fi
 
-	local snippet
 	# shellcheck disable=SC2145
 	echo "capturing output of calling: $script ${varargs[@]}"
-	set +e
+
+	local snippet quotedSnippet markdownSnippet
 	# we actually want that the array is passed as multiple arguments
 	# shellcheck disable=SC2068
-	snippet=$("$script" ${varargs[@]})
-	set -e
-
-	local quotedSnippet
+	snippet=$("$script" ${varargs[@]}) || true
 	# remove ansi colour codes form snippet
-	quotedSnippet=$(echo "$snippet" | perl -0777 -pe "s/\033\[([01];\d{2}|0)m//g")
+	quotedSnippet=$(perl -0777 -pe "s/\033\[([01];\d{2}|0)m//g" <<<"$snippet") || die "could not quote snippet for %s" "$script"
+	markdownSnippet=$(printf "\`\`\`text\n%s\n\`\`\`" "$quotedSnippet") || die "could not create markdownSnippet for %s" "$script"
 
-	replaceSnippet "$script" "$id" "$dir" "$pattern" "$(printf "\`\`\`text\n%s\n\`\`\`" "$quotedSnippet")"
+	replaceSnippet "$script" "$id" "$dir" "$pattern" "$markdownSnippet"
 }
