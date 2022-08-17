@@ -38,10 +38,9 @@ if ! [[ -v dir_of_gget ]]; then
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 function gget() {
 	if (($# < 1)); then

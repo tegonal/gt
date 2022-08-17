@@ -34,7 +34,7 @@ if ! [[ -v dir_of_gget ]]; then
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 # because "$dir_of_gget/utils.sh" sources this file and we don't have at this point
@@ -44,7 +44,6 @@ sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_remote_cleanupRemoteOnUnexpectedExit() {
