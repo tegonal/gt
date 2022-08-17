@@ -264,7 +264,7 @@ function gget_pull() {
 		relativeTarget=$(realpath --relative-to="$workingDir" "$absoluteTarget")
 		local sha
 		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1)
-		local -r entry="$(printf "%s\t" "$tag" "$file" "$sha")$relativeTarget"
+		local -r entry=$(pulledTsvEntry "$tag" "$file" "$relativeTarget" "$sha")
 		#shellcheck disable=SC2310,SC2311
 		local -r currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file")
 		local entryTag entrySha entryRelativePath

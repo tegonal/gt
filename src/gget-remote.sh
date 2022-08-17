@@ -115,7 +115,7 @@ function gget_remote_add() {
 
 	mkdir "$remoteDir" || returnDying "failed to create remote directory %s" "$remoteDir"
 
-	# we want to expand $remoteDir here and not when EXIT happens (as $remoteDir might be out of scope)
+	# we want to expand $remoteDir here and not when signal happens (as $remoteDir might be out of scope)
 	# shellcheck disable=SC2064
 	trap "gget_remote_cleanupRemoteOnUnexpectedExit '$remoteDir'" EXIT SIGINT
 
@@ -148,7 +148,7 @@ function gget_remote_add() {
 	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
 		if [[ $unsecure == true ]]; then
 			logWarning "no GPG key found, ignoring it because %s true was specified" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
+			echo "$unsecurePattern true" >>"$workingDir/pull.args"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
@@ -159,7 +159,7 @@ function gget_remote_add() {
 	if noAscInDir "$repo/.gget"; then
 		if [[ $unsecure == true ]]; then
 			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
+			echo "$unsecurePattern true" >>"$workingDir/pull.args"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecurePattern"

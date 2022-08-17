@@ -26,8 +26,19 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+
 function pulledTsvHeader() {
-	printf "tag\tfile\tsha512\trelativePullDir\n"
+	printf "tag\tfile\trelativeTarget\tsha512\n"
+}
+function pulledTsvEntry(){
+	local tag file relativeTarget sha512
+	# params is required for parseFnArgs thus:
+	# shellcheck disable=SC2034
+	local -ra params=(tag file relativeTarget sha512)
+  parseFnArgs params "$@"
+	printf "%s\t" "$tag" "$file" "$relativeTarget"
+	printf "%s\n" "$sha512"
 }
 
 function checkHeaderOfPulledTsv() {
@@ -49,7 +60,7 @@ function checkHeaderOfPulledTsv() {
 
 function setEntryVariables() {
 	# shellcheck disable=SC2034
-	IFS=$'\t' read -r entryTag entryFile entrySha entryRelativePath <<<"$1"
+	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1"
 }
 
 function grepPulledEntryByFile() {
