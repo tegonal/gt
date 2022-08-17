@@ -14,6 +14,7 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 export GGET_VERSION='v0.2.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
@@ -46,7 +47,7 @@ function checkHeaderOfPulledTsv() {
 	local currentHeader
 	currentHeader="$(head -n 1 "$pulledTsv")"
 	local expectedHeader
-	expectedHeader=$(set -e && pulledTsvHeader)
+	expectedHeader=$(pulledTsvHeader)
 	if ! [[ "$currentHeader" == "$expectedHeader" ]]; then
 		logError "looks like the format of \033[0;36m%s\033[0m changed:" "$pulledTsv"
 		echo "Expected Header: $expectedHeader" | cat -A >&2

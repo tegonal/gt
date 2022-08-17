@@ -25,6 +25,7 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 export GGET_VERSION='v0.2.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
@@ -167,7 +168,7 @@ function gget_pull() {
 			else
 				mkdir "$gpgDir"
 				chmod 700 "$gpgDir"
-				local -r confirm="--confirm=$(set -e && invertBool "$autoTrust")"
+				local -r confirm="--confirm=$(invertBool "$autoTrust")"
 
 				local -i numberOfImportedKeys=0
 				function gget_pull_importGpgKeys() {
