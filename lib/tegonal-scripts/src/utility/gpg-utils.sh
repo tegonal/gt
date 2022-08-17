@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -15,8 +15,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
@@ -35,9 +36,10 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
@@ -45,26 +47,31 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function trustGpgKey() {
 	local gpgDir keyId
-	# params is required for parse-fn-args.sh thus:
+	# params is required for parseFnArgs thus:
 	# shellcheck disable=SC2034
 	local -ra params=(gpgDir keyId)
-	parseFnArgs params "$@" || return $?
+	parseFnArgs params "$@"
 	echo -e "5\ny\n" | gpg --homedir "$gpgDir" --command-fd 0 --edit-key "$keyId" trust
 }
 
 function importGpgKey() {
 	local gpgDir file withConfirmation
-	# params is required for parse-fn-args.sh thus:
+	# params is required for parseFnArgs thus:
 	# shellcheck disable=SC2034
 	local -ra params=(gpgDir file withConfirmation)
-	parseFnArgs params "$@" || exit $?
+	parseFnArgs params "$@"
 
 	local outputKey
-	outputKey=$(gpg --homedir "$gpgDir" --keyid-format LONG --import-options show-only --import "$file")
+	outputKey=$(
+		gpg --homedir "$gpgDir" --keyid-format LONG \
+			--list-options show-user-notations,show-std-notations,show-usage,show-sig-expire \
+			--import-options show-only \
+			--import "$file"
+	) || die "not able to show the theoretical import of %s, aborting" "$file"
 	local isTrusting='y'
 	if [[ $withConfirmation == "--confirm=true" ]]; then
 		echo "$outputKey"
-		if askYesOrNo "The above key(s) will be used to verify the files you will pull from this remote, do you trust it?"; then
+		if askYesOrNo "The above key(s) will be used to verify the files you will pull from this remote, do you trust them?"; then
 			isTrusting='y'
 		else
 			isTrusting='n'
@@ -75,13 +82,12 @@ function importGpgKey() {
 
 	if [[ $isTrusting == y ]]; then
 		echo "importing key $file"
-		gpg --homedir "$gpgDir" --import "$file"
+		gpg --homedir "$gpgDir" --import "$file" || die "failed to import $file"
 		local keyId
-		echo "$outputKey" | grep pub | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
+		grep pub <<< "$outputKey" | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
 			while read -r keyId; do
 				trustGpgKey "$gpgDir" "$keyId"
 			done
-		return 0
 	else
 		return 1
 	fi

@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #
 #######  Description  #############
@@ -21,8 +21,9 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
+#    shopt -s inherit_errexit
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    source "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
@@ -39,9 +40,10 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
@@ -53,15 +55,17 @@ function updateBashDocumentation() {
 	local -ra params=(script id dir pattern)
 	parseFnArgs params "$@"
 
-	local snippet
-	snippet=$(cat "${script::-3}.doc.sh")
+	local snippet pathWithoutExtension
+	pathWithoutExtension=${script::-3} || die "could not determine path without extension for script %s and %id" "$script" "$id"
+	snippet=$(cat "${pathWithoutExtension}.doc.sh") || die "could not cat %s" "${pathWithoutExtension}.doc.sh"
 
-	local quotedSnippet
-	quotedSnippet=$(echo "$snippet" | perl -0777 -pe 's/(\/|\$|\\)/\\$1/g;' | sed 's/^/#    /' | sed 's/^#    $/#/')
+	local quotedSnippet markdownSnippet
+	quotedSnippet=$(perl -0777 -pe 's/(\/|\$|\\)/\\$1/g;' <<<"$snippet" | sed 's/^/#    /' | sed 's/^#    $/#/') || die "was not able to quote the snippet for script %s and id %s" "$script" "$id"
+	markdownSnippet=$(printf "\`\`\`bash\n%s\n\`\`\`" "$snippet") || die "could not create the markdownSnippet for script %s and id %s" "$script" "$id"
 
 	perl -0777 -i \
 		-pe "s/(###+\s+Usage\s+###+\n#\n)[\S\s]+?(\n#\n###+)/\$1${quotedSnippet}\$2/g;" \
-		"$script"
+		"$script" || die "could not replace the Usage section for %s" "$script"
 
-	replaceSnippet "$script" "$id" "$dir" "$pattern" "$(printf "\`\`\`bash\n%s\n\`\`\`" "$snippet")"
+	replaceSnippet "$script" "$id" "$dir" "$pattern" "$markdownSnippet"
 }

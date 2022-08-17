@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.11.1
+#                                         Version: v0.12.0
 #
 #######  Description  #############
 #
@@ -18,8 +18,10 @@
 #    #!/usr/bin/env bash
 #    # shellcheck disable=SC2034
 #    set -euo pipefail
+#    shopt -s inherit_errexit
+#
 #    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
-#    dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src")"
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
 #    source "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
@@ -29,11 +31,13 @@
 #    declare -n ref2=ref1
 #    declare -n ref3=ref2
 #
-#    printf "%s\n" \
-#    	"$(set -e; recursiveDeclareP tmp)" \
-#    	"$(set -e; recursiveDeclareP ref1)" \
-#    	"$(set -e; recursiveDeclareP ref2)" \
-#    	"$(set -e; recursiveDeclareP ref3)"
+#    declare r0 r1 r2 r3
+#    r0=$(recursiveDeclareP tmp)
+#    r1=$(recursiveDeclareP ref1)
+#    r2=$(recursiveDeclareP ref2)
+#    r3=$(recursiveDeclareP ref3)
+#
+#    printf "%s\n" "$r0" "$r1" "$r2" "$r3"
 #    # declare -i tmp="1"
 #    # declare -i tmp="1"
 #    # declare -i tmp="1"
@@ -41,22 +45,19 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)/..")"
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 function recursiveDeclareP() {
 	if ! (($# == 1)); then
-		logError "One parameter needs to be passed to recursiveDeclareP, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1. variableName		 the name of the variable whose declaration statement shall be determined'
-		printStackTrace
-		exit 9
+		traceAndDie "you need to pass the variable name, whose declaration statement shall be determined, to recursiveDeclareP"
 	fi
 
-	definition=$(declare -p "$1")
+	definition=$(declare -p "$1") || echo "executing 'declare -p $1' failed, see previous error message further above"
 	local -r reg='^declare -n(r)? [^=]+=\"([^\"]+)\"$'
 	while [[ $definition =~ $reg ]]; do
 		definition=$(declare -p "${BASH_REMATCH[2]}" || echo "executing 'declare -p ${BASH_REMATCH[2]}' failed, see previous error message further above")
