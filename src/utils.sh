@@ -54,19 +54,19 @@ function findAscInDir() {
 function noAscInDir() {
 	local -r dir=$1
 	shift 1
-	(($(
-		set -e
-		findAscInDir "$dir" | wc -l
-	) == 0))
+	local numberOfAsc
+	# we are aware of that set -e is disabled for findAscInDir
+	#shellcheck disable=SC2310
+	numberOfAsc=$(findAscInDir "$dir" | wc -l) || die "could not find the number of *.asc files in dir %s, see errors above" "$dir"
+	((numberOfAsc == 0))
 }
 
 function checkWorkingDirExists() {
 	local workingDir=$1
+	shift
 
-	local scriptDir workingDirPattern
-	scriptDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
-	local -r scriptDir
-	source "$scriptDir/shared-patterns.source.sh"
+	local workingDirPattern
+	source "$dir_of_gget/shared-patterns.source.sh"
 
 	if ! [[ -d $workingDir ]]; then
 		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDir"
@@ -76,15 +76,16 @@ function checkWorkingDirExists() {
 }
 
 function checkRemoteDirExists() {
-	local -r workingDir=$1
+	local -r workingDirAbsolute=$1
 	local -r remote=$2
+	shift 2
 	local remoteDir
 	source "$dir_of_gget/paths.source.sh"
 
 	if ! [[ -d $remoteDir ]]; then
 		logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
 		sourceOnce "$dir_of_gget/gget-remote.sh"
-		gget_remote_list -w "$workingDir"
+		gget_remote_list -w "$workingDirAbsolute"
 		return 9
 	else
 		return 0
@@ -101,7 +102,11 @@ function invertBool() {
 }
 
 function gitDiffChars() {
-	git --no-pager diff "$(echo "$1" | git hash-object -w --stdin)" "$(echo "$2" | git hash-object -w --stdin)" \
+	local hash1 hash2
+	hash1=$(git hash-object -w --stdin <<<"$1")
+	hash2=$(git hash-object -w --stdin <<<"$2")
+	shift 2
+	git --no-pager diff "$hash1" "$hash2" \
 		--word-diff=color --word-diff-regex . --ws-error-highlight=all |
 		grep -A 1 @@ | tail -n +2
 }

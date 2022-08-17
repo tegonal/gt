@@ -25,8 +25,9 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh"
 function prepareNextDevCycle() {
 	# same as in release.sh, update there as well
 	local -r additionalPattern="(GGET_VERSION=['\"])[^'\"]+(['\"])"
-
-	prepareFilesNextDevCycle --project-dir "$(realpath "$scriptsDir/..")" -p "$additionalPattern" "$@"
+	local projectDir
+	projectDir=$(realpath "$scriptsDir/..")
+	prepareFilesNextDevCycle --project-dir "$projectDir" -p "$additionalPattern" "$@"
 }
 
 ${__SOURCED__:+return}

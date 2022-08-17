@@ -1,7 +1,3 @@
-# Consider invoking this command separately to avoid masking its return value (or use '|| true' to ignore).
-# ==> too many false positives
-disable=SC2312
-
 # Prefer putting braces around variable references even when not strictly required.
 # ==> IMO without braces reads nicer
 disable=SC2250
