@@ -38,7 +38,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 # because "$dir_of_gget/utils.sh" sources this file and we don't have at this point
-printf -v "$(set -e && determineSourceOnceGuard "$dir_of_gget/gget-remote.sh")" "%s" "true"
+printf -v "$(determineSourceOnceGuard "$dir_of_gget/gget-remote.sh")" "%s" "true"
 
 sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
