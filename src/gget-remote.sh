@@ -60,14 +60,14 @@ function gget_remote_cleanupRemoteOnUnexpectedExit() {
 function gget_remote_add() {
 	source "$dir_of_gget/shared-patterns.source.sh"
 
-	local remote url pullDir unsecure workingDir
+	local remote url pullDir unsecure workingDirMaybeRelative
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name to refer to this the remote repository'
 		url '-u|--url' 'url of the remote repository'
 		pullDir "$pullDirPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
 		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		workingDirMaybeRelative "$workingDirPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
 		cat <<-EOM
@@ -89,11 +89,10 @@ function gget_remote_add() {
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v pullDir ]]; then pullDir="lib/$remote"; fi
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
-	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+	if ! [[ -v workingDirMaybeRelative ]]; then workingDirMaybeRelative="$defaultWorkingDir"; fi
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
-	# make directory paths absolute
-	local -r workingDir=$(readlink -m "$workingDir")
+	local -r workingDir=$(readlink -m "$workingDirMaybeRelative")
 
 	if ! checkWorkingDirExists "$workingDir"; then
 		if askYesOrNo "Shall I create the work directory for you and continue?"; then
@@ -149,7 +148,7 @@ function gget_remote_add() {
 	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
 		if [[ $unsecure == true ]]; then
 			logWarning "no GPG key found, ignoring it because %s true was specified" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDir/pull.args"
+			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
@@ -160,7 +159,7 @@ function gget_remote_add() {
 	if noAscInDir "$repo/.gget"; then
 		if [[ $unsecure == true ]]; then
 			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDir/pull.args"
+			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecurePattern"

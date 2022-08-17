@@ -56,15 +56,15 @@ function gget_pull() {
 	currentDir=$(pwd)
 	local -r currentDir
 
-	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
+	local remote tag path pullDirMaybeRelative chopPath workingDirMaybeRelative autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name of the remote repository'
 		tag '-t|--tag' 'git tag used to pull the file/directory'
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
-		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
+		pullDirMaybeRelative "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		chopPath "--chop-path" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		workingDirMaybeRelative "$workingDirPattern" "$workingDirParamDocu"
 		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
 		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecurePattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
@@ -91,11 +91,11 @@ function gget_pull() {
 	# redirecting output to /dev/null because we don't want to see 'ignored argument warnings' twice
 	# || true because --help returns 99 and we don't want to exit at this point (because we redirect output)
 	parseArguments params "$examples" "$GGET_VERSION" "$@" >/dev/null || true
-	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+	if ! [[ -v workingDirMaybeRelative ]]; then workingDirMaybeRelative="$defaultWorkingDir"; fi
 
 	local -a args=()
 	if [[ -v remote ]] && [[ -n $remote ]]; then
-		local -r pullArgsFile="$workingDir/remotes/$remote/pull.args"
+		local -r pullArgsFile="$workingDirMaybeRelative/remotes/$remote/pull.args"
 		if [[ -f $pullArgsFile ]]; then
 			defaultArguments=$(cat "$pullArgsFile")
 			eval 'for arg in '"$defaultArguments"'; do
@@ -112,18 +112,18 @@ function gget_pull() {
 	if ! [[ -v unsecure ]]; then unsecure="$forceNoVerification"; fi
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
+	# make directory paths absolute
+	local -r workingDir=$(readlink -m "$workingDirMaybeRelative")
+	local -r pullDir=$(readlink -m "$pullDirMaybeRelative")
+
 	checkWorkingDirExists "$workingDir"
 	checkRemoteDirExists "$workingDir" "$remote"
-
-	# make directory paths absolute
-	local -r workingDir=$(readlink -m "$workingDir")
-	local -r pullDirAbsolute=$(readlink -m "$pullDir")
 
 	local remoteDir publicKeysDir repo gpgDir pulledTsv
 	source "$dir_of_gget/paths.source.sh"
 
-	if ! [[ -d $pullDirAbsolute ]]; then
-		mkdir -p "$pullDirAbsolute" || returnDying "failed to create the pull directory %s" "$pullDirAbsolute"
+	if ! [[ -d $pullDir ]]; then
+		mkdir -p "$pullDir" || returnDying "failed to create the pull directory %s" "$pullDir"
 	fi
 
 	if ! [[ -f $pulledTsv ]]; then
@@ -254,7 +254,7 @@ function gget_pull() {
 		else
 			targetFile="$file"
 		fi
-		local -r absoluteTarget="$pullDirAbsolute/$targetFile"
+		local -r absoluteTarget="$pullDir/$targetFile"
 		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
 		mkdir -p "$(dirname "$absoluteTarget")"
 		local relativeTarget
@@ -282,14 +282,15 @@ function gget_pull() {
 				return
 			elif ! grep --line-regexp "$entry" "$pulledTsv" >/dev/null; then
 				local -r currentLocation=$(realpath --relative-to="$currentDir" "$workingDir/$entryRelativePath" || echo "$workingDir/$entryRelativePath")
+				local -r newLocation=$(realpath --relative-to="$currentDir" "$pullDirMaybeRelative/$targetFile" || echo "$pullDirMaybeRelative/$targetFile")
 				logWarning "the file was previously pulled to a different location"
 				echo "current location: $currentLocation"
-				echo "    new location: $pullDir/$targetFile"
+				echo "    new location: $newLocation"
 				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$repo/$file"
 				return
 			elif [[ -f $absoluteTarget ]]; then
-				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$pullDir/$file"
+				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$pullDirMaybeRelative/$file"
 			fi
 		fi
 
@@ -301,8 +302,8 @@ function gget_pull() {
 	while read -r -d $'\0' file; do
 		if [[ $doVerification == true && -f "$file.$sigExtension" ]]; then
 			printf "verifying \033[0;36m%s\033[0m\n" "$file"
-			if [[ -d "$pullDirAbsolute/$file" ]]; then
-				returnDying "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
+			if [[ -d "$pullDir/$file" ]]; then
+				returnDying "there exists a directory with the same name at %s" "$pullDir/$file"
 			fi
 			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
 			rm "$file.$sigExtension"
