@@ -16,7 +16,7 @@
 set -euo pipefail
 
 if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" &>/dev/null && pwd 2>/dev/null)"
+	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
 	declare -r dir_of_gget
 fi
 
