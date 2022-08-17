@@ -29,8 +29,9 @@ function release() {
 
 	# same as in prepare-next-dev-cycle.sh, update there as well
 	local -r additionalPattern="(GGET_VERSION=['\"])[^'\"]+(['\"])"
-
-	releaseFiles --project-dir "$(realpath "$scriptsDir/..")" -p "$additionalPattern" --sign-fn findScripts "$@"
+	local projectDir
+	projectDir=$(realpath "$scriptsDir/..")
+	releaseFiles --project-dir "$projectDir" -p "$additionalPattern" --sign-fn findScripts "$@"
 }
 
 ${__SOURCED__:+return}

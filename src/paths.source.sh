@@ -11,13 +11,13 @@
 #######  Description  #############
 #
 #  constants intended to be sourced into a function.
-#	 Requires that $workingDir is defined beforehand
+#	 Requires that $workingDirAbsolute is defined beforehand
 #
 ###################################
 
 
 # note if you change this structure, then you need to adopt gget_pull => pullArgsFile
-local -r remotesDir="$workingDir/remotes"
+local -r remotesDir="$workingDirAbsolute/remotes"
 local -r remoteDir="$remotesDir/$remote"
 local -r publicKeysDir="$remoteDir/public-keys"
 local -r repo="$remoteDir/repo"

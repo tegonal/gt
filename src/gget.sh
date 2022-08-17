@@ -42,6 +42,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 function gget() {
 	if (($# < 1)); then
@@ -52,9 +53,7 @@ function gget() {
 		exit 9
 	fi
 
-	if ! [[ -x "$(command -v "git")" ]]; then
-		die "git is not installed (or not in PATH), please install it (https://git-scm.com/downloads)"
-	fi
+	exitIfCommandDoesNotExist "git" "please install it (https://git-scm.com/downloads)"
 
 	local -r command=$1
 	shift

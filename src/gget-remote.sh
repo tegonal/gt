@@ -37,8 +37,6 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-# because "$dir_of_gget/utils.sh" sources this file and we don't have at this point
-printf -v "$(determineSourceOnceGuard "$dir_of_gget/gget-remote.sh")" "%s" "true"
 
 sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
@@ -60,16 +58,17 @@ function gget_remote_cleanupRemoteOnUnexpectedExit() {
 function gget_remote_add() {
 	source "$dir_of_gget/shared-patterns.source.sh"
 
-	local remote url pullDir unsecure workingDirMaybeRelative
+	local remote url pullDir unsecure workingDir
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name to refer to this the remote repository'
 		url '-u|--url' 'url of the remote repository'
 		pullDir "$pullDirPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
 		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
-		workingDirMaybeRelative "$workingDirPattern" "$workingDirParamDocu"
+		workingDir "$workingDirPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
+		# shellcheck disable=SC2312
 		cat <<-EOM
 			# adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
 			# uses the default location lib/tegonal-scripts for the files which will be pulled from this remote
@@ -89,20 +88,22 @@ function gget_remote_add() {
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v pullDir ]]; then pullDir="lib/$remote"; fi
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
-	if ! [[ -v workingDirMaybeRelative ]]; then workingDirMaybeRelative="$defaultWorkingDir"; fi
+	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
-	local -r workingDir=$(readlink -m "$workingDirMaybeRelative")
+	local workingDirAbsolute
+	workingDirAbsolute=$(readlink -m "$workingDir")
+	local -r workingDirAbsolute
 
-	if ! checkWorkingDirExists "$workingDir"; then
+	if ! checkWorkingDirExists "$workingDirAbsolute"; then
 		if askYesOrNo "Shall I create the work directory for you and continue?"; then
-			mkdir -p "$workingDir"
+			mkdir -p "$workingDirAbsolute"
 		else
 			return 9
 		fi
 	fi
 
-	mkdir -p "$workingDir/remotes"
+	mkdir -p "$workingDirAbsolute/remotes"
 
 	local remoteDir publicKeysDir repo gpgDir
 	source "$dir_of_gget/paths.source.sh"
@@ -148,7 +149,7 @@ function gget_remote_add() {
 	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
 		if [[ $unsecure == true ]]; then
 			logWarning "no GPG key found, ignoring it because %s true was specified" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDir/pull.args"
+			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
@@ -159,7 +160,7 @@ function gget_remote_add() {
 	if noAscInDir "$repo/.gget"; then
 		if [[ $unsecure == true ]]; then
 			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDir/pull.args"
+			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecurePattern"
@@ -173,6 +174,7 @@ function gget_remote_add() {
 		findAscInDir "$repo/.gget" -print0 >&3
 
 		echo ""
+		local file
 		while read -u 4 -r -d $'\0' file; do
 			if importGpgKey "$gpgDir" "$file" --confirm=true; then
 				mv "$file" "$publicKeysDir/"
@@ -209,6 +211,7 @@ function gget_remote_list() {
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
+		# shellcheck disable=SC2312
 		cat <<-EOM
 			# lists all defined remotes in .gget
 			gget remote list
@@ -252,6 +255,7 @@ function gget_remote_remove() {
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
+		# shellcheck disable=SC2312
 		cat <<-EOM
 			# removes the remote tegonal-scripts
 			gget remote remove -r tegonal-scripts
