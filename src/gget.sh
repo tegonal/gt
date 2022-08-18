@@ -58,7 +58,10 @@ function gget() {
 	local -r command=$1
 	shift
 	if [[ "$command" =~ ^(pull|remote|reset)$ ]]; then
-		sourceOnce "$dir_of_gget/gget-$command.sh"
+		local -r file="$dir_of_gget/gget-$command.sh"
+		# we are aware of that the || disables set -e for sourceOnce
+		# shellcheck disable=SC2310
+		sourceOnce "$file" || die "could not source %s" "$file"
 		"gget_$command" "$@"
 	elif [[ "$command" == "--help" ]]; then
 		cat <<-EOM

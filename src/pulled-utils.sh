@@ -32,26 +32,28 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 function pulledTsvHeader() {
 	printf "tag\tfile\trelativeTarget\tsha512\n"
 }
-function pulledTsvEntry(){
+function pulledTsvEntry() {
 	local tag file relativeTarget sha512
 	# params is required for parseFnArgs thus:
 	# shellcheck disable=SC2034
 	local -ra params=(tag file relativeTarget sha512)
-  parseFnArgs params "$@"
+	parseFnArgs params "$@"
 	printf "%s\t" "$tag" "$file" "$relativeTarget"
 	printf "%s\n" "$sha512"
 }
 
-function checkHeaderOfPulledTsv() {
+function exitIfHeaderOfPulledTsvIsWrong() {
 	local -r pulledTsv=$1
-	local currentHeader
-	currentHeader="$(head -n 1 "$pulledTsv")"
-	local expectedHeader
-	expectedHeader=$(pulledTsvHeader)
+	shift
+	local currentHeader expectedHeader
+	currentHeader="$(head -n 1 "$pulledTsv")" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
+	# we are aware of that the || disables set -e for pulledTsvHeader
+	# shellcheck disable=SC2310
+	expectedHeader=$(pulledTsvHeader) || die "looks like we discovered a bug, was not able to create the pulledTsvHeader"
 	if ! [[ "$currentHeader" == "$expectedHeader" ]]; then
 		logError "looks like the format of \033[0;36m%s\033[0m changed:" "$pulledTsv"
-		echo "Expected Header: $expectedHeader" | cat -A >&2
-		echo "Current  Header: $currentHeader" | cat -A >&2
+		cat -A >&2 <<<"Expected Header: $expectedHeader"
+		cat -A >&2 <<<"Current  Header: $currentHeader"
 		echo >&2 ""
 		echo >&2 "In case you updated gget, then check the release notes for migration hints:"
 		echo >&2 "https://github.com/tegonal/gget/releases/tag/$GGET_VERSION"
@@ -60,6 +62,7 @@ function checkHeaderOfPulledTsv() {
 }
 
 function setEntryVariables() {
+	# yes the variables are not used here but they are (should be) in the parent scope
 	# shellcheck disable=SC2034
 	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1"
 }
@@ -72,11 +75,14 @@ function grepPulledEntryByFile() {
 }
 
 function replacePulledEntry() {
-	local -r pulledTsv=$1
-	local -r file=$2
-	local -r entry=$3
-	shift 3
-	grepPulledEntryByFile "$pulledTsv" "$file" -v >"$pulledTsv.new"
-	mv "$pulledTsv.new" "$pulledTsv"
-	echo "$entry" >>"$pulledTsv"
+	local pulledTsv file entry
+	# params is required for parseFnArgs thus:
+	# shellcheck disable=SC2034
+	local -ra params=(pulledTsv file entry)
+	parseFnArgs params "$@"
+	# we are aware of that the || disables set -e for grepPulledEntryByFile but we want to be sure we die in case of general set -e
+	# shellcheck disable=SC2310
+	grepPulledEntryByFile "$pulledTsv" "$file" -v >"$pulledTsv.new" || die "could not find entry for file \033[0;36m%s\033[0m, thus cannot replace" "$file"
+	mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override %s with the new content (which does not contain the entry for file \033[0;36m%s\033[0m)" "$pulledTsv" "$file"
+	echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file \033[0;36m%s\033[0m to %s" "$file" "$pulledTsv"
 }
