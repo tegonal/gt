@@ -57,12 +57,12 @@ function gget() {
 
 	local -r command=$1
 	shift
-	if [[ "$command" =~ ^(pull|remote|reset)$ ]]; then
+	if [[ "$command" =~ ^(pull|re-pull|remote|reset)$ ]]; then
 		local -r file="$dir_of_gget/gget-$command.sh"
 		# we are aware of that the || disables set -e for sourceOnce
 		# shellcheck disable=SC2310
 		sourceOnce "$file" || die "could not source %s" "$file"
-		"gget_$command" "$@"
+		"gget_${command/-/_}" "$@"
 	elif [[ "$command" == "--help" ]]; then
 		cat <<-EOM
 			Use one of the following commands:
@@ -70,7 +70,7 @@ function gget() {
 			remote   manage remotes
 		EOM
 	else
-		die "unknown command \033[0;36m%s\033[0m, expected one of pull, remote, reset" "$command"
+		die "unknown command \033[0;36m%s\033[0m, expected one of:\n- pull\n- re-pull\n- remote\n- reset" "$command"
 	fi
 }
 
