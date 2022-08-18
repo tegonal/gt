@@ -143,8 +143,6 @@ function gget_remote_add() {
 	# currentDir after this line can be influenced by this cd
 	cd "$repo"
 
-	# show commands in output
-	set -x
 	git remote add "$remote" "$url"
 
 	# we need to copy the git config away in order that one can commit it
@@ -153,11 +151,7 @@ function gget_remote_add() {
 
 	local defaultBranch
 	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' || (logWarning >&2 "was not able to determine default branch for remote %s, going to use main" && echo "main"))"
-
 	git fetch --depth 1 "$remote" "$defaultBranch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
-
-	# don't show commands in output anymore
-	{ set +x; } 2>/dev/null
 
 	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
 		if [[ $unsecure == true ]]; then
@@ -261,7 +255,7 @@ function gget_remote_list() {
 }
 
 function gget_remote_remove() {
-	source "$dir_of_gget/shared-patterns.source.sh"|| die "was not able to source shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034
