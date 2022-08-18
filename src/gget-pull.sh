@@ -167,7 +167,7 @@ function gget_pull() {
 
 			if noAscInDir "$publicKeysDir"; then
 				if [[ $unsecure == true ]]; then
-					logWarning "no GPG key found, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"
+					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecurePattern"
 					doVerification=false
 				else
 					die "no public keys for remote \033[0;36m%s\033[0m defined in %s" "$remote" "$publicKeysDir"
@@ -190,7 +190,7 @@ function gget_pull() {
 				withCustomOutputInput 3 4 gget_pull_importGpgKeys
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
-						logWarning "all GPG keys declined, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"
+						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecurePattern"
 						doVerification=false
 					else
 						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
@@ -199,7 +199,7 @@ function gget_pull() {
 			fi
 		fi
 		if [[ $unsecure == true && $doVerification == true ]]; then
-			logInfo "gpg key found going to perform verification even though %s true was specified" "$unsecurePattern"
+			logInfo "gpg key found going to perform verification even though '%s true' was specified" "$unsecurePattern"
 		fi
 	fi
 
@@ -209,7 +209,7 @@ function gget_pull() {
 
 	cd "$repo"
 	if ! git remote | grep "$remote" >/dev/null; then
-		logError "looks like the .git directory of remote %s is broken. There is no remote %s setup." "$remote" "$remote"
+		logError "looks like the .git directory of remote \033[0;36m%s\033[0m is broken. There is no remote %s set up in its gitconfig." "$remote" "$remote"
 		if [[ -f $gitconfig ]]; then
 			if askYesOrNo "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
 				# cd only necessary because we did a cd $repo beforehand, could be removed if we don't do it
@@ -241,9 +241,9 @@ function gget_pull() {
 
 	function gget_pull_mentionUnsecure() {
 		if ! [[ $unsecure == true ]]; then
-			printf " -- you can disable this check via %s true\n" "$unsecurePattern"
+			printf " -- you can disable this check via: %s true\n" "$unsecurePattern"
 		else
-			printf " -- you can disable this check via %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
+			printf " -- you can disable this check via: %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
 		fi
 	}
 

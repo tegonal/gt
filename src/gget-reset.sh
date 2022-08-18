@@ -9,7 +9,7 @@
 #
 #######  Description  #############
 #
-#  'reset' command of gget: utility to reset (re-initialise gpg, pull files) for all or one previously defined remote
+#  'reset' command of gget: utility to reset (re-initialise gpg, re-pull all files) for all or one previously defined remote
 #
 #######  Usage  ###################
 #
@@ -17,17 +17,17 @@
 #
 #    # resets all defined remotes, which means for each remote in .gget
 #    # - re-initialise gpg trust based on public keys defined in .gget/remotes/<remote>/public-keys/*.asc
-#    # - pull files defined in .gget/remotes/<remote>/pulled
+#    # - pull files defined in .gget/remotes/<remote>/pulled.tsv
 #    gget reset
 #
 #    # resets the remote tegonal-scripts which means:
 #    # - re-initialise gpg trust based on public keys defined in .gget/remotes/tegonal-scripts/public-keys/*.asc
-#    # - pull files defined in .gget/remotes/tegonal-scripts/pulled
+#    # - pull files defined in .gget/remotes/tegonal-scripts/pulled.tsv
 #    gget reset -r tegonal-scripts
 #
 #    # uses a custom working directory and resets the remote tegonal-scripts which means:
 #    # - re-initialise gpg trust based on public keys defined in .github/.gget/remotes/tegonal-scripts/public-keys/*.asc
-#    # - pull files defined in .github/.gget/remotes/tegonal-scripts/pulled
+#    # - pull files defined in .github/.gget/remotes/tegonal-scripts/pulled.tsv
 #    gget reset -r tegonal-scripts -w .github/.gget
 #
 ###################################
@@ -47,8 +47,8 @@ sourceOnce "$dir_of_gget/pulled-utils.sh"
 sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_gget/gget-pull.sh"
 sourceOnce "$dir_of_gget/gget-remote.sh"
+sourceOnce "$dir_of_gget/gget-re-pull.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_reset() {
@@ -88,49 +88,20 @@ function gget_reset() {
 	workingDirAbsolute=$(readlink -m "$workingDir")
 	local -r workingDirAbsolute
 
-	local -i success=0
-	local -i errors=0
-
-	function gget_reset_rePull() {
-		local -r remote=$1
-		local pulledTsv
-		source "$dir_of_gget/paths.source.sh"
-		if ! [[ -f $pulledTsv ]]; then
-			logWarning "Looks like remote %s is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
-			return 0
-		fi
-		# start from line 2, i.e. skip the header in pulled.tsv
-		tail -n +2 "$pulledTsv" >&5
-		while read -u 6 -r entry; do
-			local entryTag entryFile entryRelativePath
-			setEntryVariables "$entry"
-			local entryAbsolutePath parentDir
-			entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath")
-			parentDir=$(dirname "$entryAbsolutePath")
-			if gget_pull -w "$workingDirAbsolute" -r "$remote" -t "$entryTag" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
-				((++success))
-			else
-				logError "could not fetch \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
-				((++errors))
-			fi
-		done
-	}
-
 	function gget_reset_resetRemote() {
 		local -r remote=$1
 
-		local gpgDir pulledTsv
+		local gpgDir
 		source "$dir_of_gget/paths.source.sh"
 		if [[ -d $gpgDir ]]; then
 			deleteDirChmod777 "$gpgDir"
-			logInfo "removed $gpgDir, going to re-pull files"
+			logInfo "removed $gpgDir"
 		else
-			logInfo "$gpgDir does not exist, going to re-pull files"
+			logInfo "$gpgDir does not exist, not necessary to reset"
 		fi
-		withCustomOutputInput 5 6 gget_reset_rePull "$remote"
 	}
 
-	function gget_reset_listAllRemotes() {
+	function gget_reset_allRemotes() {
 		gget_remote_list -w "$workingDirAbsolute" >&7
 		local remote
 		while read -u 8 -r remote; do
@@ -139,16 +110,13 @@ function gget_reset() {
 	}
 
 	if [[ -n $remote ]]; then
-		gget_reset_resetRemote "$remote"
+		# we know that set -e is disabled for gget_reset_resetRemote due to ||
+		#shellcheck disable=SC2310
+		gget_reset_resetRemote "$remote" || die "could not remove gpg directory for remote %s, see above" "$remote"
+		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false -t "$remote"
 	else
-		withCustomOutputInput 7 8 gget_reset_listAllRemotes
-	fi
-
-	if ((errors == 0)); then
-		logSuccess "%s files reset successfully" "$success"
-	else
-		logWarning "%s files reset successfully, %s errors occurred, see above" "$success" "$errors"
-		return 1
+		withCustomOutputInput 7 8 gget_reset_allRemotes || die "could not remove gpg directories, see above"
+		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false
 	fi
 }
 
