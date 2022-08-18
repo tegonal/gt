@@ -45,15 +45,15 @@ sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_pull_cleanupRepo() {
-	# maybe we still show commands at this point due to unexpected exit, thus turn it of just in case
+	# maybe we still show commands at this point due to unexpected exit, thus turn it off just in case
 	{ set +x; } 2>/dev/null
 
 	local -r repository=$1
-	find "$repository" -maxdepth 1 -type d -not -path "$repo" -not -name ".git" -exec rm -r {} \;
+	find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
 }
 
 function gget_pull() {
-	source "$dir_of_gget/shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local currentDir
@@ -100,9 +100,11 @@ function gget_pull() {
 
 	local -a args=()
 	if [[ -v remote ]] && [[ -n $remote ]]; then
-		local -r pullArgsFile="$workingDir/remotes/$remote/pull.args"
+		# cannot be readonly as we override it in paths.source.sh as well, should be the same though
+		local pullArgsFile="$workingDir/remotes/$remote/pull.args"
 		if [[ -f $pullArgsFile ]]; then
-			defaultArguments=$(cat "$pullArgsFile")
+			local defaultArguments
+			defaultArguments=$(cat "$pullArgsFile") || die "could not read %s, you might not execute what you want without it, aborting" "$pullArgsFile"
 			eval 'for arg in '"$defaultArguments"'; do
 					args+=("$arg");
 			done'
@@ -119,40 +121,36 @@ function gget_pull() {
 	# if remote does not exist then pull.args does not and most likely pullDir is thus not defined, in this case we want
 	# to show the error about the non existing remote before other missing arguments
 	if ! [[ -v pullDir ]] && [[ -v workingDir ]] && [[ -v remote ]]; then
-		checkRemoteDirExists "$workingDir" "$remote"
+		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 	fi
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
-	# make directory paths absolute
 	local workingDirAbsolute pullDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir")
 	pullDirAbsolute=$(readlink -m "$pullDir")
 	local -r workingDirAbsolute pullDirAbsolute
 
-	checkWorkingDirExists "$workingDirAbsolute"
-	checkRemoteDirExists "$workingDirAbsolute" "$remote"
+	exitIfWorkingDirDoesNotExist "$workingDirAbsolute"
+	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
 	local remoteDir publicKeysDir repo gpgDir pulledTsv gitconfig
 	source "$dir_of_gget/paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
-		mkdir -p "$pullDirAbsolute" || returnDying "failed to create the pull directory %s" "$pullDirAbsolute"
+		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"
 	fi
 
 	if ! [[ -f $pulledTsv ]]; then
-		pulledTsvHeader >"$pulledTsv" || returnDying "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
+		pulledTsvHeader >"$pulledTsv" || die "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
 	else
-		checkHeaderOfPulledTsv "$pulledTsv"
+		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
 
 	if [[ -f $repo ]]; then
-		returnDying "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
-	elif ! [[ -d $repo ]]; then
-		logInfo "repo directory does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
-		mkdir -p "$repo"
-		cd "$repo"
-		git init
-		cp "$gitconfig" "$repo/.git/config"
+		die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
+	elif ! [[ -d "$repo/.git" ]]; then
+		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
+		reInitialiseGitDir "$workingDir" "$remote"
 	fi
 
 	local doVerification
@@ -162,7 +160,7 @@ function gget_pull() {
 		doVerification=true
 		if ! [[ -d $gpgDir ]]; then
 			if [[ -f $gpgDir ]]; then
-				returnDying "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the gpg dir's location: %s" "$remote" "$gpgDir"
+				die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the gpg dir's location: %s" "$remote" "$gpgDir"
 			fi
 
 			logInfo "gpg directory does not exist at %s\nWe are going to import all public keys which are stored in %s" "$gpgDir" "$publicKeysDir"
@@ -172,11 +170,10 @@ function gget_pull() {
 					logWarning "no GPG key found, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"
 					doVerification=false
 				else
-					returnDying "no public keys for remote \033[0;36m%s\033[0m defined in %s" "$remote" "$publicKeysDir"
+					die "no public keys for remote \033[0;36m%s\033[0m defined in %s" "$remote" "$publicKeysDir"
 				fi
 			else
-				mkdir "$gpgDir"
-				chmod 700 "$gpgDir"
+				initialiseGpgDir "$gpgDir"
 				local confirm
 				confirm="--confirm=$(invertBool "$autoTrust")"
 
@@ -196,7 +193,7 @@ function gget_pull() {
 						logWarning "all GPG keys declined, won't be able to verify files (which is OK because %s true was specified)" "$unsecurePattern"
 						doVerification=false
 					else
-						errorNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
 					fi
 				fi
 			fi
@@ -215,27 +212,29 @@ function gget_pull() {
 		logError "looks like the .git directory of remote %s is broken. There is no remote %s setup." "$remote" "$remote"
 		if [[ -f $gitconfig ]]; then
 			if askYesOrNo "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
+				# cd only necessary because we did a cd $repo beforehand, could be removed if we don't do it
 				cd "$workingDir"
 				deleteDirChmod777 "$repo"
-				initialiseGitDir "$workingDir" "$remote"
+				reInitialiseGitDir "$workingDir" "$remote"
+				# cd only necessary because we did a cd $repo and then cd $workingDir beforehand, could be removed if we don't do it
 				cd "$repo"
 			else
 				exit 1
 			fi
 		else
-			logInfo >&2 "%s does not exist, cannot ask to re-initialise the repo, have to abort" "$gitconfig"
+			logInfo >&2 "%s does not exist, cannot ask to re-initialise the repo, must abort" "$gitconfig"
 			exit 1
 		fi
 	fi
 	local remoteTags
-	remoteTags=$(git ls-remote -t "$remote" || (logInfo >&2 "check your internet connection" && return 1))
-	grep "$tag" <<<"$remoteTags" >/dev/null || (returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags")
+	remoteTags=$(git ls-remote -t "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
+	grep "$tag" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags" || return $?
 
 	# show commands as output
 	set -x
 
-	git fetch --depth 1 "$remote" "refs/tags/$tag:refs/tags/$tag"
-	git checkout "tags/$tag" -- "$path"
+	git fetch --depth 1 "$remote" "refs/tags/$tag:refs/tags/$tag" || return $?
+	git checkout "tags/$tag" -- "$path" || return $?
 
 	# don't show commands in output anymore
 	{ set +x; } 2>/dev/null
@@ -253,12 +252,13 @@ function gget_pull() {
 	function gget_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
+			# show commands as output
 			set -x
 			if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
 				# don't show commands in output anymore
 				{ set +x; } 2>/dev/null
 
-				logErrorWithoutNewline "no signature file found, aborting"
+				logErrorWithoutNewline "no signature file found for %s, aborting pull" "$path"
 				gget_pull_mentionUnsecure >&2
 				return 1
 			fi
@@ -279,21 +279,23 @@ function gget_pull() {
 			if [[ -d "$repo/$path" ]]; then
 				local offset
 				offset=$(if [[ $path == */ ]]; then echo 1; else echo 2; fi)
-				targetFile="$(echo "$file" | cut -c "$((${#path} + offset))"-)"
+				targetFile="$(cut -c "$((${#path} + offset))"- <<<"$file")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$file" || return $?
 			else
-				targetFile="$(basename "$file")"
+				targetFile="$(basename "$file")"  || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$file" || return $?
 			fi
 		else
 			targetFile="$file"
 		fi
 		local -r absoluteTarget="$pullDirAbsolute/$targetFile"
+		local parentDir
+		parentDir=$(dirname "$absoluteTarget")
 		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
-		mkdir -p "$(dirname "$absoluteTarget")"
+		mkdir -p "$parentDir" || die "was not able to create the parent dir for %s" "$absoluteTarget"
 
 		local relativeTarget sha entry currentEntry
-		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for %s" "$absoluteTarget" || return $?
-		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1) || returnDying "could not calculate sha12 for %s" "$repo/$file" || return $?
-		entry=$(pulledTsvEntry "$tag" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for %s %s" "$tag" "$file" || return $?
+		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
+		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$repo/$file" || return $?
+		entry=$(pulledTsvEntry "$tag" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tag" "$file" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file" || echo "")
 		local -r relativeTarget sha entry currentEntry
@@ -303,7 +305,7 @@ function gget_pull() {
 		local -r entryTag entrySha entryRelativePath
 
 		if [[ $currentEntry == "" ]]; then
-			echo "$entry" >>"$pulledTsv"
+			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$file" "$pulledTsv"
 		elif ! [[ $entryTag == "$tag" ]]; then
 			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tag" "$file"
 			# we could warn about a version which was older
@@ -331,7 +333,7 @@ function gget_pull() {
 			fi
 		fi
 
-		mv "$repo/$file" "$absoluteTarget"
+		mv "$repo/$file" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$repo/$file" "$absoluteTarget" || return $?
 
 		((++numberOfPulledFiles))
 	}
@@ -341,15 +343,17 @@ function gget_pull() {
 		if [[ $doVerification == true && -f "$file.$sigExtension" ]]; then
 			printf "verifying \033[0;36m%s\033[0m\n" "$file"
 			if [[ -d "$pullDirAbsolute/$file" ]]; then
-				returnDying "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
+				die "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
 			fi
 			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
-			rm "$file.$sigExtension"
+			# or true as we will try to cleanup the repo on exit
+			rm "$file.$sigExtension" || true
 			gget_pull_moveFile "$file"
 		elif [[ $doVerification == true ]]; then
 			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
 			gget_pull_mentionUnsecure
-			rm "$file"
+			# or true as we will try to cleanup the repo on exit
+			rm "$file" || true
 		else
 			gget_pull_moveFile "$file"
 		fi
@@ -364,7 +368,6 @@ function gget_pull() {
 	else
 		returnDying "0 files could be pulled from %s, most likely verification failed, see above." "$remote"
 	fi
-	exit 0
 }
 
 ${__SOURCED__:+return}

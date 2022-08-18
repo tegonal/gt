@@ -46,17 +46,28 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_remote_cleanupRemoteOnUnexpectedExit() {
 	local -r result=$?
-	# maybe we still show commands at this point due to unexpected exit, thus turn it of just in case
+	# maybe we still show commands at this point due to unexpected exit, thus turn it off just in case
 	{ set +x; } 2>/dev/null
+
+	local -r repo=$1
+	local -r currentDir=$2
+	shift 2
 
 	# shellcheck disable=SC2181
 	if ! ((result == 0)) && [[ -d $1 ]]; then
 		deleteDirChmod777 "$1"
 	fi
+
+	# revert side effect of cd
+	cd "$currentDir"
 }
 
 function gget_remote_add() {
-	source "$dir_of_gget/shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
+
+	local currentDir
+	currentDir=$(pwd)
+	local -r currentDir
 
 	local remote url pullDir unsecure workingDir
 	# shellcheck disable=SC2034
@@ -97,41 +108,43 @@ function gget_remote_add() {
 
 	if ! checkWorkingDirExists "$workingDirAbsolute"; then
 		if askYesOrNo "Shall I create the work directory for you and continue?"; then
-			mkdir -p "$workingDirAbsolute"
+			mkdir -p "$workingDirAbsolute" || die "was not able to create the workingDir %s" "$workingDirAbsolute"
 		else
-			return 9
+			exit 9
 		fi
 	fi
 
-	mkdir -p "$workingDirAbsolute/remotes"
+	mkdir -p "$workingDirAbsolute/remotes" || die "was not able to create directory %s" "$workingDirAbsolute/remotes"
 
-	local remoteDir publicKeysDir repo gpgDir gitconfig
+	local remoteDir publicKeysDir repo gpgDir pullArgsFile gitconfig
 	source "$dir_of_gget/paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
-		returnDying "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
+		die "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
 	elif [[ -d $remoteDir ]]; then
-		returnDying "remote \033[0;36m%s\033[0m already exists, remove with: gget remote remove %s" "$remote" "$remote"
+		returnDying "remote \033[0;36m%s\033[0m already exists, remove with: gget remote remove %s" "$remote" "$remote" || return $?
 	fi
 
-	mkdir "$remoteDir" || returnDying "failed to create remote directory %s" "$remoteDir"
+	mkdir "$remoteDir" || die "failed to create remote directory %s" "$remoteDir"
 
-	# we want to expand $remoteDir here and not when signal happens (as $remoteDir might be out of scope)
+	# we want to expand $remoteDir and $currentDir here and not when signal happens (as they might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gget_remote_cleanupRemoteOnUnexpectedExit '$remoteDir'" EXIT SIGINT
+	trap "gget_remote_cleanupRemoteOnUnexpectedExit '$remoteDir' '$currentDir'" EXIT SIGINT
 
-	echo "--directory \"$pullDir\"" >"$remoteDir/pull.args"
+	echo "--directory \"$pullDir\"" >"$pullArgsFile" || logWarning "was not able to write the pull directory %s into %s\nPlease do it manually or use --directory when using 'gget pull' with the remote %s" "$pullDir" "$pullArgsFile" "$remote"
 
-	mkdir "$publicKeysDir"
-	mkdir "$repo"
-	mkdir "$gpgDir"
-	chmod 700 "$gpgDir"
+	mkdir "$publicKeysDir" || die "was not able to create the public keys dir at %s" "$publicKeysDir"
+	initialiseGpgDir "$gpgDir"
+	initialiseGitDir "$workingDir" "$remote"
 
+	# can be a problematic side effect, leaving as note here in case we run into issues at some point
+	# alternatively we could use `git -C "$repo"` for every git command
+	# we partly undo this cd in gget_remote_cleanupRemoteOnUnexpectedExit. Yet, every script which would depend on
+	# currentDir after this line can be influenced by this cd
 	cd "$repo"
 
 	# show commands in output
 	set -x
-	git init
 	git remote add "$remote" "$url"
 
 	# we need to copy the git config away in order that one can commit it
@@ -139,17 +152,17 @@ function gget_remote_add() {
 	cp "$repo/.git/config" "$gitconfig"
 
 	local defaultBranch
-	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p')"
+	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' || (logWarning >&2 "was not able to determine default branch for remote %s, going to use main" && echo "main"))"
 
-	git fetch --depth 1 "$remote" "$defaultBranch"
+	git fetch --depth 1 "$remote" "$defaultBranch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
 
 	# don't show commands in output anymore
 	{ set +x; } 2>/dev/null
 
 	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
 		if [[ $unsecure == true ]]; then
-			logWarning "no GPG key found, ignoring it because %s true was specified" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
+			logWarning "no .gget directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
+			echo "$unsecurePattern true" >>"$pullArgsFile" || logWarning "was not able to write '%s true' into %s, please do it manually" "$unsecurePattern" "$pullArgsFile"
 			return 0
 		else
 			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gget\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
@@ -177,28 +190,28 @@ function gget_remote_add() {
 		local file
 		while read -u 4 -r -d $'\0' file; do
 			if importGpgKey "$gpgDir" "$file" --confirm=true; then
-				mv "$file" "$publicKeysDir/"
+				mv "$file" "$publicKeysDir/" || die "unable to move public key %s into public keys directory %s" "$file" "$publicKeysDir"
 				((++numberOfImportedKeys))
 			else
-				echo "deleting key $file"
-				rm "$file"
+				echo "deleting gpg key file $file"
+				rm "$file" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$file"
 			fi
 		done
 	}
 	withCustomOutputInput 3 4 gget_remote_importGpgKeys
 
-	deleteDirChmod777 "$repo/.gget"
+	deleteDirChmod777 "$repo/.gget" || logWarning "was not able to delete %s, please do it manually" "$repo/.gget"
 
 	if ((numberOfImportedKeys == 0)); then
 		if [[ $unsecure == true ]]; then
 			logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecurePattern"
 			return 0
 		else
-			errorNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
 		fi
 	fi
 
-	gpg --homedir "$gpgDir" --list-sig
+	gpg --homedir "$gpgDir" --list-sig || die "was not able to list the gpg keys, looks like a broken setup, aborting"
 	logSuccess "remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -t <VERSION> -p <PATH>" "$remote" "$numberOfImportedKeys" "$remote"
 }
 
@@ -225,15 +238,17 @@ function gget_remote_list() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
-	checkWorkingDirExists "$workingDir"
+	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	local remotesDir
-	local -r remote="not really a remote but paths.source.sh requires it, hence we set it here"
+	local -r remote="not really a remote but paths.source.sh requires it, hence we set it here but don't use it afterwards"
 	source "$dir_of_gget/paths.source.sh"
 
-	cd "$remotesDir"
+	local cutLength
+	cutLength=$((${#remotesDir} + 2))
+
 	local output
-	output="$(find . -maxdepth 1 -type d -not -path "." | cut -c 3-)"
+	output="$(find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo "")"
 	if [[ $output == "" ]]; then
 		logInfo "No remote define yet."
 		echo ""
@@ -246,7 +261,7 @@ function gget_remote_list() {
 }
 
 function gget_remote_remove() {
-	source "$dir_of_gget/shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh"|| die "was not able to source shared-patterns.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034
@@ -269,18 +284,19 @@ function gget_remote_remove() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
 
-	checkWorkingDirExists "$workingDir"
+	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	local remoteDir
 	source "$dir_of_gget/paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
-		returnDying "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"
+		logError "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"
+		return 1
 	else
-		checkRemoteDirExists "$workingDir" "$remote"
+		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 	fi
 
-	deleteDirChmod777 "$remoteDir"
+	deleteDirChmod777 "$remoteDir" || die "was not able to delete remoteDir %s" "$remoteDir"
 	logSuccess "removed remote \033[0;36m%s\033[0m" "$remote"
 }
 
