@@ -25,13 +25,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-
-function deleteDirChmod777() {
-	local -r dir=$1
-	# e.g files in .git will be write-protected and we don't want sudo for this command
-	chmod -R 777 "$dir"
-	rm -r "$dir"
-}
+sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 
 function errorNoGpgKeysImported() {
 	local -r remote=$1
