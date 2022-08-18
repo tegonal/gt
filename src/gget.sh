@@ -70,7 +70,7 @@ function gget() {
 			remote   manage remotes
 		EOM
 	else
-		die "unknown command \033[0;36m%s\033[0m, expected one of pull, remote" "$command"
+		die "unknown command \033[0;36m%s\033[0m, expected one of pull, remote, reset" "$command"
 	fi
 }
 

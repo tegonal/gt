@@ -45,14 +45,14 @@ sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_pull_cleanupRepo() {
-	# maybe we still show commands at this point due to unexpected exit, thus turn it off just in case
-	{ set +x; } 2>/dev/null
-
 	local -r repository=$1
 	find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
 }
 
 function gget_pull() {
+	local startTime endTime elapsed
+	startTime=$(date +%s.%3N)
+
 	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
@@ -226,18 +226,18 @@ function gget_pull() {
 			exit 1
 		fi
 	fi
-	local remoteTags
-	remoteTags=$(git ls-remote -t "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
-	grep "$tag" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags" || return $?
+	local tags
+	tags=$(git tag) || die "The following command failed (see above): git tag"
+	if grep "$tag" <<<"$tags" >/dev/null; then
+		logInfo "tag %s already exists locally, skipping fetching from remote" "$tag"
+	else
+		local remoteTags
+		remoteTags=$(git ls-remote -t "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
+		grep "$tag" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags" || return $?
+		git fetch --depth 1 "$remote" "refs/tags/$tag:refs/tags/$tag" || returnDying "was not able to fetch tag %s from remote %s" "$tag" "$remote" || return $?
+	fi
 
-	# show commands as output
-	set -x
-
-	git fetch --depth 1 "$remote" "refs/tags/$tag:refs/tags/$tag" || return $?
 	git checkout "tags/$tag" -- "$path" || return $?
-
-	# don't show commands in output anymore
-	{ set +x; } 2>/dev/null
 
 	function gget_pull_mentionUnsecure() {
 		if ! [[ $unsecure == true ]]; then
@@ -252,19 +252,11 @@ function gget_pull() {
 	function gget_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
-			# show commands as output
-			set -x
 			if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
-				# don't show commands in output anymore
-				{ set +x; } 2>/dev/null
-
 				logErrorWithoutNewline "no signature file found for %s, aborting pull" "$path"
 				gget_pull_mentionUnsecure >&2
 				return 1
 			fi
-
-			# don't show commands in output anymore
-			{ set +x; } 2>/dev/null
 		fi
 	}
 	gget_pull_pullSignatureOfSingleFetchedFile
@@ -281,7 +273,7 @@ function gget_pull() {
 				offset=$(if [[ $path == */ ]]; then echo 1; else echo 2; fi)
 				targetFile="$(cut -c "$((${#path} + offset))"- <<<"$file")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$file" || return $?
 			else
-				targetFile="$(basename "$file")"  || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$file" || return $?
+				targetFile="$(basename "$file")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$file" || return $?
 			fi
 		else
 			targetFile="$file"
@@ -329,7 +321,7 @@ function gget_pull() {
 				rm "$repo/$file"
 				return
 			elif [[ -f $absoluteTarget ]]; then
-				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$pullDir/$file"
+				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$absoluteTarget"
 			fi
 		fi
 
@@ -345,7 +337,7 @@ function gget_pull() {
 			if [[ -d "$pullDirAbsolute/$file" ]]; then
 				die "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
 			fi
-			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file"
+			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m" "$file" || return $?
 			# or true as we will try to cleanup the repo on exit
 			rm "$file.$sigExtension" || true
 			gget_pull_moveFile "$file"
@@ -361,10 +353,12 @@ function gget_pull() {
 		# `while read` will fail because there is no \0
 		true)
 
+	endTime=$(date +%s.%3N)
+	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
 	if ((numberOfPulledFiles > 1)); then
-		logSuccess "%s files pulled from %s %s" "$numberOfPulledFiles" "$remote" "$path"
+		logSuccess "%s files pulled from %s %s in %s seconds" "$numberOfPulledFiles" "$remote" "$path" "$elapsed"
 	elif ((numberOfPulledFiles = 1)); then
-		logSuccess "file %s pulled from %s" "$path" "$remote"
+		logSuccess "file %s pulled from %s in %s seconds" "$path" "$remote" "$elapsed"
 	else
 		returnDying "0 files could be pulled from %s, most likely verification failed, see above." "$remote"
 	fi
