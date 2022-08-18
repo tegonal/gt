@@ -105,7 +105,7 @@ function gget_remote_add() {
 
 	mkdir -p "$workingDirAbsolute/remotes"
 
-	local remoteDir publicKeysDir repo gpgDir
+	local remoteDir publicKeysDir repo gpgDir gitconfig
 	source "$dir_of_gget/paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
@@ -136,7 +136,7 @@ function gget_remote_add() {
 
 	# we need to copy the git config away in order that one can commit it
 	# this file will be used to restore the config for those who have not setup the remote on their machine
-	cp "$repo/.git/config" "$remoteDir/gitconfig"
+	cp "$repo/.git/config" "$gitconfig"
 
 	local defaultBranch
 	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p')"

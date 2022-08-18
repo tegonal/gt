@@ -132,7 +132,7 @@ function gget_pull() {
 	checkWorkingDirExists "$workingDirAbsolute"
 	checkRemoteDirExists "$workingDirAbsolute" "$remote"
 
-	local remoteDir publicKeysDir repo gpgDir pulledTsv
+	local remoteDir publicKeysDir repo gpgDir pulledTsv gitconfig
 	source "$dir_of_gget/paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -152,7 +152,7 @@ function gget_pull() {
 		mkdir -p "$repo"
 		cd "$repo"
 		git init
-		cp "$remoteDir/gitconfig" "$repo/.git/config"
+		cp "$gitconfig" "$repo/.git/config"
 	fi
 
 	local doVerification
@@ -211,6 +211,22 @@ function gget_pull() {
 	trap "gget_pull_cleanupRepo '$repo'" EXIT SIGINT
 
 	cd "$repo"
+	if ! git remote | grep "$remote" >/dev/null; then
+		logError "looks like the .git directory of remote %s is broken. There is no remote %s setup." "$remote" "$remote"
+		if [[ -f $gitconfig ]]; then
+			if askYesOrNo "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
+				cd "$workingDir"
+				deleteDirChmod777 "$repo"
+				initialiseGitDir "$workingDir" "$remote"
+				cd "$repo"
+			else
+				exit 1
+			fi
+		else
+			logInfo >&2 "%s does not exist, cannot ask to re-initialise the repo, have to abort" "$gitconfig"
+			exit 1
+		fi
+	fi
 	local remoteTags
 	remoteTags=$(git ls-remote -t "$remote" || (logInfo >&2 "check your internet connection" && return 1))
 	grep "$tag" <<<"$remoteTags" >/dev/null || (returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags")
