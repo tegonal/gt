@@ -123,7 +123,7 @@ function gget_pull() {
 	if ! [[ -v pullDir ]] && [[ -v workingDir ]] && [[ -v remote ]]; then
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 	fi
-	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	local workingDirAbsolute pullDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir")
