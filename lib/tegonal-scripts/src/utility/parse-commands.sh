@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.0
+#                                         Version: v0.13.1
 #
 #######  Description  #############
 #
@@ -95,7 +95,7 @@ function parse_commands_checkParameterDefinitionIsPair() {
 }
 
 function parseCommands {
-	if (($# < 5)); then
+	if (($# < 4)); then
 		logError "At least five arguments need to be passed to parseCommands, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: commands   the name of an array which contains the command definitions'
 		echo >&2 '2: version    the version which shall be shown if one uses --version'
@@ -112,6 +112,12 @@ function parseCommands {
 	local -r sourceFn=$3
 	local -r fnPrefix=$4
 	shift 4 || die "could not shift by 4"
+
+	if (($# < 5 )); then
+		logError "no command passed to %s, following the output of --help"
+		echo ""
+		parse_commands_printHelp parseCommands_paramArr "$version"
+	fi
 
 	parse_commands_checkParameterDefinitionIsPair parseCommands_paramArr
 	exitIfArgIsNotFunction "$sourceFn" 3
@@ -157,7 +163,7 @@ function parse_commands_printHelp() {
 	local -a commandNames=()
 	arrTakeEveryX parse_commands_printHelp_paramArr commandNames 2 0
 	local -i maxLength=$(($(arrStringEntryMaxLength commandNames) + 2))
-	local -ri arrLength="${#parseCommands_paramArr}"
+	local -ri arrLength="${#parseCommands_paramArr[@]}"
 
 	printf "\033[1;33mCommands:\033[0m\n"
 	local -i i
