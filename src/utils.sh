@@ -112,7 +112,7 @@ function gitDiffChars() {
 
 function initialiseGitDir() {
 	local -r workingDir=$1
-	local -r remote=$2"asdf"
+	local -r remote=$2
 	shift 2
 
 	local repo gitconfig
