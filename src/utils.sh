@@ -112,14 +112,14 @@ function gitDiffChars() {
 
 function initialiseGitDir() {
 	local -r workingDir=$1
-	local -r remote=$2"asdf"
+	local -r remote=$2
 	shift 2
 
 	local repo gitconfig
 	source "$dir_of_gget/paths.source.sh"
 
 	mkdir -p "$repo" || die "could not create the repo at %s" "$repo"
-	git --git-dir="$repo" init || die "could not git init the repo at %s" "$repo"
+	git --git-dir="$repo/.git" init || die "could not git init the repo at %s" "$repo"
 }
 
 function reInitialiseGitDir() {
