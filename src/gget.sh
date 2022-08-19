@@ -42,36 +42,24 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-commands.sh"
+
+function gget_source(){
+	local -r command=$1
+	shift || die "could not shift by 1"
+	sourceOnce "$dir_of_gget/gget-$command.sh"
+}
 
 function gget() {
-	if (($# < 1)); then
-		logError "At least one parameter needs to be passed to gget, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1. command     one of: pull, remote'
-		echo >&2 '2... args...   command specific arguments'
-		printStackTrace
-		exit 9
-	fi
-
-	exitIfCommandDoesNotExist "git" "please install it (https://git-scm.com/downloads)"
-
-	local -r command=$1
-	shift
-	if [[ "$command" =~ ^(pull|re-pull|remote|reset)$ ]]; then
-		local -r file="$dir_of_gget/gget-$command.sh"
-		# we are aware of that the || disables set -e for sourceOnce
-		# shellcheck disable=SC2310
-		sourceOnce "$file" || die "could not source %s" "$file"
-		"gget_${command/-/_}" "$@"
-	elif [[ "$command" == "--help" ]]; then
-		cat <<-EOM
-			Use one of the following commands:
-			pull     pull files from a remote
-			remote   manage remotes
-		EOM
-	else
-		die "unknown command \033[0;36m%s\033[0m, expected one of:\n- pull\n- re-pull\n- remote\n- reset" "$command"
-	fi
+	# is used in parseCommands but shellcheck is not able to deduce this, thus:
+	# shellcheck disable=SC2034
+	local -ra commands=(
+		pull		"pull files from a previously defined remote"
+		re-pull "re-pull files defined in pulled.tsv of a specific or all remotes"
+		remote  "manage remotes"
+		reset		"reset one or all remotes (re-establish gpg and re-pull files)"
+	)
+	parseCommands commands "$GGET_VERSION" gget_source gget_ "$@"
 }
 
 ${__SOURCED__:+return}
