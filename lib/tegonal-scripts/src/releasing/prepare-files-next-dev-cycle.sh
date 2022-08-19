@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -49,7 +49,7 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
-export TEGONAL_SCRIPTS_VERSION='v0.12.0'
+export TEGONAL_SCRIPTS_VERSION='v0.13.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -71,7 +71,7 @@ function prepareFilesNextDevCycle() {
 	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
 	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
-	checkAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
+	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 
 	if ! [[ "$version" =~ ^(v[0-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$ ]]; then
 		die "version should match vX.Y.Z(-RC...), was %s" "$version"

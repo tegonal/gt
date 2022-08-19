@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -31,7 +31,7 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
-export TEGONAL_SCRIPTS_VERSION='v0.12.0'
+export TEGONAL_SCRIPTS_VERSION='v0.13.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -65,7 +65,7 @@ function updateVersionScripts() {
 	parseArguments params "$examples" "$TEGONAL_SCRIPTS_VERSION" "$@"
 	if ! [[ -v directory ]]; then directory="./src"; fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern=""; fi
-	checkAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
 
 	echo "set version $version in bash headers in directory $directory"
 	if [[ -n $additionalPattern ]]; then

@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -35,6 +35,10 @@
 #    # executes readFile and closes the file descriptors again
 #    withCustomOutputInput 3 4 readFile "my-file.txt"
 #
+#
+#    # First tries to set chmod 777 to the directory and all files within it and then deletes the directory
+#    deleteDirChmod777 ".git"
+#
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
@@ -49,7 +53,7 @@ function withCustomOutputInput() {
 	local outputNr=$1
 	local inputNr=$2
 	local fun=$3
-	shift 3
+	shift 3 || die "could not shift by 3"
 
 	exitIfArgIsNotFunction "$fun" 3
 
@@ -68,7 +72,7 @@ function withCustomOutputInput() {
 
 function deleteDirChmod777() {
 	local -r dir=$1
-	shift
+	shift || die "could not shift by 1"
 	# e.g files in .git will be write-protected and we don't want sudo for this command
 	# yet, if it fails, then we ignore the problem and still try to delete the folder
 	chmod -R 777 "$dir" || true

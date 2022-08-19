@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -74,7 +74,7 @@ function parseFnArgs() {
 
 	# using unconventional naming in order to avoid name clashes with the variables we will initialise further below
 	local -rn parseFnArgs_paramArr1=$1
-	shift 1
+	shift 1 || die "could not shift by 1"
 
 	exitIfArgIsNotArray parseFnArgs_paramArr1 1
 
@@ -92,6 +92,8 @@ function parseFnArgs() {
 		parseFnArgs_minExpected="$((${#parseFnArgs_paramArr1[@]} - 1))"
 	fi
 	local -r parseFnArgs_minExpected
+	local -i parseFnArgs_i
+
 	if (($# < parseFnArgs_minExpected)); then
 		logError "Not enough arguments supplied to \033[0m\033[0;36m%s\033[0m\nExpected %s, given %s\nFollowing a listing of the expected arguments (red means missing):" \
 			"${FUNCNAME[1]}" "${#parseFnArgs_paramArr1[@]}" "$#"
@@ -132,7 +134,7 @@ function parseFnArgs() {
 		# assign arguments to specified variables
 		printf -v "$parseFnArgs_name" "%s" "$1" || die "could not assign value to $parseFnArgs_name"
 		local -r "$parseFnArgs_name"
-		shift
+		shift || die "could not shift by 1"
 	done
 
 	# assign rest to varargs if used

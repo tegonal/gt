@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -24,22 +24,22 @@
 #
 #    source "$dir_of_tegonal_scripts/utility/source-once.sh"
 #
-#    sourceOnce "foo.sh"    # creates a variable named foo__sh which acts as guard and sources foo.sh
-#    sourceOnce "foo.sh"    # will source nothing as foo__sh is already defined
-#    unset foo__sh          # unsets the guard
+#    sourceOnce "foo.sh"    # creates a variable named sourceOnceGuard_foo__sh which acts as guard and sources foo.sh
+#    sourceOnce "foo.sh"    # will source nothing as sourceOnceGuard_foo__sh is already defined
+#    unset sourceOnceGuard_foo__sh          # unsets the guard
 #    sourceOnce "foo.sh"    # is sourced again and the guard established
 #
-#    # creates a variable named bar__foo__sh which acts as guard and sources bar/foo.sh
+#    # creates a variable named sourceOnceGuard_bar__foo__sh which acts as guard and sources bar/foo.sh
 #    sourceOnce "bar/foo.sh"
 #
 #    # will source nothing, only the parent dir + file is used as identifier
-#    # i.e. the corresponding guard is bar__foo__sh and thus this file is not sourced
+#    # i.e. the corresponding guard is sourceOnceGuard_bar__foo__sh and thus this file is not sourced
 #    sourceOnce "asdf/bar/foo.sh"
 #
 #    declare guard
-#    guard=$(determineSourceOnceGuard "src/b.sh")
-#    # In case you have a cyclic dependency (a.sh sources b.sh and b.sh source a.sh),
-#    # then you can define the guard in file a yourself (before sourcing b.sh) so that b.sh does no longer source file a
+#    guard=$(determineSourceOnceGuard "src/bar.sh")
+#    # In case you don't want that a certain file is sourced, then you can define the guard yourself
+#    # this will prevent that */src/bar.sh is sourced
 #    printf -v "$guard" "%s" "true"
 #
 ###################################
@@ -48,10 +48,10 @@ shopt -s inherit_errexit
 
 function determineSourceOnceGuard() {
 	if ! (($# == 1)); then
-  		traceAndDie "you need to pass the file name, for which we shall calculate the guard, to determineSourceOnceGuard"
-  	fi
+		traceAndDie "you need to pass the file name, for which we shall calculate the guard, to determineSourceOnceGuard"
+	fi
 	local -r file="$1"
-	readlink -m "$file" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
+	readlink -m "$file" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@sourceOnceGuard_\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
 }
 
 function sourceOnce() {
@@ -64,7 +64,7 @@ function sourceOnce() {
 	fi
 
 	local -r sourceOnce_file="$1"
-	shift
+	shift 1 || die "could not shift by 1"
 
 	local sourceOnce_guard
 	sourceOnce_guard=$(determineSourceOnceGuard "$sourceOnce_file")
