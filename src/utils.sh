@@ -119,7 +119,7 @@ function initialiseGitDir() {
 	source "$dir_of_gget/paths.source.sh"
 
 	mkdir -p "$repo" || die "could not create the repo at %s" "$repo"
-	git --git-dir="$repo" init || die "could not git init the repo at %s" "$repo"
+	git --git-dir="$repo/.git" init || die "could not git init the repo at %s" "$repo"
 }
 
 function reInitialiseGitDir() {
