@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.1
+#                                         Version: v0.13.2
 #
 #######  Description  #############
 #
@@ -49,7 +49,7 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
-export TEGONAL_SCRIPTS_VERSION='v0.13.1'
+export TEGONAL_SCRIPTS_VERSION='v0.13.2'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."

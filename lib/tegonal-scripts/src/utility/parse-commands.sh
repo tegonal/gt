@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.1
+#                                         Version: v0.13.2
 #
 #######  Description  #############
 #
@@ -114,7 +114,7 @@ function parseCommands {
 	shift 4 || die "could not shift by 4"
 
 	if (($# < 5 )); then
-		logError "no command passed to %s, following the output of --help"
+		logError "no command passed to %s, following the output of --help" "$(basename "${BASH_SOURCE[2]}")"
 		echo ""
 		parse_commands_printHelp parseCommands_paramArr "$version"
 	fi
