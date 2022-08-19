@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.2
+#                                         Version: v0.13.3
 #
 #######  Description  #############
 #
@@ -59,7 +59,7 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
-export TEGONAL_SCRIPTS_VERSION='v0.13.2'
+export TEGONAL_SCRIPTS_VERSION='v0.13.3'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -143,6 +143,8 @@ function releaseFiles() {
 		fi
 	fi
 
+	git fetch || die "could not fetch latest changes from origin"
+
 	if localGitIsAhead "$expectedDefaultBranch"; then
 		logError "you are ahead of origin, please push first and check if CI succeeds before releasing. Following your additional changes:"
 		git -P log origin/main..main
@@ -154,7 +156,7 @@ function releaseFiles() {
 	fi
 
 	while localGitIsBehind "$expectedDefaultBranch"; do
-		git fetch
+		git fetch || die "could not fetch latest changes from origin"
 		logError "you are behind of origin. I already fetched the changes for you, please check if you still want to release. Following the additional changes in origin/main:"
 		git -P log "${expectedDefaultBranch}..origin/$expectedDefaultBranch"
 		if askYesOrNo "Do you want to git pull?"; then
