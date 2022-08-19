@@ -43,6 +43,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-commands.sh"
 
 function gget_remote_cleanupRemoteOnUnexpectedExit() {
 	local -r result=$?
@@ -294,29 +295,20 @@ function gget_remote_remove() {
 	logSuccess "removed remote \033[0;36m%s\033[0m" "$remote"
 }
 
-function gget_remote() {
-	if (($# < 1)); then
-		logError "At least one parameter needs to be passed to \`gget remote\`, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:\n" "$#"
-		echo >&2 '1. command     one of: add, remove, list'
-		echo >&2 '2... args...   command specific arguments'
-		printStackTrace
-		exit 9
-	fi
+function gget_remote_source() {
+	# no op the command functions are already in this file
+	true
+}
 
-	declare command=$1
-	shift
-	if [[ "$command" =~ ^(add|remove|list)$ ]]; then
-		"gget_remote_$command" "$@"
-	elif [[ "$command" == "--help" ]]; then
-		cat <<-EOM
-			Use one of the following commands:
-			add      add a remote
-			remove   remove a remote
-			list     list all existing remotes
-		EOM
-	else
-		die "unknown command \033[0;36m%s\033[0m, expected one of add, list, remove -- as in gget remote list" "$command"
-	fi
+function gget_remote() {
+	# is used in parseCommands but shellcheck is not able to deduce this, thus:
+	# shellcheck disable=SC2034
+	local -ra commands=(
+		add 		'add a remote'
+		remove  'remove a remote'
+		list    'list all remotes'
+	)
+	parseCommands commands "$GGET_VERSION" gget_remote_source gget_remote_ "$@"
 }
 
 ${__SOURCED__:+return}

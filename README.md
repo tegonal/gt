@@ -67,9 +67,17 @@ Following the output of running `gget --help`:
 
 <!-- auto-generated, do not modify here but in src/gget.sh -->
 ```text
-Use one of the following commands:
-pull     pull files from a remote
-remote   manage remotes
+Commands:
+pull      pull files from a previously defined remote
+re-pull   re-pull files defined in pulled.tsv of a specific or all remotes
+remote    manage remotes
+reset     reset one or all remotes (re-establish gpg and re-pull files)
+
+--help     prints this help
+--version  prints the version of this script
+
+INFO: Version of gget.sh is:
+v0.2.0-SNAPSHOT
 ```
 
 </gget-help>
@@ -82,10 +90,16 @@ Following the output of running `gget remote --help`:
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
 ```text
-Use one of the following commands:
+Commands:
 add      add a remote
 remove   remove a remote
-list     list all existing remotes
+list     list all remotes
+
+--help     prints this help
+--version  prints the version of this script
+
+INFO: Version of gget-remote.sh is:
+v0.2.0-SNAPSHOT
 ```
 
 </gget-remote-help>
