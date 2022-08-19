@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -70,6 +70,7 @@ function importGpgKey() {
 	) || die "not able to show the theoretical import of %s, aborting" "$file"
 	local isTrusting='y'
 	if [[ $withConfirmation == "--confirm=true" ]]; then
+		echo "==========================================================================="
 		echo "$outputKey"
 		if askYesOrNo "The above key(s) will be used to verify the files you will pull from this remote, do you trust them?"; then
 			isTrusting='y'

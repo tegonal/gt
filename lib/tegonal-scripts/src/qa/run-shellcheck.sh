@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.12.0
+#                                         Version: v0.13.0
 #
 #######  Description  #############
 #
@@ -44,6 +44,8 @@ sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function runShellcheck() {
+	exitIfCommandDoesNotExist "shellcheck" "see https://github.com/koalaman/shellcheck#installing"
+
 	if ! (($# == 2)); then
 		logError "Two parameters need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: dirs         name of array which contains paths in which *.sh files are searched'
@@ -53,6 +55,7 @@ function runShellcheck() {
 	fi
 	local -rn runShellcheck_paths=$1
 	local -r sourcePath=$2
+	shift 2 || die "could not shift by 2"
 
 	exitIfArgIsNotArray runShellcheck_paths 1
 

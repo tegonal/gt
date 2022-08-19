@@ -84,7 +84,7 @@ function gget_re_pull() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v onlyMissing ]]; then onlyMissing=true; fi
-	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 

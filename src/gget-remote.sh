@@ -100,7 +100,7 @@ function gget_remote_add() {
 	if ! [[ -v pullDir ]]; then pullDir="lib/$remote"; fi
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
-	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir")
@@ -230,7 +230,7 @@ function gget_remote_list() {
 
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
-	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
@@ -276,7 +276,7 @@ function gget_remote_remove() {
 
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
-	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 

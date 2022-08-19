@@ -80,7 +80,7 @@ function gget_reset() {
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
-	checkAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
