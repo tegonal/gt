@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.2
+#                                         Version: v0.13.3
 #
 #######  Description  #############
 #
@@ -102,7 +102,7 @@ function parseCommands {
 		echo >&2 '3: sourceFn   the function which sources the necessary files for a particular command, the commandName will be passed to this function'
 		echo >&2 '4: fnPrefix   prefix for the function representing a command'
 		echo >&2 '5: command    the command name'
-		echo >&2 '5... args...  arguments for the command, typically "$@"'
+		echo >&2 '6... args...  arguments for the command, typically "$@"'
 		printStackTrace
 		exit 9
 	fi
@@ -113,10 +113,11 @@ function parseCommands {
 	local -r fnPrefix=$4
 	shift 4 || die "could not shift by 4"
 
-	if (($# < 5 )); then
+	if (($# < 1 )); then
 		logError "no command passed to %s, following the output of --help" "$(basename "${BASH_SOURCE[2]}")"
 		echo ""
 		parse_commands_printHelp parseCommands_paramArr "$version"
+		exit 9
 	fi
 
 	parse_commands_checkParameterDefinitionIsPair parseCommands_paramArr
