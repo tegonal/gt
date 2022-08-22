@@ -49,6 +49,8 @@ For instance, the [README of v0.1.0](https://github.com/tegonal/gget/tree/v0.1.0
     - [remove](#remove)
     - [list](#list)
   - [pull](#pull) 
+  - [re-pull](#re-pull)
+  - [reset](#reset)
 - [Contributors and contribute](#contributors-and-contribute)
 - [License](#license)
 
@@ -84,6 +86,7 @@ v0.2.0-SNAPSHOT
 
 ## remote
 
+Use this command to manage remotes.
 Following the output of running `gget remote --help`:
 
 <gget-remote-help>
@@ -220,6 +223,8 @@ v0.2.0-SNAPSHOT
 
 ## pull
 
+Use this command to pull files from a previously defined remote
+
 Following the output of running `gget pull --help`:
 
 <gget-pull-help>
@@ -278,6 +283,128 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 ```
 
 </gget-pull>
+
+## re-pull
+
+Use this command to pull missing files form all or a specific remote. You can also use it to re-pull files even if they
+already exist locally.
+
+Following the output of running `gget re-pull --help`:
+
+<gget-re-pull-help>
+
+<!-- auto-generated, do not modify here but in src/gget-re-pull.sh -->
+```text
+Parameters:
+-r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
+-w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
+--auto-trust             (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+--only-missing           (optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true
+
+--help     prints this help
+--version  prints the version of this script
+
+Examples:
+# re-pull all files of remote tegonal-scripts which are missing locally
+gget re-pull -r tegonal-scripts
+
+# re-pull all files of all remotes which are missing locally
+gget re-pull
+
+# re-pull all files (not only missing) of remote tegonal-scripts, imports gpg keys without manual consent if necessary
+gget re-pull -r tegonal-scripts --only-missing false --auto-trust true
+
+INFO: Version of gget-re-pull.sh is:
+v0.2.0-SNAPSHOT
+```
+
+</gget-re-pull-help>
+
+Full usage example:
+
+<gget-re-pull>
+
+<!-- auto-generated, do not modify here but in src/gget-re-pull.sh -->
+```bash
+#!/usr/bin/env bash
+
+# for each remote in .gget
+# - re-pull files defined in .gget/remotes/<remote>/pulled.tsv which are missing locally
+gget re-pull
+
+# re-pull files defined in .gget/remotes/tegonal-scripts/pulled.tsv which are missing locally
+gget re-pull -r tegonal-scripts
+
+# pull all files defined in .gget/remotes/tegonal-scripts/pulled.tsv regardless if they already exist locally or not
+gget re-pull -r tegonal-scripts --only-missing false
+
+# uses a custom working directory and re-pulls files of remote tegonal-scripts which are missing locally
+gget re-pull -r tegonal-scripts -w .github/.gget
+```
+
+</gget-re-pull>
+
+## reset
+
+Use this command to reset one or all remotes. By resetting we mean, re-establish trust (check GPG key again) and 
+re-fetch all files.
+
+Following the output of running `gget reset --help`:
+
+<gget-reset-help>
+
+<!-- auto-generated, do not modify here but in src/gget-reset.sh -->
+```text
+Parameters:
+-r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
+-w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
+--auto-trust             (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+
+--help     prints this help
+--version  prints the version of this script
+
+Examples:
+# reset the remote tegonal-scripts
+gget reset -r tegonal-scripts
+
+# resets all remotes
+gget reset
+
+# resets all remotes and imports gpg keys without manual consent
+gget reset --auto-trust true
+
+INFO: Version of gget-reset.sh is:
+v0.2.0-SNAPSHOT
+```
+
+</gget-reset-help>
+
+Full usage example:
+
+<gget-reset>
+
+<!-- auto-generated, do not modify here but in src/gget-reset.sh -->
+```bash
+#!/usr/bin/env bash
+
+# resets all defined remotes, which means for each remote in .gget
+# - re-initialise gpg trust based on public keys defined in .gget/remotes/<remote>/public-keys/*.asc
+# - pull files defined in .gget/remotes/<remote>/pulled.tsv
+gget reset
+
+# resets the remote tegonal-scripts which means:
+# - re-initialise gpg trust based on public keys defined in .gget/remotes/tegonal-scripts/public-keys/*.asc
+# - pull files defined in .gget/remotes/tegonal-scripts/pulled.tsv
+gget reset -r tegonal-scripts
+
+# uses a custom working directory and resets the remote tegonal-scripts which means:
+# - re-initialise gpg trust based on public keys defined in .github/.gget/remotes/tegonal-scripts/public-keys/*.asc
+# - pull files defined in .github/.gget/remotes/tegonal-scripts/pulled.tsv
+gget reset -r tegonal-scripts -w .github/.gget
+```
+
+</gget-reset>
+
 
 # Contributors and contribute
 
