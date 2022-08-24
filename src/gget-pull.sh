@@ -133,7 +133,7 @@ function gget_pull() {
 	exitIfWorkingDirDoesNotExist "$workingDirAbsolute"
 	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
-	local remoteDir publicKeysDir repo gpgDir pulledTsv gitconfig
+	local remoteDir publicKeysDir repo gpgDir pulledTsv pullHookFile gitconfig
 	source "$dir_of_gget/paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -261,6 +261,19 @@ function gget_pull() {
 	}
 	gget_pull_pullSignatureOfSingleFetchedFile
 
+	function gget_pull_noop() {
+		true
+	}
+	local pullHook="$pullHookFile"
+	if [[ -f $pullHook ]]; then
+		if ! [[ -x "$pullHook" ]]; then
+			die "there is a file at %s but it is not executable.\nEither make it executable:\n\033[35;1msudo chmod +x %s\033[0m\nOr rename/delete it:\nmv %s %s.bak" "$pullHook" "$pullHook" "$pullHook" "$pullHook"
+		fi
+	else
+		pullHook="gget_pull_noop"
+	fi
+	local -r pullHook
+
 	local -i numberOfPulledFiles=0
 
 	function gget_pull_moveFile() {
@@ -284,9 +297,10 @@ function gget_pull() {
 		# parent dir needs to be created before relativeTarget is determined because realpath expects an existing parent dir
 		mkdir -p "$parentDir" || die "was not able to create the parent dir for %s" "$absoluteTarget"
 
+		local source="$repo/$file"
 		local relativeTarget sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
-		sha=$(sha512sum "$repo/$file" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$repo/$file" || return $?
+		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
 		entry=$(pulledTsvEntry "$tag" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tag" "$file" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file" || echo "")
@@ -307,7 +321,7 @@ function gget_pull() {
 				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tag"
 				gitDiffChars "$entrySha" "$sha"
 				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
-				rm "$repo/$file"
+				rm "$source"
 				return
 			elif ! grep --line-regexp "$entry" "$pulledTsv" >/dev/null; then
 				local currentLocation newLocation
@@ -318,14 +332,16 @@ function gget_pull() {
 				echo "current location: $currentLocation"
 				echo "    new location: $newLocation"
 				printf "Won't pull the file again, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
-				rm "$repo/$file"
+				rm "$source"
 				return
 			elif [[ -f $absoluteTarget ]]; then
 				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$absoluteTarget"
 			fi
 		fi
 
-		mv "$repo/$file" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$repo/$file" "$absoluteTarget" || return $?
+		"$pullHook" "$tag" "$source" "$absoluteTarget" ||  returnDying "pull hook failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
+		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
+
 
 		((++numberOfPulledFiles))
 	}
