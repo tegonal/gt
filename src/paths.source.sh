@@ -24,4 +24,5 @@ local -r gpgDir="$publicKeysDir/gpg"
 local -r pulledTsv="$remoteDir/pulled.tsv"
 # note if you change this structure, then you need to adopt gget_pull => pullArgsFile
 local -r pullArgsFile="$remoteDir/pull.args"
+local -r pullHookFile="$remoteDir/pull-hook.sh"
 local -r gitconfig="$remoteDir/gitconfig"

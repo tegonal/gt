@@ -49,6 +49,7 @@ For instance, the [README of v0.2.0](https://github.com/tegonal/gget/tree/v0.2.0
     - [remove](#remove)
     - [list](#list)
   - [pull](#pull) 
+    - [Pull Hook](#pull-hook)
   - [re-pull](#re-pull)
   - [reset](#reset)
 - [Contributors and contribute](#contributors-and-contribute)
@@ -223,7 +224,7 @@ v0.2.0-SNAPSHOT
 
 ## pull
 
-Use this command to pull files from a previously defined remote
+Use this command to pull files from a previously defined remote (see [remote -> add](#add)).
 
 Following the output of running `gget pull --help`:
 
@@ -283,6 +284,24 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 ```
 
 </gget-pull>
+
+### pull hook
+
+You can define the file `pull-hook.sh` in `WORKGIN_DIR/remotes/REMOTE/pull-hook.sh` 
+(for instance in `.gget/remotes/tegonal-scripts/pull-hook.sh), 
+make it executable and it will be called for each file which is pulled where the following arguments are passed:
+1. tag specified via `-t|--target`
+2. path of the file before the move to its target destination
+3. target destination
+
+For instance, a hook could look as follows:
+```bash
+#!/usr/bin/env bash
+set -eu -o pipefail
+declare tag=$1 source=$2 target=$3
+shift 3
+echo "before moving $source of tag $tag to $target"
+```
 
 ## re-pull
 

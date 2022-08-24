@@ -26,6 +26,7 @@
 #
 ###################################
 set -eu -o pipefail
+shopt -s inherit_errexit
 export GGET_VERSION='v0.3.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
@@ -245,7 +246,7 @@ function gget_remote_list() {
 	local output
 	output="$(find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo "")"
 	if [[ $output == "" ]]; then
-		logInfo "No remote define yet."
+		logInfo "No remote defined yet."
 		echo ""
 		echo "To add one, use: gget remote add ..."
 		echo "Following the corresponding documentation of \`gget remote add\`:"
@@ -281,14 +282,24 @@ function gget_remote_remove() {
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
-	local remoteDir
+	workingDirAbsolute=$(readlink -m "$workingDir")
+
+	local remoteDir pullHookFile
 	source "$dir_of_gget/paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
 		logError "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"
 		return 1
 	else
-		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+		exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
+	fi
+
+	if [[ -f $pullHookFile ]]; then
+		logWarning "detected a pull-hook.sh in the corresponding remote, you might want to move it away first."
+		if ! askYesOrNo "shall I continue and delete it as well?"; then
+			logInfo "removing %s aborted" "$remote"
+			exit 10
+		fi
 	fi
 
 	deleteDirChmod777 "$remoteDir" || die "was not able to delete remoteDir %s" "$remoteDir"
@@ -304,9 +315,9 @@ function gget_remote() {
 	# is used in parseCommands but shellcheck is not able to deduce this, thus:
 	# shellcheck disable=SC2034
 	local -ra commands=(
-		add 		'add a remote'
-		remove  'remove a remote'
-		list    'list all remotes'
+		add 'add a remote'
+		remove 'remove a remote'
+		list 'list all remotes'
 	)
 	parseCommands commands "$GGET_VERSION" gget_remote_source gget_remote_ "$@"
 }

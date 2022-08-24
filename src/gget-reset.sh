@@ -32,6 +32,7 @@
 #
 ###################################
 set -euo pipefail
+shopt -s inherit_errexit
 export GGET_VERSION='v0.3.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
