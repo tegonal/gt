@@ -64,7 +64,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 function setEntryVariables() {
 	# yes the variables are not used here but they are (should be) in the parent scope
 	# shellcheck disable=SC2034
-	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1"
+	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1" ||  die "could not setEntryVariables for entry:\n%s" "$1"
 }
 
 function grepPulledEntryByFile() {
@@ -85,4 +85,32 @@ function replacePulledEntry() {
 	grepPulledEntryByFile "$pulledTsv" "$file" -v >"$pulledTsv.new" || die "could not find entry for file \033[0;36m%s\033[0m, thus cannot replace" "$file"
 	mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override %s with the new content (which does not contain the entry for file \033[0;36m%s\033[0m)" "$pulledTsv" "$file"
 	echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file \033[0;36m%s\033[0m to %s" "$file" "$pulledTsv"
+}
+
+function readPulledTsv() {
+	local workingDirAbsolute remote callback fileDescriptorOut fileDescriptorIn
+	# params is required for parseFnArgs thus:
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote callback fileDescriptorOut fileDescriptorIn)
+	parseFnArgs params "$@"
+
+	exitIfArgIsNotFunction "$callback" 3
+
+	local pulledTsv
+	source "$dir_of_gget/paths.source.sh"
+	if ! [[ -f $pulledTsv ]]; then
+		logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
+		return 0
+	fi
+
+	# start from line 2, i.e. skip the header in pulled.tsv
+	eval "tail -n +2 \"$pulledTsv\" >&$fileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+	while read -u "$fileDescriptorIn" -r entry; do
+		local entryTag entryFile entryRelativePath
+		setEntryVariables "$entry"
+		local entryAbsolutePath
+		#shellcheck disable=SC2310
+		entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of %s of remote %s" "$entryFile" "$remote" || return $?
+		"$callback" "$entryTag" "$entryFile" "$entryRelativePath" "$entryAbsolutePath" || return $?
+	done
 }

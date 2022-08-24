@@ -40,6 +40,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 
 sourceOnce "$dir_of_gget/utils.sh"
+sourceOnce "$dir_of_gget/pulled-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
@@ -264,6 +265,7 @@ function gget_remote_remove() {
 	local -ra params=(
 		remote "$remotePattern" 'define the name of the remote which shall be removed'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -278,13 +280,14 @@ function gget_remote_remove() {
 
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+	if ! [[ -v deletePulledFiles ]]; then deletePulledFiles="false"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	workingDirAbsolute=$(readlink -m "$workingDir")
 
-	local remoteDir pullHookFile
+	local remoteDir pulledTsv pullHookFile
 	source "$dir_of_gget/paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
@@ -295,10 +298,39 @@ function gget_remote_remove() {
 	fi
 
 	if [[ -f $pullHookFile ]]; then
-		logWarning "detected a pull-hook.sh in the corresponding remote, you might want to move it away first."
+		logWarning "detected a pull-hook.sh in the remote %s, you might want to move it away first." "$remote"
 		if ! askYesOrNo "shall I continue and delete it as well?"; then
-			logInfo "removing %s aborted" "$remote"
+			logInfo "removing remote \033[0;36m%s\033[0m aborted" "$remote"
 			exit 10
+		fi
+	fi
+
+	function gget_remote_remove_read() {
+		local -i numberOfDeletedFiles=0
+
+		function gget_remote_remove_readCallback() {
+			local _entryTag _entryFile _entryRelativePath entryAbsolutePath
+			# params is required for parseFnArgs thus:
+			# shellcheck disable=SC2034
+			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath)
+			parseFnArgs params "$@"
+			rm "$entryAbsolutePath"
+			((++numberOfDeletedFiles))
+		}
+
+		readPulledTsv "$workingDirAbsolute" "$remote" gget_remote_remove_readCallback 5 6
+		logInfo "deleted %s pulled files" "$numberOfDeletedFiles"
+	}
+
+	if [[ -f $pulledTsv ]]; then
+		if ! [[ $deletePulledFiles == true ]]; then
+			logInfo "detected a pulled.tsv in the remote %s. You might want to pass '--delete-pulled-files true' in case you want to delete all files" "$remote"
+			if askYesOrNo "Shall I abort? If you don't choose y, then I will go on and delete the remote without deleting the pulled files as defined in pulled.tsv"; then
+				logInfo "removing remote \033[0;36m%s\033[0m aborted" "$remote"
+				exit 10
+			fi
+		else
+			withCustomOutputInput 5 6 gget_remote_remove_read
 		fi
 	fi
 
