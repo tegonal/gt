@@ -288,7 +288,7 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 ### pull hook
 
 You can define the file `pull-hook.sh` in `WORKGIN_DIR/remotes/REMOTE/pull-hook.sh` 
-(for instance in `.gget/remotes/tegonal-scripts/pull-hook.sh), 
+(for instance in `.gget/remotes/tegonal-scripts/pull-hook.sh`), 
 make it executable and it will be called for each file which is pulled where the following arguments are passed:
 1. tag specified via `-t|--target`
 2. path of the file before the move to its target destination
