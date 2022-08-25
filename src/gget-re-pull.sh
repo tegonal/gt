@@ -108,22 +108,15 @@ function gget_re_pull() {
 
 	function gget_re_pull_rePullInternal() {
 		local -r remote=$1
-		shift
-		local pulledTsv
-		source "$dir_of_gget/paths.source.sh"
-		if ! [[ -f $pulledTsv ]]; then
-			logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
-			return 0
-		fi
-		# start from line 2, i.e. skip the header in pulled.tsv
-		tail -n +2 "$pulledTsv" >&5
-		while read -u 6 -r entry; do
-			local entryTag entryFile entryRelativePath
-			setEntryVariables "$entry"
-			local entryAbsolutePath parentDir
-			# we know that set -e is disabled for gget_re_pull_countError due to ||
-			#shellcheck disable=SC2310
-			entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || gget_re_pull_countError "$entryFile" "$remote" || return $?
+		shift 1 || die "could not shift by 1"
+
+		function gget_re_pull_rePullInternal_callback() {
+			local entryTag entryFile _entryRelativePath entryAbsolutePath
+			# params is required for parseFnArgs thus:
+			# shellcheck disable=SC2034
+			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath)
+			parseFnArgs params "$@"
+
 			# we know that set -e is disabled for gget_re_pull_countError due to ||
 			#shellcheck disable=SC2310
 			parentDir=$(dirname "$entryAbsolutePath") || gget_re_pull_countError "$entryFile" "$remote" || return $?
@@ -137,7 +130,10 @@ function gget_re_pull() {
 				((++skipped))
 				logInfo "skipping \033[0;36m%s\033[0m since it already exists locally at %s" "$entryFile" "$entryAbsolutePath"
 			fi
-		done
+		}
+		# we know that set -e is disabled for gget_re_pull_countError due to ||
+		#shellcheck disable=SC2310
+		readPulledTsv "$workingDirAbsolute" "$remote" gget_re_pull_rePullInternal_callback 5 6 || gget_re_pull_countError "$entryFile" "$remote" || return $?
 	}
 
 	function gget_re_pull_rePullRemote() {
