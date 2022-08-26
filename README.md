@@ -64,23 +64,56 @@ For instance, the [README of v0.2.0](https://github.com/tegonal/gget/tree/v0.2.0
 This script downloads the latest or a specific tag of gget and verifies gget's files against 
 the current GPG key (the one in the main branch).
 
-Per default it downloads the latest tag and installs it into `$HOME/.local/lib/gget` 
+We suggest that you download install.sh and its *.sig file and 
+verify the two against our GPG key before actually running it:
+```
+! [ -f ./install.sh ] || { echo "there is already an install.sh in your directory, aborting"; return 1 } && \
+wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
+wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
+wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import - && \
+gpg --verify ./install.sh.sig ./install.sh && \
+chmod +x ./install.sh && \
+echo "verification successful" || { echo "verification failed, don't continue"; return 99 } 
+```
+
+<details>
+<summary>click here for an explanation of each command</summary>
+
+1. `! [ -f ./install.sh ]`  
+   We don't want to override an existing `./install.sh` thus we check if there is already one and abort if this is the case
+2. `wget .../install.sh`  
+   download the install.sh
+3. `wget .../install.sh.sig`  
+   download the signature file of install.sh
+4. `wget .../signing-key.public.asc | gpg --import -`  
+   import the current public key of gget
+5. `gpg --verify...`  
+   verify the install.sh you downloaded is (still) valid
+6. `chmod +x ./install.sh`  
+   make install.sh executable
+7. `echo "..."`  
+   output the result of the verification
+
+</details>
+
+If successful you can install gget by just calling `./install.sh` (you might want to remove it afterwards)
+
+Per default, it downloads the latest tag and installs it into `$HOME/.local/lib/gget` 
 and sets up a symbolic link at `$HOME/.local/bin/gget`.
 
-You can tweak this as shown as follows:
-
+You can tweak this behaviour as shown as follows:
 ```
-# Download the latest tag, default installation directory and symbolic link
-wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh
+# Download the latest tag, configure default installation directory and symbolic link
+install.sh
 
 # Download a specific tag, default installation directory and symbolic link
-wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh -s -- -t v0.3.0
+install.sh -t v0.3.0
 
 # Download latest tag but custom installation directory, without the creation of a symbolic link
-wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh -s -- -d /opt/gget
+install.sh -d /opt/gget
 
 # Download latest tag but custom installation directory and symlink
-wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh -s -- -d /opt/gget -ln /usr/local/bin
+install.sh -d /opt/gget -ln /usr/local/bin
 ```
 
 ## manually
