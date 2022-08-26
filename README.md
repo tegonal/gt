@@ -43,6 +43,8 @@ For instance, the [README of v0.2.0](https://github.com/tegonal/gget/tree/v0.2.0
 
 **Table of Content**
 - [Installation](#installation)
+  - [install.sh](#using-installsh)
+  - [manually](#manually)
 - [Usage](#usage)
   - [remote](#remote)
     - [add](#add)
@@ -57,10 +59,47 @@ For instance, the [README of v0.2.0](https://github.com/tegonal/gget/tree/v0.2.0
 
 # Installation
 
+## using install.sh
+
+This script downloads the latest or a specific tag of gget and verifies gget's files against 
+the current GPG key (the one in the main branch).
+
+Per default it downloads the latest tag and installs it into `$HOME/.local/lib/gget` 
+and sets up a symbolic link at `$HOME/.local/bin/gget`.
+
+You can tweak this as shown as follows:
+
+```
+# Download the latest tag, default installation directory and symbolic link
+wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh
+
+# Download a specific tag, default installation directory and symbolic link
+wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh -s -- -t v0.3.0
+
+# Download latest tag but custom installation directory, without the creation of a symbolic link
+wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh -s -- -d /opt/gget
+
+# Download latest tag but custom installation directory and symlink
+wget -O- "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" | sh -s -- -d /opt/gget -ln /usr/local/bin
+```
+
+## manually
+
 1. [![Download](https://img.shields.io/badge/Download-v0.2.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.2.0)
-2. extract the zip/tar.gz
-3. copy the src directory to a place where you want to store gget e.g. /opt/gget or into your project directory
-4. optional: create a symlink `ln -s /opt/gget/gget.sh /usr/local/bin/gget`
+2. extract the zip/tar.gz 
+3. open a terminal at the corresponding folder and verify the scripts against our public key:  
+   ```bash
+   wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import -
+   find ./src -name "*.sig" -print0 | while read -r -d $'\0' sig; do gpg --verify "$sig"; done && echo "verification successful" || echo "verification failed, don't continue"
+   ```  
+4. copy the src directory to a place where you want to store gget:
+   1. For instance, if you only want it for the current user, then place it into $HOME/.local/lib/gget
+   2. if it shall be available for all users, then place it e.g. in /opt/gget or
+   3. into your project directory in case you want that other contributors can use it as well without an own installation
+5. optional: create a symlink:
+   1. only for the current user `ln -s "$HOME/.local/lib/gget/src/gget.sh" "$HOME/.local/bin/gget"`
+   2. globally `ln -s "$HOME/.local/lib/gget/src/gget.sh" "/usr/local/bin/gget"`
+   3. in project: `ln -s ./lib/gget/src/get.sh ./gget`
 
 # Usage
 
