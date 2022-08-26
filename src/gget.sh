@@ -34,7 +34,16 @@ shopt -s inherit_errexit
 export GGET_VERSION='v0.3.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	declare intermediateSource=${BASH_SOURCE[0]:-$0}
+	declare intermediateDir=""
+	while [[ -L $intermediateSource ]]; do
+		intermediateDir=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd)
+		intermediateSource=$(readlink "$intermediateSource")
+		if [[ $intermediateSource != /* ]]; then
+			intermediateSource=$intermediateDir/$intermediateSource
+		fi
+	done
+	dir_of_gget=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd)
 	declare -r dir_of_gget
 fi
 
@@ -44,7 +53,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-commands.sh"
 
-function gget_source(){
+function gget_source() {
 	local -r command=$1
 	shift || die "could not shift by 1"
 	sourceOnce "$dir_of_gget/gget-$command.sh"
@@ -54,10 +63,10 @@ function gget() {
 	# is used in parseCommands but shellcheck is not able to deduce this, thus:
 	# shellcheck disable=SC2034
 	local -ra commands=(
-		pull		"pull files from a previously defined remote"
+		pull "pull files from a previously defined remote"
 		re-pull "re-pull files defined in pulled.tsv of a specific or all remotes"
-		remote  "manage remotes"
-		reset		"reset one or all remotes (re-establish gpg and re-pull files)"
+		remote "manage remotes"
+		reset "reset one or all remotes (re-establish gpg and re-pull files)"
 	)
 	parseCommands commands "$GGET_VERSION" gget_source gget_ "$@"
 }
