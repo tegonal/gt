@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.3
+#                                         Version: v0.14.1
 #
 #######  Description  #############
 #
@@ -61,6 +61,7 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
+unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -215,7 +216,7 @@ function checkCommandExists() {
 	local file
 	file=$(command -v "$name") || returnDying "%s is not installed (or not in PATH) %s" "$name" "${2:-""}" || return $?
 	if ! [[ -x $file ]]; then
-		returnDying "%s is on the system at %s (according to command) but cannot be executed" "$name" "$file" || return $?
+		returnDying "%s is on the system at %s (according to command) but is not executable. Consider to execute:\nsudo chmod +x %s" "$name" "$file" "$file" || return $?
 	fi
 }
 

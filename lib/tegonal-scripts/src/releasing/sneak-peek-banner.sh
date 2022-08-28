@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.3
+#                                         Version: v0.14.1
 #
 #######  Description  #############
 #
@@ -31,7 +31,8 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
-export TEGONAL_SCRIPTS_VERSION='v0.13.3'
+unset CDPATH
+export TEGONAL_SCRIPTS_VERSION='v0.14.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -69,7 +70,7 @@ function sneakPeekBanner() {
 		perl -0777 -i -pe 's/((?<!<!)---\n❗ You are taking[\S\s]+?---)/<!$1>/;' "$file"
 	else
 		echo >&2 "only 'show' and 'hide' are supported as command. Following the output of calling --help"
-		printHelp params help "$examples"
+		parse_args_printHelp params "$examples" "$TEGONAL_SCRIPTS_VERSION" --help
 	fi
 }
 ${__SOURCED__:+return}

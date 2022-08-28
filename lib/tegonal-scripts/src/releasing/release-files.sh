@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.3
+#                                         Version: v0.14.1
 #
 #######  Description  #############
 #
@@ -59,7 +59,8 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
-export TEGONAL_SCRIPTS_VERSION='v0.13.3'
+unset CDPATH
+export TEGONAL_SCRIPTS_VERSION='v0.14.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -160,7 +161,7 @@ function releaseFiles() {
 		logError "you are behind of origin. I already fetched the changes for you, please check if you still want to release. Following the additional changes in origin/main:"
 		git -P log "${expectedDefaultBranch}..origin/$expectedDefaultBranch"
 		if askYesOrNo "Do you want to git pull?"; then
-			git pull
+			git pull || die "could not pull the changes, have to abort the release, please fix yourself and re-launch the release command"
 			if ! askYesOrNo "Do you want to release now?"; then
 				return 1
 			fi
