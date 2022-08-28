@@ -12,41 +12,41 @@ set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
 
-logError() {
-	msg=$1
+function logError() {
+	local msg=$1
 	shift || die "could not shift by 1"
 	# shellcheck disable=SC2059
 	printf >&2 "\033[0;31mERROR\033[0m: $msg\n" "$@"
 }
 
-die() {
+function die() {
 	logError "$@"
 	exit 1
 }
 
-logSuccess() {
-	msg=$1
+function logSuccess() {
+	local msg=$1
 	shift || die "could not shift by 1"
 	# shellcheck disable=SC2059
 	printf "\033[0;32mSUCCESS\033[0m: $msg\n" "$@"
 }
 
-checkCommandExists() {
-	name=$1
+function checkCommandExists() {
+	local name=$1
 	file=$(command -v "$name") || die "%s is not installed (or not in PATH) %s" "$name" "${2:-""}"
 	if ! [[ -x $file ]]; then
 		die "%s is on the system at %s (according to command) but cannot be executed" "$name" "$file"
 	fi
 }
 
-exitIfCommandDoesNotExist() {
+function exitIfCommandDoesNotExist() {
 	# we are aware of that || will disable set -e for checkCommandExists
 	# shellcheck disable=SC2310
 	checkCommandExists "$@" || exit $?
 }
 
-deleteDirChmod777() {
-	dir=$1
+function deleteDirChmod777() {
+	local dir=$1
 	shift || die "could not shift by 1"
 	# e.g files in .git will be write-protected and we don't want sudo for this command
 	# yet, if it fails, then we ignore the problem and still try to delete the folder
@@ -62,14 +62,14 @@ tmpDir="${TMPDIR:-${TMP:-/tmp}}/${projectName}_installation"
 gpgDir="$tmpDir/gpg"
 repoDir="$tmpDir/repo"
 
-cleanup() {
+function cleanup() {
 	# necessary because .git files are sometime 700 and would require sudo to delete
 	# we are aware of that || will disable set -e for deleteDirChmod777
 	#shellcheck disable=SC2310
 	deleteDirChmod777 "$tmpDir" >/dev/null 2>&1 || true
 }
 
-install() {
+function install() {
 	tag=$1
 	installDir=$2
 	symbolicLink=$3
@@ -122,20 +122,24 @@ install() {
 			rm "$symbolicLink" >/dev/null 2>&1 || true
 		fi
 	fi
-	mkdir -p "$installDir"
+	local parent
+	parent=$(dirname "$installDir")
+	mkdir -p "$parent"
 	mv "$repoDir" "$installDir"
 
 	echo "moved sources to installation directory $installDir"
 
 	if [[ -n $symbolicLink ]]; then
-		echo "setup symbolic link $symbolicLink"
+		echo "set up symbolic link $symbolicLink"
 		ln -sf "$installDir/src/$projectName.sh" "$symbolicLink" || sudo ln -sf "$installDir/src/$projectName.sh" "$symbolicLink"
 	else
 		echo "no symbolic link set up, please do manually if required"
 	fi
-	logSuccess "installation completed, $projectName setup in %s" "$installDir"
+	logSuccess "installation completed, $projectName set up in %s" "$installDir"
 	if [[ -n $symbolicLink ]]; then
+		echo ""
 		echo "Testing the symbolic link, following the output of calling $projectName --help"
+		echo ""
 		"$projectName" --help
 	fi
 }
@@ -144,7 +148,7 @@ tag=""
 installDir=""
 symbolicLink=""
 
-exitIfValueMissing() {
+function exitIfValueMissing() {
 	[[ -n "${2:-}" ]] || die "only %s provided but not a corresponding value" "$1"
 }
 
