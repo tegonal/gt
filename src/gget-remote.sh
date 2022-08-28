@@ -27,6 +27,7 @@
 ###################################
 set -eu -o pipefail
 shopt -s inherit_errexit
+unset CDPATH
 export GGET_VERSION='v0.3.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
