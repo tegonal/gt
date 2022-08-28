@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.3
+#                                         Version: v0.14.0
 #
 #######  Description  #############
 #
@@ -48,9 +48,23 @@
 #    	echo "do whatever you want to do..."
 #    fi
 #
+#    echo "all existing tags on remote origin, starting from smallest to biggest version number"
+#    remoteTagsSorted
+#
+#    # if you specify the name of the remote, then all additional arguments are passed to `sort` which is used internally
+#    echo "all existing tags on remote upstream, starting from smallest to biggest version number"
+#    remoteTagsSorted upstream -r
+#
+#    declare latestTag
+#    latestTag=$(latestRemoteTag)
+#    echo "latest tag on origin: $latestTag"
+#    latestTag=$(latestRemoteTag upstream)
+#    echo "latest tag on upstream: $latestTag"
+#
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
+unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -88,11 +102,11 @@ function countCommits() {
 }
 
 function localGitIsAhead() {
-	if ! (($# == 0)) && ! (($# == 1)); then
-		traceAndDie "you need to pass at least the branch name to localGitIsAhead and optionally the name of the remote (defaults to origin)"
+	if ! (($# == 1)) && ! (($# == 2)); then
+		traceAndDie "you need to pass at least the branch name to localGitIsAhead and optionally the name of the remote (defaults to origin) but not more, given: %s" "$#"
 	fi
 	local -r branch=$1
-	local -r remote=${2-"origin"}
+	local -r remote=${2:-"origin"}
 	local -i count
 	# we know that set -e is disabled for countCommits, that OK
 	# shellcheck disable=SC2310
@@ -101,11 +115,11 @@ function localGitIsAhead() {
 }
 
 function localGitIsBehind() {
-	if ! (($# == 0)) && ! (($# == 1)); then
-		traceAndDie "you need to pass at least the branch name to localGitIsBehind and optionally the name of the remote (defaults to origin)"
+	if ! (($# == 1)) && ! (($# == 2)); then
+		traceAndDie "you need to pass at least the branch name to localGitIsBehind and optionally the name of the remote (defaults to origin) but not more, given: %s" "$#"
 	fi
 	local -r branch=$1
-	local -r remote=${2-"origin"}
+	local -r remote=${2:-"origin"}
 	local -i count
 	# we know that set -e is disabled for countCommits, that OK
 	# shellcheck disable=SC2310
@@ -114,13 +128,32 @@ function localGitIsBehind() {
 }
 
 function hasRemoteTag() {
-	if ! (($# == 0)) && ! (($# == 1)); then
-		traceAndDie "you need to pass at least the tag to hasRemoteTag and optionally the name of the remote (defaults to origin)"
+	if ! (($# == 1)) && ! (($# == 2)); then
+		traceAndDie "you need to pass at least the tag to hasRemoteTag and optionally the name of the remote (defaults to origin) but not more, given: %s" "$#"
 	fi
 	local -r tag=$1
-	local -r remote=${2-"origin"}
+	local -r remote=${2:-"origin"}
 	shift 1 || die "could not shift by 1"
 	local output
 	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"$remote\""
-	grep "$tag" >/dev/null <<<"$output" || false
+	grep "$tag" >/dev/null <<<"$output"
+}
+
+function remoteTagsSorted() {
+	local repo="origin"
+	if (($# > 1)); then
+		repo=$1
+		shift || die "could not shift by 1"
+	fi
+	git ls-remote --refs --tags "$repo" |
+		cut --delimiter='/' --fields=3 |
+		sort --version-sort "$@"
+}
+
+function latestRemoteTag() {
+	if (($# > 1)); then
+		traceAndDie "you can optionally pass the name of the remote (defaults to origin) to latestRemoteTag but not more, given: %s" "$#"
+	fi
+	local repo=${1:-"origin"}
+	remoteTagsSorted "$repo" | tail --lines=1
 }
