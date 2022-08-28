@@ -41,6 +41,7 @@ fi
 
 sourceOnce "$dir_of_gget/pulled-utils.sh"
 sourceOnce "$dir_of_gget/utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
@@ -61,11 +62,13 @@ function gget_pull() {
 	currentDir=$(pwd)
 	local -r currentDir
 
+	local -r tagPattern='-t|--tag'
+
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034
 	local -ra params=(
 		remote "$remotePattern" 'name of the remote repository'
-		tag '-t|--tag' 'git tag used to pull the file/directory'
+		tag "$tagPattern" 'git tag used to pull the file/directory'
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		chopPath "--chop-path" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
@@ -100,7 +103,7 @@ function gget_pull() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 
 	local -a args=()
-	if [[ -v remote ]] && [[ -n $remote ]]; then
+	if [[ -v remote && -n $remote ]]; then
 		# cannot be readonly as we override it in paths.source.sh as well, should be the same though
 		local pullArgsFile="$workingDir/remotes/$remote/pull.args"
 		if [[ -f $pullArgsFile ]]; then
@@ -118,10 +121,12 @@ function gget_pull() {
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v forceNoVerification ]]; then forceNoVerification=false; fi
 	if ! [[ -v unsecure ]]; then unsecure="$forceNoVerification"; fi
+	local fakeTag="NOT_A_REAL_TAG_JUST_TEMPORARY"
+	if ! [[ -v tag ]]; then tag="$fakeTag"; fi
 
 	# if remote does not exist then pull.args does not and most likely pullDir is thus not defined, in this case we want
 	# to show the error about the non existing remote before other missing arguments
-	if ! [[ -v pullDir ]] && [[ -v workingDir ]] && [[ -v remote ]]; then
+	if ! [[ -v pullDir && -v workingDir && -n $workingDir && -v remote && -n $remote ]]; then
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
@@ -153,6 +158,16 @@ function gget_pull() {
 		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
 		reInitialiseGitDir "$workingDir" "$remote"
 	fi
+
+	local tagToFetch="$tag"
+	# tag was actually omitted, so we use the latest remote tag instead
+	if [[ $tag == "$fakeTag" ]]; then
+		cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
+		tagToFetch="$(latestRemoteTag "$remote")" || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
+		cd "$currentDir"
+		logInfo "no tag provided via argument %s, will use latest which was determined to be \033[0;36m%s\033[0m" "$tagPattern" "$tagToFetch"
+	fi
+	local -r tagToFetch
 
 	local doVerification
 	if [[ $forceNoVerification == true ]]; then
@@ -229,16 +244,16 @@ function gget_pull() {
 	fi
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
-	if grep "$tag" <<<"$tags" >/dev/null; then
-		logInfo "tag %s already exists locally, skipping fetching from remote" "$tag"
+	if grep "$tagToFetch" <<<"$tags" >/dev/null; then
+		logInfo "tag %s already exists locally, skipping fetching from remote" "$tagToFetch"
 	else
 		local remoteTags
 		remoteTags=$(git ls-remote -t "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
-		grep "$tag" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tag" "$remoteTags" || return $?
-		git fetch --depth 1 "$remote" "refs/tags/$tag:refs/tags/$tag" || returnDying "was not able to fetch tag %s from remote %s" "$tag" "$remote" || return $?
+		grep "$tagToFetch" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToFetch" "$remoteTags" || return $?
+		git fetch --depth 1 "$remote" "refs/tags/$tagToFetch:refs/tags/$tagToFetch" || returnDying "was not able to fetch tag %s from remote %s" "$tagToFetch" "$remote" || return $?
 	fi
 
-	git checkout "tags/$tag" -- "$path" || return $?
+	git checkout "tags/$tagToFetch" -- "$path" || return $?
 
 	function gget_pull_mentionUnsecure() {
 		if ! [[ $unsecure == true ]]; then
@@ -253,7 +268,7 @@ function gget_pull() {
 	function gget_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
-			if ! git checkout "tags/$tag" -- "$path.$sigExtension"; then
+			if ! git checkout "tags/$tagToFetch" -- "$path.$sigExtension"; then
 				logErrorWithoutNewline "no signature file found for %s, aborting pull" "$path"
 				gget_pull_mentionUnsecure >&2
 				return 1
@@ -302,7 +317,7 @@ function gget_pull() {
 		local relativeTarget sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
 		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
-		entry=$(pulledTsvEntry "$tag" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tag" "$file" || return $?
+		entry=$(pulledTsvEntry "$tagToFetch" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tagToFetch" "$file" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file" || echo "")
 		local -r relativeTarget sha entry currentEntry
@@ -313,13 +328,13 @@ function gget_pull() {
 
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$file" "$pulledTsv"
-		elif ! [[ $entryTag == "$tag" ]]; then
-			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tag" "$file"
+		elif ! [[ $entryTag == "$tagToFetch" ]]; then
+			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToFetch" "$file"
 			# we could warn about a version which was older
 			replacePulledEntry "$pulledTsv" "$file" "$entry"
 		else
 			if ! [[ $entrySha == "$sha" ]]; then
-				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tag"
+				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tagToFetch"
 				gitDiffChars "$entrySha" "$sha"
 				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$source"
@@ -340,9 +355,8 @@ function gget_pull() {
 			fi
 		fi
 
-		"$pullHook" "$tag" "$source" "$absoluteTarget" ||  returnDying "pull hook failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
+		"$pullHook" "$tagToFetch" "$source" "$absoluteTarget" || returnDying "pull hook failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
-
 
 		((++numberOfPulledFiles))
 	}

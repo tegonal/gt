@@ -176,7 +176,6 @@ if [[ -z $tag ]]; then
 	echo "determine latest tag of $repo"
 	tag=$(git ls-remote --refs --tags "$repo" |
 		cut --delimiter='/' --fields=3 |
-		tr '-' '~' |
 		sort --version-sort |
 		tail --lines=1)
 fi
