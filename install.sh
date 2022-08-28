@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
@@ -8,7 +8,8 @@
 #                                         Version: v0.3.0-SNAPSHOT
 #
 ###################################
-set -eu
+set -euo pipefail
+shopt -s inherit_errexit
 unset CDPATH
 
 logError() {
@@ -33,7 +34,7 @@ logSuccess() {
 checkCommandExists() {
 	name=$1
 	file=$(command -v "$name") || die "%s is not installed (or not in PATH) %s" "$name" "${2:-""}"
-	if ! [ -x "$file" ]; then
+	if ! [[ -x $file ]]; then
 		die "%s is on the system at %s (according to command) but cannot be executed" "$name" "$file"
 	fi
 }
@@ -111,17 +112,15 @@ install() {
 	echo "Verification complete, note that we did not verify $projectName's dependencies"
 	echo ""
 
-	wasInstalled=$(if [ -d "$installDir" ]; then echo "true"; else echo "false"; fi)
-
 	mkdir -p "$installDir"
 	cd "$installDir"
-	if ! [ "$wasInstalled" = false ]; then
+	if ! [[ -d $installDir ]]; then
 		currentBranch=$(git --git-dir="$repoDir/.git" rev-parse --abbrev-ref HEAD || echo "<UNKNOWN, most likely manual installation>")
 		echo "Looks like $projectName was already installed in $installDir. Current tag in use is $currentBranch"
 		echo "going to replace the current installation with the new one"
 		# necessary because .git files are sometime 700 and would require sudo to delete
 		deleteDirChmod777 "$installDir"
-		if [ -n "$symbolicLink" ]; then
+		if [[ -n "$symbolicLink" ]]; then
 			rm "$symbolicLink" >/dev/null 2>&1 || true
 		fi
 	fi
@@ -129,14 +128,14 @@ install() {
 
 	echo "moved sources to installation directory $installDir"
 
-	if [ -n "$symbolicLink" ]; then
+	if [[ -n $symbolicLink ]]; then
 		echo "setup symbolic link $symbolicLink"
 		ln -sf "$installDir/src/$projectName.sh" "$symbolicLink" || sudo ln -sf "$installDir/src/$projectName.sh" "$symbolicLink"
 	else
 		echo "no symbolic link set up, please do manually if required"
 	fi
 	logSuccess "installation completed, $projectName setup in %s" "$installDir"
-	if [ -n "$symbolicLink" ]; then
+	if [[ -n $symbolicLink ]]; then
 		echo "Testing the symbolic link, following the output of calling $projectName --help"
 		"$projectName" --help
 	fi
@@ -147,10 +146,10 @@ installDir=""
 symbolicLink=""
 
 exitIfValueMissing() {
-	[ -n "${2:-}" ] || die "only %s provided but not a corresponding value" "$1"
+	[[ -n "${2:-}" ]] || die "only %s provided but not a corresponding value" "$1"
 }
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
 	case $1 in
 	-t | --tag)
 		exitIfValueMissing "$@"
@@ -170,7 +169,7 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-if [ -z "$tag" ]; then
+if [[ -z $tag ]]; then
 	echo "determine latest tag of $repo"
 	tag=$(git ls-remote --refs --tags "$repo" |
 		cut --delimiter='/' --fields=3 |
@@ -178,10 +177,10 @@ if [ -z "$tag" ]; then
 		sort --version-sort |
 		tail --lines=1)
 fi
-if [ -z "$installDir" ] && [ -n "$symbolicLink" ]; then
+if [[ -z $installDir ]] && [[ -n $symbolicLink ]]; then
 	die "you can only specify a symbolic link if you specify a custom installation directory."
 fi
-if [ -z "$installDir" ]; then
+if [[ -z $installDir ]]; then
 	prefix=$(readlink -m "$HOME/.local")
 	installDir="$prefix/lib/$projectName"
 	symbolicLink="$prefix/bin/$projectName"
@@ -189,7 +188,7 @@ if [ -z "$installDir" ]; then
 fi
 installDir=$(readlink -m "$installDir")
 # if symbolicLink is relative, then make it absolute using pwd
-if ! echo "$symbolicLink" | grep -q '^/.*$'; then
+if [[ $symbolicLink != /* ]]; then
 	symbolicLink="$(pwd)/$symbolicLink"
 fi
 
