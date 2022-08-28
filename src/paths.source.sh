@@ -15,7 +15,6 @@
 #
 ###################################
 
-
 local -r remotesDir="$workingDirAbsolute/remotes"
 local -r remoteDir="$remotesDir/$remote"
 local -r publicKeysDir="$remoteDir/public-keys"

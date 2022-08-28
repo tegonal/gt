@@ -10,6 +10,7 @@
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
+unset CDPATH
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
@@ -24,7 +25,7 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/release-files.sh"
 
 function release() {
 	function findScripts() {
-		find "$scriptsDir/../src" "$scriptsDir../install.sh" -name "*.sh" -not -name "*.doc.sh" "$@"
+		find "$scriptsDir/../src" "$scriptsDir/../install.sh" -name "*.sh" -not -name "*.doc.sh" "$@"
 	}
 
 	# same as in prepare-next-dev-cycle.sh, update there as well
