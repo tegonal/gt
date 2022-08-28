@@ -112,9 +112,7 @@ install() {
 	echo "Verification complete, note that we did not verify $projectName's dependencies"
 	echo ""
 
-	mkdir -p "$installDir"
-	cd "$installDir"
-	if ! [[ -d $installDir ]]; then
+	if [[ -d $installDir ]]; then
 		currentBranch=$(git --git-dir="$repoDir/.git" rev-parse --abbrev-ref HEAD || echo "<UNKNOWN, most likely manual installation>")
 		echo "Looks like $projectName was already installed in $installDir. Current tag in use is $currentBranch"
 		echo "going to replace the current installation with the new one"
@@ -124,6 +122,7 @@ install() {
 			rm "$symbolicLink" >/dev/null 2>&1 || true
 		fi
 	fi
+	mkdir -p "$installDir"
 	mv "$repoDir" "$installDir"
 
 	echo "moved sources to installation directory $installDir"
