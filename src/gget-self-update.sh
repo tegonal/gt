@@ -78,7 +78,7 @@ function gget_self_update() {
 		currentBranch=$(currentGitBranch)
 		latestTag=$(latestRemoteTag)
 		if [[ $currentBranch == "$latestTag" ]]; then
-			logInfoWithoutNewline "latest version of gget is already installed" "$latestTag"
+			logInfoWithoutNewline "latest version of gget (%s) is already installed" "$latestTag"
 			if [[ $forceInstall != true ]]; then
 				printf ", nothing to do in addition\n"
 				return 0
