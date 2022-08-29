@@ -64,7 +64,7 @@ function gget_self_update() {
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	local installDir
-	installDir="$HOME/.local/lib/gget" #"$(readlink -m "$dir_of_gget/..")"
+	installDir="$(readlink -m "$dir_of_gget/..")"
 	local -r installDir
 
 	if ! [[ -f "$installDir/install.sh" ]]; then
