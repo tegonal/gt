@@ -509,7 +509,7 @@ gget reset -r tegonal-scripts -w .github/.gget
 
 </gget-reset>
 
-# self-update
+## self-update
 
 You can update gget by using gget (which in turn uses its install.sh)
 
