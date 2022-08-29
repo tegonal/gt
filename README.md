@@ -117,6 +117,8 @@ install.sh -d /opt/gget
 install.sh -d /opt/gget -ln /usr/local/bin
 ```
 
+Last but not least, see [additional installation steps](#additional-installation-steps)
+
 ## manually
 
 1. [![Download](https://img.shields.io/badge/Download-v0.3.1-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.3.1)
@@ -134,6 +136,15 @@ install.sh -d /opt/gget -ln /usr/local/bin
    1. only for the current user `ln -s "$HOME/.local/lib/gget/src/gget.sh" "$HOME/.local/bin/gget"`
    2. globally `ln -s "$HOME/.local/lib/gget/src/gget.sh" "/usr/local/bin/gget"`
    3. in project: `ln -s ./lib/gget/src/get.sh ./gget`
+6. See [additional installation steps](#additional-installation-steps)
+
+## additional installation steps
+
+Typically you add the following to your .gitignore file:
+```gitignore
+.gget/**/repo
+.gget/**/gpg
+```
 
 # Usage
 
