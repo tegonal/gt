@@ -68,6 +68,7 @@ function gget() {
 		re-pull "re-pull files defined in pulled.tsv of a specific or all remotes"
 		remote "manage remotes"
 		reset "reset one or all remotes (re-establish gpg and re-pull files)"
+		self-update "update gget to the latest version"
 	)
 	parseCommands commands "$GGET_VERSION" gget_source gget_ "$@"
 }

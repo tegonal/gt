@@ -54,6 +54,7 @@ For instance, the [README of v0.3.1](https://github.com/tegonal/gget/tree/v0.3.1
     - [Pull Hook](#pull-hook)
   - [re-pull](#re-pull)
   - [reset](#reset)
+  - [self-update](#self-update)
 - [Contributors and contribute](#contributors-and-contribute)
 - [License](#license)
 
@@ -143,10 +144,11 @@ Following the output of running `gget --help`:
 <!-- auto-generated, do not modify here but in src/gget.sh -->
 ```text
 Commands:
-pull      pull files from a previously defined remote
-re-pull   re-pull files defined in pulled.tsv of a specific or all remotes
-remote    manage remotes
-reset     reset one or all remotes (re-establish gpg and re-pull files)
+pull          pull files from a previously defined remote
+re-pull       re-pull files defined in pulled.tsv of a specific or all remotes
+remote        manage remotes
+reset         reset one or all remotes (re-establish gpg and re-pull files)
+self-update   update gget to the latest version
 
 --help     prints this help
 --version  prints the version of this script
@@ -496,6 +498,21 @@ gget reset -r tegonal-scripts -w .github/.gget
 
 </gget-reset>
 
+# self-update
+
+You can update gget by using gget (which in turn uses its install.sh)
+
+<gget-self-update>
+
+<!-- auto-generated, do not modify here but in src/gget-self-update.sh -->
+```bash
+#!/usr/bin/env bash
+
+# update gget to the latest version
+gget self-update
+```
+
+</gget-self-update>
 
 # Contributors and contribute
 
