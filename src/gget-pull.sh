@@ -256,7 +256,7 @@ function gget_pull() {
 	git checkout "tags/$tagToFetch" -- "$path" || return $?
 
 	function gget_pull_mentionUnsecure() {
-		if ! [[ $unsecure == true ]]; then
+		if [[ $unsecure != true ]]; then
 			printf " -- you can disable this check via: %s true\n" "$unsecurePattern"
 		else
 			printf " -- you can disable this check via: %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
@@ -328,12 +328,12 @@ function gget_pull() {
 
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$file" "$pulledTsv"
-		elif ! [[ $entryTag == "$tagToFetch" ]]; then
+		elif [[ $entryTag != "$tagToFetch" ]]; then
 			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToFetch" "$file"
 			# we could warn about a version which was older
 			replacePulledEntry "$pulledTsv" "$file" "$entry"
 		else
-			if ! [[ $entrySha == "$sha" ]]; then
+			if [[ $entrySha != "$sha" ]]; then
 				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tagToFetch"
 				gitDiffChars "$entrySha" "$sha"
 				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"

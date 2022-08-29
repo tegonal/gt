@@ -51,7 +51,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 	# we are aware of that the || disables set -e for pulledTsvHeader
 	# shellcheck disable=SC2310
 	expectedHeader=$(pulledTsvHeader) || die "looks like we discovered a bug, was not able to create the pulledTsvHeader"
-	if ! [[ "$currentHeader" == "$expectedHeader" ]]; then
+	if [[ "$currentHeader" != "$expectedHeader" ]]; then
 		logError "looks like the format of \033[0;36m%s\033[0m changed:" "$pulledTsv"
 		cat -A >&2 <<<"Expected Header: $expectedHeader"
 		cat -A >&2 <<<"Current  Header: $currentHeader"

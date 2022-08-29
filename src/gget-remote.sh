@@ -154,7 +154,7 @@ function gget_remote_add() {
 	cp "$repo/.git/config" "$gitconfig"
 
 	local defaultBranch
-	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' || (logWarning >&2 "was not able to determine default branch for remote %s, going to use main" && echo "main"))"
+	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' || (logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" && echo "main"))"
 	git fetch --depth 1 "$remote" "$defaultBranch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
 
 	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
@@ -324,7 +324,7 @@ function gget_remote_remove() {
 	}
 
 	if [[ -f $pulledTsv ]]; then
-		if ! [[ $deletePulledFiles == true ]]; then
+		if [[ $deletePulledFiles != true ]]; then
 			logInfo "detected a pulled.tsv in the remote %s. You might want to pass '--delete-pulled-files true' in case you want to delete all files" "$remote"
 			if askYesOrNo "Shall I abort? If you don't choose y, then I will go on and delete the remote without deleting the pulled files as defined in pulled.tsv"; then
 				logInfo "removing remote \033[0;36m%s\033[0m aborted" "$remote"
