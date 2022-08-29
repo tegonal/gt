@@ -1,17 +1,17 @@
 <!-- for main -->
-
-[![Download](https://img.shields.io/badge/Download-v0.3.1-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.3.1)
+<!--
+[![Download](https://img.shields.io/badge/Download-v0.4.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.4.0)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Code Quality](https://github.com/tegonal/gget/workflows/Code%20Quality/badge.svg?event=push&branch=main)](https://github.com/tegonal/gget/actions/workflows/code-quality.yml?query=branch%3Amain)
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
-
+-->
 <!-- for main end -->
 <!-- for release -->
-<!--
-[![Download](https://img.shields.io/badge/Download-v0.3.1-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.3.1)
+
+[![Download](https://img.shields.io/badge/Download-v0.4.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.4.0)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
--->
+
 <!-- for release end -->
 # gget
 
@@ -37,7 +37,7 @@ at a single place.
 
 ❗ You are taking a _sneak peek_ at the next version.
 Please have a look at the README of the git tag in case you are looking for the documentation of the corresponding version.
-For instance, the [README of v0.3.1](https://github.com/tegonal/gget/tree/v0.3.1/README.md).
+For instance, the [README of v0.4.0](https://github.com/tegonal/gget/tree/v0.4.0/README.md).
 
 ---
 
@@ -121,7 +121,7 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ## manually
 
-1. [![Download](https://img.shields.io/badge/Download-v0.3.1-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.3.1)
+1. [![Download](https://img.shields.io/badge/Download-v0.4.0-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.4.0)
 2. extract the zip/tar.gz 
 3. open a terminal at the corresponding folder and verify the scripts against our public key:  
    ```bash
@@ -165,7 +165,7 @@ self-update   update gget to the latest version
 --version  prints the version of this script
 
 INFO: Version of gget.sh is:
-v0.4.0-SNAPSHOT
+v0.4.0
 ```
 
 </gget-help>
@@ -188,7 +188,7 @@ list     list all remotes
 --version  prints the version of this script
 
 INFO: Version of gget-remote.sh is:
-v0.4.0-SNAPSHOT
+v0.4.0
 ```
 
 </gget-remote-help>
@@ -346,7 +346,7 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 gget pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 
 INFO: Version of gget-pull.sh is:
-v0.4.0-SNAPSHOT
+v0.4.0
 ```
 
 </gget-pull-help>
@@ -419,7 +419,7 @@ gget re-pull
 gget re-pull -r tegonal-scripts --only-missing false --auto-trust true
 
 INFO: Version of gget-re-pull.sh is:
-v0.4.0-SNAPSHOT
+v0.4.0
 ```
 
 </gget-re-pull-help>
@@ -478,7 +478,7 @@ gget reset
 gget reset --auto-trust true
 
 INFO: Version of gget-reset.sh is:
-v0.4.0-SNAPSHOT
+v0.4.0
 ```
 
 </gget-reset-help>
