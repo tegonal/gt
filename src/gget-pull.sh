@@ -162,10 +162,15 @@ function gget_pull() {
 	local tagToFetch="$tag"
 	# tag was actually omitted, so we use the latest remote tag instead
 	if [[ $tag == "$fakeTag" ]]; then
+		logInfo "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
 		cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
+#		git fetch "$remote" 'refs/tags/*:refs/tags/*' || die "could not fetch the tags of remote %s and thus cannot determine latest tag"
 		tagToFetch="$(latestRemoteTag "$remote")" || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
+		if [[ -z $tagToFetch ]]; then
+			die "looks like remote \033[0;36m%s\033[0m does not have a tag yet, cannot pull files from it." "$remote"
+		fi
 		cd "$currentDir"
-		logInfo "no tag provided via argument %s, will use latest which was determined to be \033[0;36m%s\033[0m" "$tagPattern" "$tagToFetch"
+		logInfo "latest is \033[0;36m%s\033[0m" "$tagToFetch"
 	fi
 	local -r tagToFetch
 
