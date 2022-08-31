@@ -17,6 +17,11 @@ if ! [[ -v scriptsDir ]]; then
 	declare -r scriptsDir
 fi
 
+if ! [[ -v projectDir ]]; then
+	projectDir="$(realpath "$scriptsDir/../")"
+	declare -r projectDir
+fi
+
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -28,10 +33,7 @@ function release() {
 		find "$scriptsDir/../src" "$scriptsDir/../install.sh" -name "*.sh" -not -name "*.doc.sh" "$@"
 	}
 
-	# same as in prepare-next-dev-cycle.sh, update there as well
-	local -r additionalPattern="(GGET_VERSION=['\"])[^'\"]+(['\"])"
-	local projectDir
-	projectDir=$(realpath "$scriptsDir/..")
+	local -r additionalPattern="(GGET_(?:LATEST_)VERSION=['\"])[^'\"]+(['\"])"
 	releaseFiles --project-dir "$projectDir" -p "$additionalPattern" --sign-fn findScripts "$@"
 }
 

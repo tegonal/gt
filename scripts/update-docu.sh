@@ -17,14 +17,14 @@ if ! [[ -v scriptsDir ]]; then
 	declare -r scriptsDir
 fi
 
-if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
-	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
-fi
-
 if ! [[ -v projectDir ]]; then
 	projectDir="$(realpath "$scriptsDir/../")"
 	declare -r projectDir
+fi
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"

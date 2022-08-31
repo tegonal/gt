@@ -1,4 +1,4 @@
 
 
 ______________________________________
-I confirm that I have read the [Contributor Agreements v1.0](https://github.com/tegonal/gget/blob/main/.github/Contributor%20Agreements%20v1.0.txt), agree to be bound on them and confirm that my contribution is compliant.
+I confirm that I have read the [Contributor Agreement v1.1](https://github.com/tegonal/gget/blob/v0.4.1/.github/Contributor%20Agreement.txt), agree to be bound on them and confirm that my contribution is compliant.
