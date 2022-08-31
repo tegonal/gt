@@ -31,7 +31,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
 
-function updateDocu() {
+function cleanupOnPushToMain() {
 	find "$projectDir/src" -maxdepth 1 -type f \
 		-name "*.sh" \
 		-not -name "*.doc.sh" \
@@ -42,9 +42,9 @@ function updateDocu() {
 			declare relative
 			relative="$(realpath --relative-to="$projectDir" "$script")"
 			declare id="${relative:4:-3}"
-			updateBashDocumentation "$script" "${id////-}" . README.md
-			replaceHelpSnippet "$script" "${id////-}-help" . README.md
-		done
+			updateBashDocumentation "$script" "${id////-}" . README.md || return $?
+			replaceHelpSnippet "$script" "${id////-}-help" . README.md || return $?
+		done || die "updating bash documentation and help snippets failed, see above"
 
 	declare additionalHelp=(
 		gget_remote_add "src/gget-remote.sh" "add --help"
@@ -53,10 +53,10 @@ function updateDocu() {
 	)
 	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
 		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i + 2]}"
-	done
+	done || die "replacing help snippets failed, see above"
 
 	logSuccess "Updating bash docu and README completed"
 }
 
 ${__SOURCED__:+return}
-updateDocu "$@"
+cleanupOnPushToMain "$@"
