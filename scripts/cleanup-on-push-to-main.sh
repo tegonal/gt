@@ -52,7 +52,9 @@ function cleanupOnPushToMain() {
 		gget_remote_list "src/gget-remote.sh" "list --help"
 	)
 	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
-		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md "${additionalHelp[i + 2]}"
+		# we actually want word splitting for additionalHelp[i+2] thus OK
+		# shellcheck disable=SC2086
+		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md ${additionalHelp[i + 2]}
 	done || die "replacing help snippets failed, see above"
 
 	logSuccess "Updating bash docu and README completed"
