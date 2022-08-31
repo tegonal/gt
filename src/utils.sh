@@ -58,14 +58,14 @@ function noAscInDir() {
 }
 
 function checkWorkingDirExists() {
-	local workingDir=$1
+	local workingDirAbsolute=$1
 	shift
 
 	local workingDirPattern
 	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
 
-	if ! [[ -d $workingDir ]]; then
-		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDir"
+	if ! [[ -d $workingDirAbsolute ]]; then
+		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDirAbsolute"
 		echo >&2 "Check for typos and/or use $workingDirPattern to specify another"
 		return 9
 	fi
@@ -112,7 +112,7 @@ function gitDiffChars() {
 }
 
 function initialiseGitDir() {
-	local -r workingDir=$1
+	local -r workingDirAbsolute=$1
 	local -r remote=$2
 	shift 2
 

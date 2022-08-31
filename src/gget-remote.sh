@@ -238,6 +238,10 @@ function gget_remote_list() {
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
+	local workingDirAbsolute
+	workingDirAbsolute=$(readlink -m "$workingDir")
+	local -r workingDirAbsolute
+
 	local remotesDir
 	local -r remote="not really a remote but paths.source.sh requires it, hence we set it here but don't use it afterwards"
 	source "$dir_of_gget/paths.source.sh"
@@ -286,7 +290,9 @@ function gget_remote_remove() {
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
+	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir")
+	local -r workingDirAbsolute
 
 	local remoteDir pulledTsv pullHookFile
 	source "$dir_of_gget/paths.source.sh"
