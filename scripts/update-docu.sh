@@ -17,14 +17,14 @@ if ! [[ -v scriptsDir ]]; then
 	declare -r scriptsDir
 fi
 
-if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
-	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
-fi
-
 if ! [[ -v projectDir ]]; then
 	projectDir="$(realpath "$scriptsDir/../")"
 	declare -r projectDir
+fi
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
+	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
@@ -32,7 +32,8 @@ sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
 
 function updateDocu() {
-	find "$projectDir/src" -maxdepth 1 -name "*.sh" \
+	find "$projectDir/src" -maxdepth 1 -type f \
+		-name "*.sh" \
 		-not -name "*.doc.sh" \
 		-not -name "*utils.sh" \
 		-not -name "*.source.sh" \
