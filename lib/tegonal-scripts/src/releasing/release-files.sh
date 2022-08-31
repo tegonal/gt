@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.1
+#                                         Version: v0.14.5
 #
 #######  Description  #############
 #
@@ -60,7 +60,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v0.14.1'
+export TEGONAL_SCRIPTS_VERSION='v0.14.5'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -101,7 +101,7 @@ function releaseFiles() {
 	fi
 	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
-	if ! [[ -v prepareOnly ]] || ! [[ "$prepareOnly" == "true" ]]; then prepareOnly=false; fi
+	if ! [[ -v prepareOnly ]] || [[ $prepareOnly != "true" ]]; then prepareOnly=false; fi
 	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 
 	if ! [[ "$version" =~ $versionRegex ]]; then
@@ -135,7 +135,7 @@ function releaseFiles() {
 	local branch
 	branch="$(currentGitBranch)" || die "could not determine current git branch, see above"
 	local -r expectedDefaultBranch="main" branch
-	if ! [[ $branch == "$expectedDefaultBranch" ]]; then
+	if [[ $branch != "$expectedDefaultBranch" ]]; then
 		logError "you need to be on the \033[0;36m%s\033[0m branch to release, check that you have merged all changes from your current branch \033[0;36m%s\033[0m." "$expectedDefaultBranch" "$branch"
 		if askYesOrNo "Shall I switch to %s for you?" "$expectedDefaultBranch"; then
 			git checkout "$expectedDefaultBranch" || die "checking out branch %s failed" "$expectedDefaultBranch"
@@ -206,14 +206,14 @@ function releaseFiles() {
 	trustGpgKey "$gpgDir" "info@tegonal.com" || logInfo "could not trust key with id info@tegonal.com, you will see warnings due to this during signing the files"
 
 	local script
-	"$findForSigning" -print0 |
+	"$findForSigning" -type f -not -name "*.sig" -print0 |
 		while read -r -d $'\0' script; do
 			echo "signing $script"
 			gpg --detach-sign --batch --yes -u "$key" -o "${script}.sig" "$script" || die "was not able to sign %s" "$script"
 			gpg --homedir "$gpgDir" --batch --verify "${script}.sig" "$script" || die "verification via previously imported %s failed" "$ggetDir/signing-key.public.asc"
 		done || die $?
 
-	if ! [[ $prepareOnly == true ]]; then
+	if [[ $prepareOnly != true ]]; then
 		git add . || return $?
 		git commit -m "$version" || return $?
 		git tag "$version" || return $?

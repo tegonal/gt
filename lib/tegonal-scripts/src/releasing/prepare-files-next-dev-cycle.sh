@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.1
+#                                         Version: v0.14.5
 #
 #######  Description  #############
 #
@@ -50,7 +50,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v0.14.1'
+export TEGONAL_SCRIPTS_VERSION='v0.14.5'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -85,7 +85,6 @@ function prepareFilesNextDevCycle() {
 	# shellcheck disable=SC2310
 	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
 
-
 	logInfo "prepare next dev cycle for version $version"
 
 	sneakPeekBanner -c show || return $?
@@ -93,15 +92,15 @@ function prepareFilesNextDevCycle() {
 	updateVersionScripts -v "$version-SNAPSHOT" -p "$additionalPattern" || return $?
 	updateVersionScripts -v "$version-SNAPSHOT" -p "$additionalPattern" -d "$projectsScriptsDir" || return $?
 
-	# check if we accidentally have broken something, run formatting or whatever is done in beforePr
-	beforePr || return $?
-
 	local -r additionalSteps="$projectsScriptsDir/additional-prepare-files-next-dev-cycle-steps.sh"
 	if [[ -f $additionalSteps ]]; then
 		# we are aware of that || will disable set -e for sourceOnce
 		# shellcheck disable=SC2310
 		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
 	fi
+
+	# check if we accidentally have broken something, run formatting or whatever is done in beforePr
+	beforePr || return $?
 
 	git commit -a -m "prepare next dev cycle for $version"
 }
