@@ -593,18 +593,6 @@ v0.5.0-SNAPSHOT
 
 </gget-self-update-help>
 
-<gget-self-update>
-
-<!-- auto-generated, do not modify here but in src/gget-self-update.sh -->
-```bash
-#!/usr/bin/env bash
-
-# update gget to the latest version
-gget self-update
-```
-
-</gget-self-update>
-
 # Contributors and contribute
 
 Our thanks go to [code contributors](https://github.com/tegonal/gget/graphs/contributors)
