@@ -98,7 +98,7 @@ function readPulledTsv() {
 	exitIfArgIsNotFunction "$callback" 3
 
 	local pulledTsv
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 	if ! [[ -f $pulledTsv ]]; then
 		logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
 		return 0

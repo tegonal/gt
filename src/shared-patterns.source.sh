@@ -18,6 +18,7 @@ local -r remotePattern='-r|--remote'
 local -r workingDirPattern='-w|--working-directory'
 local -r pullDirPattern='-d|--directory'
 local -r autoTrustPattern='--auto-trust'
+local -r tagPattern='-t|--tag'
 
 # in case you should add alternatives, then you need to modify error messages and the like, search for unsecurePattern
 local -r unsecurePattern='--unsecure'

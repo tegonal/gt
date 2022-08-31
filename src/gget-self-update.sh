@@ -9,7 +9,7 @@
 #
 #######  Description  #############
 #
-#  'reset' command of gget: utility to reset (re-initialise gpg, re-pull all files) for all or one previously defined remote
+#  'self-update' command of gget: utility to update gget
 #
 #######  Usage  ###################
 #

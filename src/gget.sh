@@ -17,16 +17,25 @@
 #
 #    #!/usr/bin/env bash
 #
-#    # gget pull ...
-#    # take at look at gget-pull.doc.sh for more information
-#
 #    # gget remote add ...
 #    # gget remote remove ...
 #    # gget remote list ...
 #    # take at look at gget-remote.doc.sh for more information
 #
+#    # gget pull ...
+#    # take at look at gget-pull.doc.sh for more information
+#
+#    # gget re-pull ...
+#    # take at look at gget-re-pull.doc.sh for more information
+#
 #    # gget reset ...
 #    # take at look at gget-reset.doc.sh for more information
+#
+#    # gget update ...
+#    # take at look at gget-update.doc.sh for more information
+#
+#    # gget self-update
+#    # take at look at gget-self-update.doc.sh for more information
 #
 ###################################
 set -euo pipefail
@@ -68,6 +77,7 @@ function gget() {
 		re-pull "re-pull files defined in pulled.tsv of a specific or all remotes"
 		remote "manage remotes"
 		reset "reset one or all remotes (re-establish gpg and re-pull files)"
+		update "update pulled files to latest or particular version"
 		self-update "update gget to the latest version"
 	)
 	parseCommands commands "$GGET_VERSION" gget_source gget_ "$@"

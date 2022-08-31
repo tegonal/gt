@@ -54,6 +54,7 @@ For instance, the [README of v0.4.1](https://github.com/tegonal/gget/tree/v0.4.1
     - [Pull Hook](#pull-hook)
   - [re-pull](#re-pull)
   - [reset](#reset)
+  - [update](#update)
   - [self-update](#self-update)
 - [Contributors and contribute](#contributors-and-contribute)
 - [License](#license)
@@ -159,6 +160,7 @@ pull          pull files from a previously defined remote
 re-pull       re-pull files defined in pulled.tsv of a specific or all remotes
 remote        manage remotes
 reset         reset one or all remotes (re-establish gpg and re-pull files)
+update        update pulled files to latest or particular version
 self-update   update gget to the latest version
 
 --help     prints this help
@@ -509,9 +511,87 @@ gget reset -r tegonal-scripts -w .github/.gget
 
 </gget-reset>
 
+## Update
+
+Use this command to update already pulled files.
+Following the output of running `gget update --help`:
+
+<gget-update-help>
+
+<!-- auto-generated, do not modify here but in src/gget-update.sh -->
+```text
+Parameters:
+-r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
+-w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
+--auto-trust             (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+-t|--tag                 (optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified
+
+--help     prints this help
+--version  prints the version of this script
+
+Examples:
+# updates all pulled files of all remotes to latest tag
+gget update
+
+# updates all pulled files of remote tegonal-scripts to latest tag
+gget update -r tegonal-scripts
+
+# updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0
+gget update -r tegonal-scripts -t v1.0.0
+
+INFO: Version of gget-update.sh is:
+v0.5.0-SNAPSHOT
+```
+
+</gget-update-help>
+
+Full usage example:
+
+<gget-update>
+
+<!-- auto-generated, do not modify here but in src/gget-update.sh -->
+```bash
+#!/usr/bin/env bash
+
+# updates all pulled files of all remotes to latest tag
+gget update
+
+# updates all pulled files of remote tegonal-scripts to latest tag
+gget update -r tegonal-scripts
+
+# updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0
+gget update -r tegonal-scripts -t v1.0.0
+```
+
+</gget-update>
+
 ## self-update
 
 You can update gget by using gget (which in turn uses its install.sh)
+Following the output of running `gget self-update --help`:
+
+<gget-self-update-help>
+
+<!-- auto-generated, do not modify here but in src/gget-self-update.sh -->
+```text
+Parameters:
+--force   if set to true, then install.sh will be called even if gget is already on latest tag
+
+--help     prints this help
+--version  prints the version of this script
+
+Examples:
+# updates gget to the latest tag
+gget self-update
+
+# updates gget to the latest tag and downloads the sources even if already on the latest
+gget self-update --force
+
+INFO: Version of gget-self-update.sh is:
+v0.5.0-SNAPSHOT
+```
+
+</gget-self-update-help>
 
 <gget-self-update>
 

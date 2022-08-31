@@ -47,7 +47,6 @@ sourceOnce "$dir_of_gget/pulled-utils.sh"
 sourceOnce "$dir_of_gget/utils.sh"
 sourceOnce "$dir_of_gget/gget-pull.sh"
 sourceOnce "$dir_of_gget/gget-remote.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_re_pull() {
@@ -55,7 +54,7 @@ function gget_re_pull() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
 
@@ -91,7 +90,7 @@ function gget_re_pull() {
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	local workingDirAbsolute
-	workingDirAbsolute=$(readlink -m "$workingDir")
+	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
 	local -i pulled=0

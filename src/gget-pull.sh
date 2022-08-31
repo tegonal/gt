@@ -55,14 +55,12 @@ function gget_pull() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
-	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
-	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
-
 	local currentDir
-	currentDir=$(pwd)
+	currentDir=$(pwd) || die "could not determine currentDir"
 	local -r currentDir
 
-	local -r tagPattern='-t|--tag'
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034
@@ -132,7 +130,7 @@ function gget_pull() {
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	local workingDirAbsolute pullDirAbsolute
-	workingDirAbsolute=$(readlink -m "$workingDir")
+	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	pullDirAbsolute=$(readlink -m "$pullDir")
 	local -r workingDirAbsolute pullDirAbsolute
 
@@ -140,7 +138,7 @@ function gget_pull() {
 	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
 	local remoteDir publicKeysDir repo gpgDir pulledTsv pullHookFile gitconfig
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
 		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"

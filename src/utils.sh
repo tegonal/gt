@@ -62,7 +62,7 @@ function checkWorkingDirExists() {
 	shift
 
 	local workingDirPattern
-	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	if ! [[ -d $workingDirAbsolute ]]; then
 		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDirAbsolute"
@@ -82,7 +82,7 @@ function exitIfRemoteDirDoesNotExist() {
 	local -r remote=$2
 	shift 2
 	local remoteDir
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d $remoteDir ]]; then
 		logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
@@ -117,7 +117,7 @@ function initialiseGitDir() {
 	shift 2
 
 	local repo gitconfig
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	mkdir -p "$repo" || die "could not create the repo at %s" "$repo"
 	git --git-dir="$repo/.git" init || die "could not git init the repo at %s" "$repo"

@@ -67,7 +67,7 @@ function gget_remote_cleanupRemoteOnUnexpectedExit() {
 }
 
 function gget_remote_add() {
-	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local currentDir
 	currentDir=$(pwd)
@@ -107,7 +107,7 @@ function gget_remote_add() {
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	local workingDirAbsolute
-	workingDirAbsolute=$(readlink -m "$workingDir")
+	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
 	if ! checkWorkingDirExists "$workingDirAbsolute"; then
@@ -121,7 +121,7 @@ function gget_remote_add() {
 	mkdir -p "$workingDirAbsolute/remotes" || die "was not able to create directory %s" "$workingDirAbsolute/remotes"
 
 	local remoteDir publicKeysDir repo gpgDir pullArgsFile gitconfig
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
 		die "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
@@ -239,12 +239,12 @@ function gget_remote_list() {
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	local workingDirAbsolute
-	workingDirAbsolute=$(readlink -m "$workingDir")
+	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
 	local remotesDir
 	local -r remote="not really a remote but paths.source.sh requires it, hence we set it here but don't use it afterwards"
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	local cutLength
 	cutLength=$((${#remotesDir} + 2))
@@ -263,7 +263,7 @@ function gget_remote_list() {
 }
 
 function gget_remote_remove() {
-	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034
@@ -291,11 +291,11 @@ function gget_remote_remove() {
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	local workingDirAbsolute
-	workingDirAbsolute=$(readlink -m "$workingDir")
+	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
 	local remoteDir pulledTsv pullHookFile
-	source "$dir_of_gget/paths.source.sh"
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
 		logError "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"
