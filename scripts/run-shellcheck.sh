@@ -14,7 +14,7 @@ unset CDPATH
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	declare -r scriptsDir
+	readonly scriptsDir
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then

@@ -20,7 +20,7 @@ fi
 
 if ! [[ -v dir_of_github_commons ]]; then
 	dir_of_github_commons="$dir_of_tegonal_scripts/../../../.gget/remotes/tegonal-gh-commons/lib/src"
-	declare -r dir_of_github_commons
+	readonly dir_of_github_commons
 fi
 sourceOnce "$dir_of_github_commons/gget/pull-hook-functions.sh"
 

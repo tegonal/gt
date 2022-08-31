@@ -36,7 +36,7 @@ export GGET_VERSION='v0.5.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
 	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	declare -r dir_of_gget
+	readonly dir_of_gget
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
