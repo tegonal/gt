@@ -246,7 +246,7 @@ function gget_remote_list() {
 	cutLength=$((${#remotesDir} + 2))
 
 	local output
-	output="$(find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo "")"
+	output="$([[ -d $remotesDir ]] && find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo "")"
 	if [[ $output == "" ]]; then
 		logInfo "No remote defined yet."
 		echo ""
