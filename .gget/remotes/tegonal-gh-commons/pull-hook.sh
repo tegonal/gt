@@ -30,6 +30,6 @@ if [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
 	replacePlaceholdersContributorsAgreement "$source" "gget"
 elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
 	# same as in additional-release-files-preparations.sh
-  declare githubUrl="https://github.com/tegonal/github-commons"
+  declare githubUrl="https://github.com/tegonal/gget"
 	replacePlaceholderPullRequestTemplate "$source" "$githubUrl" "$GGET_LATEST_VERSION"
 fi

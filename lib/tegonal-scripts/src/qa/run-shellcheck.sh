@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.1
+#                                         Version: v0.14.5
 #
 #######  Description  #############
 #
@@ -69,18 +69,23 @@ function runShellcheck() {
 
 	local -i fileWithIssuesCounter=0
 	local -i fileCounter=0
+	local -i skipped=0
 	local script
 	if ! while read -r -d $'\0' script; do
-		((++fileCounter))
-		declare output
-		output=$(shellcheck -C -x -o all -P "$sourcePath" "$script" 2>&1 || true)
-		if ! [[ $output == "" ]]; then
-			printf "%s\n" "$output"
-			((++fileWithIssuesCounter))
-		fi
-		if ((fileWithIssuesCounter >= 5)); then
-			logInfoWithoutNewline "Already found issues in %s files, going to stop the analysis now in order to keep the output small" "$fileWithIssuesCounter"
-			break
+		if [[ -L $script ]]; then
+			((++skipped))
+		else
+			((++fileCounter))
+			declare output
+			output=$(shellcheck -C -x -o all -P "$sourcePath" "$script" 2>&1 || true)
+			if [[ $output != "" ]]; then
+				printf "%s\n" "$output"
+				((++fileWithIssuesCounter))
+			fi
+			if ((fileWithIssuesCounter >= 5)); then
+				logInfoWithoutNewline "Already found issues in %s files, going to stop the analysis now in order to keep the output small" "$fileWithIssuesCounter"
+				break
+			fi
 		fi
 		printf "."
 	done < <(
@@ -94,10 +99,10 @@ function runShellcheck() {
 	printf "\n"
 
 	if ((fileWithIssuesCounter > 0)); then
-		die "found shellcheck issues in %s files" "$fileWithIssuesCounter"
+		die "found shellcheck issues in %s files (%s symlinks skipped)" "$fileWithIssuesCounter" "$skipped"
 	elif ((fileCounter == 0)); then
 		die "looks suspicious, no files where analysed, watch out for errors above"
 	else
-		logSuccess "no shellcheck issues found, analysed %s files" "$fileCounter"
+		logSuccess "no shellcheck issues found, analysed %s files (%s symlinks skipped)" "$fileCounter" "$skipped"
 	fi
 }

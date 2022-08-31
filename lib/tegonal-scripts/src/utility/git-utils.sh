@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please remotert bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.1
+#                                         Version: v0.14.5
 #
 #######  Description  #############
 #
@@ -79,7 +79,7 @@ function currentGitBranch() {
 function hasGitChanges() {
 	local gitStatus
 	gitStatus=$(git status --porcelain) || die "the following command failed (see above): git status --porcelain"
-	! [[ $gitStatus == "" ]]
+	[[ $gitStatus != "" ]]
 }
 
 function exitIfGitHasChanges() {

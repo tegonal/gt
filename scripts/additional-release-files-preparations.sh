@@ -38,6 +38,6 @@ if ! [[ -v version ]] || [[ -z $version ]]; then
 fi
 
 # same as in pull-hook.sh
-declare githubUrl="https://github.com/tegonal/github-commons"
+declare githubUrl="https://github.com/tegonal/gget"
 
 replaceTagInPullRequestTemplate "$projectDir/.github/PULL_REQUEST_TEMPLATE.md" "$githubUrl" "$version"
