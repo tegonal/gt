@@ -21,11 +21,12 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$scriptsDir/run-shellcheck.sh"
-sourceOnce "$scriptsDir/update-docu.sh"
+sourceOnce "$scriptsDir/cleanup-on-push-to-main.sh"
 
 function beforePr() {
-	customRunShellcheck
-	updateDocu
+	# using && because this function is used on the left side of an || in releaseFiles
+	customRunShellcheck && \
+	cleanupOnPushToMain
 }
 
 ${__SOURCED__:+return}

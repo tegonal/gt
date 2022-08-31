@@ -15,4 +15,4 @@ jobs:
           SHELLCHECK_OPTS: -C -x -o all -P ./src:./scripts:./lib/tegonal-scripts/src
 
       - name: check all scripts have documentation
-        run: ./scripts/update-docu.sh
+        run: ./scripts/cleanup-on-push-to-main.sh
