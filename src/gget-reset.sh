@@ -55,7 +55,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_reset() {
 	local defaultWorkingDir
-	source "$dir_of_gget/shared-patterns.source.sh" || die "was not able to source shared-patterns.source.sh"
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir autoTrust
 	# shellcheck disable=SC2034
@@ -87,14 +87,14 @@ function gget_reset() {
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	local workingDirAbsolute
-	workingDirAbsolute=$(readlink -m "$workingDir")
+	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
 	function gget_reset_resetRemote() {
 		local -r remote=$1
 
 		local gpgDir
-		source "$dir_of_gget/paths.source.sh"
+		source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 		if [[ -d $gpgDir ]]; then
 			deleteDirChmod777 "$gpgDir"
 			logInfo "removed $gpgDir"
