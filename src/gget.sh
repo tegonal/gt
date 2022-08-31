@@ -54,7 +54,7 @@ if ! [[ -v dir_of_gget ]]; then
 		fi
 	done
 	dir_of_gget=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd)
-	declare -r dir_of_gget
+	readonly dir_of_gget
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
