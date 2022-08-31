@@ -32,7 +32,8 @@ sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
 
 function updateDocu() {
-	find "$projectDir/src" -maxdepth 1 -name "*.sh" \
+	find "$projectDir/src" -maxdepth 1 -type f \
+		-name "*.sh" \
 		-not -name "*.doc.sh" \
 		-not -name "*utils.sh" \
 		-not -name "*.source.sh" \

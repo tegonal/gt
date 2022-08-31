@@ -111,7 +111,7 @@ function readPulledTsv() {
 		setEntryVariables "$entry"
 		local entryAbsolutePath
 		#shellcheck disable=SC2310
-		entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of %s of remote %s" "$entryFile" "$remote" || return $?
+		entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
 		"$callback" "$entryTag" "$entryFile" "$entryRelativePath" "$entryAbsolutePath" || return $?
 	done
 }
