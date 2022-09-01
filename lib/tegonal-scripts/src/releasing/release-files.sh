@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.5
+#                                         Version: v0.14.7
 #
 #######  Description  #############
 #
@@ -60,7 +60,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v0.14.5'
+export TEGONAL_SCRIPTS_VERSION='v0.14.7'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -185,6 +185,7 @@ function releaseFiles() {
 	updateVersionScripts -v "$version" -p "$additionalPattern" -d "$projectsScriptsDir" || return $?
 	local -r additionalSteps="$projectsScriptsDir/additional-release-files-preparations.sh"
 	if [[ -f $additionalSteps ]]; then
+		logInfo "found $additionalSteps going to source it"
 		# we are aware of that || will disable set -e for sourceOnce
 		# shellcheck disable=SC2310
 		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"

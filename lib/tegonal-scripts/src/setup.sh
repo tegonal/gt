@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.5
+#                                         Version: v0.14.7
 #
 #######  Description  #############
 #
@@ -39,5 +39,5 @@ if ! dir_of_tegonal_scripts=$(realpath "$1"); then
 	printf >&2 "\033[0;31mERROR\033[0m: looks like the passed dir_of_tegonal_scripts is not a realpath: %s" "$1"
 	exit 9
 fi
-declare -r dir_of_tegonal_scripts
+readonly dir_of_tegonal_scripts
 source "$dir_of_tegonal_scripts/utility/source-once.sh"
