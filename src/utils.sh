@@ -136,3 +136,34 @@ function initialiseGpgDir() {
 	# so the user could be aware of that something went wrong
 	chmod 700 "$gpgDir" || true
 }
+
+function latestRemoteTagIncludingChecks() {
+	if ! (($# == 2)); then
+		logError "you need to pass two arguments to latestRemoteTagIncludingChecks, given %s" "$#"
+		echo "1: workingDirAbsolute"
+		echo "2: remote"
+		printStackTrace
+		exit 9
+	fi
+	local -r workingDirAbsolute=$1
+	local -r remote=$2
+
+	local repo
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+
+	local currentDir
+	currentDir=$(pwd)
+
+	local tagPattern
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+
+	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
+	cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
+	#		git fetch "$remote" 'refs/tags/*:refs/tags/*' || die "could not fetch the tags of remote %s and thus cannot determine latest tag"
+	latestRemoteTag "$remote" || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
+	if [[ -z $tag ]]; then
+		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet, cannot pull files from it." "$remote"
+	fi
+	cd "$currentDir"
+	logInfo >&2 "latest is \033[0;36m%s\033[0m" "$tag"
+}
