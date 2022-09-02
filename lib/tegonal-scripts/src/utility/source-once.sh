@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.7
+#                                         Version: v0.15.0
 #
 #######  Description  #############
 #
@@ -28,6 +28,8 @@
 #    sourceOnce "foo.sh"    # will source nothing as sourceOnceGuard_foo__sh is already defined
 #    unset sourceOnceGuard_foo__sh          # unsets the guard
 #    sourceOnce "foo.sh"    # is sourced again and the guard established
+#    # you can also use sourceAlways instead of unsetting and using sourceOnce.
+#    sourceAlways "foo.sh"
 #
 #    # creates a variable named sourceOnceGuard_bar__foo__sh which acts as guard and sources bar/foo.sh
 #    sourceOnce "bar/foo.sh"
@@ -55,7 +57,7 @@ function determineSourceOnceGuard() {
 	readlink -m "$file" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@sourceOnceGuard_\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
 }
 
-function sourceOnce() {
+function sourceOnce_exitIfNotAtLeastOneArg() {
 	if (($# < 1)); then
 		printf >&2 "you need to pass at least the file you want to source to sourceOnce in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "${BASH_SOURCE[1]}"
 		echo >&2 '1. file       the file to source'
@@ -63,6 +65,10 @@ function sourceOnce() {
 		printStackTraced
 		exit 9
 	fi
+}
+
+function sourceOnce() {
+	sourceOnce_exitIfNotAtLeastOneArg "$@"
 
 	local -r sourceOnce_file="$1"
 	shift 1 || die "could not shift by 1"
@@ -92,3 +98,19 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
+
+# Use this function in case you want to source the given file even if it was previously sourced via sourceOnce
+# but still want to set up a corresponding guard in order that a subsequent sourceOnce does no longer source the file
+#
+# if you don't want to setup a guard, then simply use `source` instead.
+function sourceAlways() {
+	sourceOnce_exitIfNotAtLeastOneArg "$@"
+
+	local -r sourceAlways_file="$1"
+	shift 1 || die "could not shift by 1"
+
+	local sourceAlways_guard
+	sourceAlways_guard=$(determineSourceOnceGuard "$sourceAlways_file")
+	unset "$sourceAlways_guard"
+	sourceOnce "$sourceAlways_file" "$@"
+}
