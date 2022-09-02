@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please remotert bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.15.0
+#                                         Version: v0.15.1
 #
 #######  Description  #############
 #
@@ -154,6 +154,13 @@ function latestRemoteTag() {
 	if (($# > 1)); then
 		traceAndDie "you can optionally pass the name of the remote (defaults to origin) to latestRemoteTag but not more, given: %s" "$#"
 	fi
-	local remote=${1:-"origin"}
-	remoteTagsSorted "$remote" | tail --lines=1
+	local -r remote=${1:-"origin"}
+	local tag
+	# we are aware of that || will disable set -e for remoteTagsSorted
+	#shellcheck disable=SC2310
+	tag=$(remoteTagsSorted "$remote" | tail --lines=1) || die "could not get remote tags sorted, see above"
+	if [[ -z $tag ]]; then
+		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet." "$remote"
+	fi
+	echo "$tag"
 }
