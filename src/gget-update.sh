@@ -50,10 +50,6 @@ function gget_update() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
-	local currentDir
-	currentDir=$(pwd) || die "could not determine currentDir"
-	local -r currentDir
-
 	local defaultWorkingDir
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
@@ -112,15 +108,11 @@ function gget_update() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
 
-		local repo
-		source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 		local tagToPull
 		if [[ -n $tag ]]; then
 			tagToPull="$tag"
 		else
-			cd "$repo"
-			tagToPull=$(latestRemoteTag "$remote")
-			cd "$currentDir"
+			tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag, see above"
 		fi
 
 		function gget_update_rePullInternal_callback() {

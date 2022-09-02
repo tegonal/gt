@@ -157,20 +157,12 @@ function gget_pull() {
 		reInitialiseGitDir "$workingDir" "$remote"
 	fi
 
-	local tagToFetch="$tag"
+	local tagToPull="$tag"
 	# tag was actually omitted, so we use the latest remote tag instead
 	if [[ $tag == "$fakeTag" ]]; then
-		logInfo "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
-		cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
-#		git fetch "$remote" 'refs/tags/*:refs/tags/*' || die "could not fetch the tags of remote %s and thus cannot determine latest tag"
-		tagToFetch="$(latestRemoteTag "$remote")" || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
-		if [[ -z $tagToFetch ]]; then
-			die "looks like remote \033[0;36m%s\033[0m does not have a tag yet, cannot pull files from it." "$remote"
-		fi
-		cd "$currentDir"
-		logInfo "latest is \033[0;36m%s\033[0m" "$tagToFetch"
+		tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag, see above"
 	fi
-	local -r tagToFetch
+	local -r tagToPull
 
 	local doVerification
 	if [[ $forceNoVerification == true ]]; then
@@ -247,16 +239,16 @@ function gget_pull() {
 	fi
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
-	if grep "$tagToFetch" <<<"$tags" >/dev/null; then
-		logInfo "tag %s already exists locally, skipping fetching from remote" "$tagToFetch"
+	if grep "$tagToPull" <<<"$tags" >/dev/null; then
+		logInfo "tag %s already exists locally, skipping fetching from remote" "$tagToPull"
 	else
 		local remoteTags
 		remoteTags=$(git ls-remote -t "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
-		grep "$tagToFetch" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToFetch" "$remoteTags" || return $?
-		git fetch --depth 1 "$remote" "refs/tags/$tagToFetch:refs/tags/$tagToFetch" || returnDying "was not able to fetch tag %s from remote %s" "$tagToFetch" "$remote" || return $?
+		grep "$tagToPull" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToPull" "$remoteTags" || return $?
+		git fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
 	fi
 
-	git checkout "tags/$tagToFetch" -- "$path" || return $?
+	git checkout "tags/$tagToPull" -- "$path" || return $?
 
 	function gget_pull_mentionUnsecure() {
 		if [[ $unsecure != true ]]; then
@@ -271,7 +263,7 @@ function gget_pull() {
 	function gget_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
-			if ! git checkout "tags/$tagToFetch" -- "$path.$sigExtension"; then
+			if ! git checkout "tags/$tagToPull" -- "$path.$sigExtension"; then
 				logErrorWithoutNewline "no signature file found for %s, aborting pull" "$path"
 				gget_pull_mentionUnsecure >&2
 				return 1
@@ -320,7 +312,7 @@ function gget_pull() {
 		local relativeTarget sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
 		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
-		entry=$(pulledTsvEntry "$tagToFetch" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tagToFetch" "$file" || return $?
+		entry=$(pulledTsvEntry "$tagToPull" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tagToPull" "$file" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file" || echo "")
 		local -r relativeTarget sha entry currentEntry
@@ -331,13 +323,13 @@ function gget_pull() {
 
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$file" "$pulledTsv"
-		elif [[ $entryTag != "$tagToFetch" ]]; then
-			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToFetch" "$file"
+		elif [[ $entryTag != "$tagToPull" ]]; then
+			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToPull" "$file"
 			# we could warn about a version which was older
 			replacePulledEntry "$pulledTsv" "$file" "$entry"
 		else
 			if [[ $entrySha != "$sha" ]]; then
-				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tagToFetch"
+				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$file" "$tagToPull"
 				gitDiffChars "$entrySha" "$sha"
 				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$source"
@@ -358,7 +350,7 @@ function gget_pull() {
 			fi
 		fi
 
-		"$pullHook" "$tagToFetch" "$source" "$absoluteTarget" || returnDying "pull hook failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
+		"$pullHook" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
 
 		((++numberOfPulledFiles))
