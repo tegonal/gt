@@ -39,7 +39,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gget_self_update() {
 	local currentDir
-	currentDir=$(pwd)
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
 	local forceInstall

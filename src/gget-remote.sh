@@ -70,7 +70,7 @@ function gget_remote_add() {
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local currentDir
-	currentDir=$(pwd)
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
 	local remote url pullDir unsecure workingDir

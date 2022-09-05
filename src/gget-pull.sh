@@ -56,7 +56,7 @@ function gget_pull() {
 	startTime=$(date +%s.%3N)
 
 	local currentDir
-	currentDir=$(pwd) || die "could not determine currentDir"
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
