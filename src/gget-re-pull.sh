@@ -97,11 +97,11 @@ function gget_re_pull() {
 	local -i skipped=0
 	local -i errors=0
 
-	function gget_re_pull_countError() {
+	function gget_re_pull_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
 		shift 2
-		logError "could not fetch \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
+		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
 		return 1
 	}
@@ -117,23 +117,22 @@ function gget_re_pull() {
 			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 
-			# we know that set -e is disabled for gget_re_pull_countError due to ||
+			# we know that set -e is disabled for gget_re_pull_incrementError due to ||
 			#shellcheck disable=SC2310
-			parentDir=$(dirname "$entryAbsolutePath") || gget_re_pull_countError "$entryFile" "$remote" || return $?
+			parentDir=$(dirname "$entryAbsolutePath") || gget_re_pull_incrementError "$entryFile" "$remote" || return $?
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
 				if gget_pull -w "$workingDirAbsolute" -r "$remote" -t "$entryTag" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 					((++pulled))
 				else
-					gget_re_pull_countError "$entryFile" "$remote"
+					gget_re_pull_incrementError "$entryFile" "$remote"
 				fi
 			elif [[ $onlyMissing == true ]]; then
 				((++skipped))
 				logInfo "skipping \033[0;36m%s\033[0m since it already exists locally at %s" "$entryFile" "$entryAbsolutePath"
 			fi
 		}
-		# we know that set -e is disabled for gget_re_pull_countError due to ||
-		#shellcheck disable=SC2310
-		readPulledTsv "$workingDirAbsolute" "$remote" gget_re_pull_rePullInternal_callback 5 6 || gget_re_pull_countError "$entryFile" "$remote" || return $?
+
+		readPulledTsv "$workingDirAbsolute" "$remote" gget_re_pull_rePullInternal_callback 5 6 || gget_re_pull_incrementError "$entryFile" "$remote"
 	}
 
 	function gget_re_pull_rePullRemote() {

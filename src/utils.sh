@@ -43,13 +43,13 @@ function exitBecauseNoGpgKeysImported() {
 
 function findAscInDir() {
 	local -r dir=$1
-	shift
+	shift 1 || die "could not shift by 1"
 	find "$dir" -maxdepth 1 -type f -name "*.asc" "$@"
 }
 
 function noAscInDir() {
 	local -r dir=$1
-	shift 1
+	shift 1 || die "could not shift by 1"
 	local numberOfAsc
 	# we are aware of that set -e is disabled for findAscInDir
 	#shellcheck disable=SC2310
@@ -59,7 +59,7 @@ function noAscInDir() {
 
 function checkWorkingDirExists() {
 	local workingDirAbsolute=$1
-	shift
+	shift 1 || die "could not shift by 1"
 
 	local workingDirPattern
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
@@ -78,9 +78,11 @@ function exitIfWorkingDirDoesNotExist() {
 }
 
 function exitIfRemoteDirDoesNotExist() {
-	local -r workingDirAbsolute=$1
-	local -r remote=$2
-	shift 2
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
+
 	local remoteDir
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
@@ -94,6 +96,7 @@ function exitIfRemoteDirDoesNotExist() {
 
 function invertBool() {
 	local b=$1
+	shift 1 || die "could not shift by 1"
 	if [[ $b == true ]]; then
 		echo "false"
 	else
@@ -105,16 +108,18 @@ function gitDiffChars() {
 	local hash1 hash2
 	hash1=$(git hash-object -w --stdin <<<"$1") || die "cannot calculate hash for string: %" "$1"
 	hash2=$(git hash-object -w --stdin <<<"$2") || die "cannot calculate hash for string: %" "$2"
-	shift 2
+	shift 2 || die "could not shift by 2"
+
 	git --no-pager diff "$hash1" "$hash2" \
 		--word-diff=color --word-diff-regex . --ws-error-highlight=all |
 		grep -A 1 @@ | tail -n +2
 }
 
 function initialiseGitDir() {
-	local -r workingDirAbsolute=$1
-	local -r remote=$2
-	shift 2
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
 
 	local repo gitconfig
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
@@ -128,9 +133,24 @@ function reInitialiseGitDir() {
 	cp "$gitconfig" "$repo/.git/config" || die "could not copy %s to %s" "$gitconfig" "$repo/.git/config"
 }
 
+function reInitialiseGitDirIfDotGitNotPresent() {
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
+
+	local repo
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+
+	if ! [[ -d "$repo/.git" ]]; then
+		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
+		reInitialiseGitDir "$workingDirAbsolute" "$remote"
+	fi
+}
+
 function initialiseGpgDir() {
 	local -r gpgDir=$1
-	shift
+	shift || die "could not shift by 1"
 	mkdir "$gpgDir" || die "could not create the gpg directory at %s" "$gpgDir"
 	# it's OK if we are not able to set the rights as we only use it temporary. This will cause warnings by gpg
 	# so the user could be aware of that something went wrong
@@ -138,32 +158,25 @@ function initialiseGpgDir() {
 }
 
 function latestRemoteTagIncludingChecks() {
-	if ! (($# == 2)); then
-		logError "you need to pass two arguments to latestRemoteTagIncludingChecks, given %s" "$#"
-		echo "1: workingDirAbsolute"
-		echo "2: remote"
-		printStackTrace
-		exit 9
-	fi
-	local -r workingDirAbsolute=$1
-	local -r remote=$2
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
 
 	local repo
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	local currentDir
-	currentDir=$(pwd)
+	currentDir=$(pwd) || die "could not determine currentDir"
 
 	local tagPattern
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
 	cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
-	#		git fetch "$remote" 'refs/tags/*:refs/tags/*' || die "could not fetch the tags of remote %s and thus cannot determine latest tag"
-	latestRemoteTag "$remote" || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
-	if [[ -z $tag ]]; then
-		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet, cannot pull files from it." "$remote"
-	fi
+	local tag
+	tag=$(latestRemoteTag "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
 	cd "$currentDir"
 	logInfo >&2 "latest is \033[0;36m%s\033[0m" "$tag"
+	echo "$tag"
 }
