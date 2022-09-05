@@ -141,6 +141,8 @@ function install() {
 
 	if [[ -n $symbolicLink ]]; then
 		echo "set up symbolic link $symbolicLink"
+		parent=$(dirname "$symbolicLink")
+		mkdir -p "$parent"
 		ln -sf "$installDir/src/$projectName.sh" "$symbolicLink" || sudo ln -sf "$installDir/src/$projectName.sh" "$symbolicLink"
 	else
 		echo "no symbolic link set up, please do manually if required"
