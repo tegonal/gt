@@ -152,9 +152,8 @@ function gget_pull() {
 
 	if [[ -f $repo ]]; then
 		die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
-	elif ! [[ -d "$repo/.git" ]]; then
-		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
-		reInitialiseGitDir "$workingDir" "$remote"
+	else
+		reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
 	fi
 
 	local tagToPull="$tag"

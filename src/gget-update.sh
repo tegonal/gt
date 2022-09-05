@@ -95,11 +95,11 @@ function gget_update() {
 	local -i pulled=0
 	local -i errors=0
 
-	function gget_update_countError() {
+	function gget_update_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
 		shift 2
-		logError "could not fetch \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
+		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
 		return 1
 	}
@@ -112,6 +112,7 @@ function gget_update() {
 		if [[ -n $tag ]]; then
 			tagToPull="$tag"
 		else
+			reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
 			tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag, see above"
 		fi
 
@@ -122,18 +123,16 @@ function gget_update() {
 			local -ra params=(_entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 
-			# we know that set -e is disabled for gget_update_countError due to ||
+			# we know that set -e is disabled for gget_update_incrementError due to ||
 			#shellcheck disable=SC2310
-			parentDir=$(dirname "$entryAbsolutePath") || gget_update_countError "$entryFile" "$remote" || return $?
+			parentDir=$(dirname "$entryAbsolutePath") || gget_update_incrementError "$entryFile" "$remote" || return $?
 			if gget_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 				((++pulled))
 			else
-				gget_update_countError "$entryFile" "$remote"
+				gget_update_incrementError "$entryFile" "$remote"
 			fi
 		}
-		# we know that set -e is disabled for gget_update_countError due to ||
-		#shellcheck disable=SC2310
-		readPulledTsv "$workingDirAbsolute" "$remote" gget_update_rePullInternal_callback 5 6 || gget_update_countError "$entryFile" "$remote" || return $?
+		readPulledTsv "$workingDirAbsolute" "$remote" gget_update_rePullInternal_callback 5 6
 	}
 
 	function gget_update_rePullRemote() {
