@@ -30,7 +30,8 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/release-files.sh"
 
 function release() {
 	function findScripts() {
-		find "$scriptsDir/../src" "$scriptsDir/../install.sh" -name "*.sh" -not -name "*.doc.sh" "$@"
+		find "$scriptsDir/../src" "$scriptsDir/../install.sh" "$scriptsDir/../install.doc.sh" \
+			-name "*.sh" \( -not -name "*.doc.sh" -o -name "install.doc.sh" \) "$@"
 	}
 
 	local -r additionalPattern="(GGET_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"

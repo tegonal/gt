@@ -46,6 +46,8 @@ function cleanupOnPushToMain() {
 			replaceHelpSnippet "$script" "${id////-}-help" . README.md || return $?
 		done || die "updating bash documentation and help snippets failed, see above"
 
+	updateBashDocumentation "$projectDir/install.sh" "install" . README.md || die "could not update install documentation"
+
 	declare additionalHelp=(
 		gget_remote_add "src/gget-remote.sh" "add --help"
 		gget_remote_remove "src/gget-remote.sh" "remove --help"

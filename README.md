@@ -68,15 +68,22 @@ the current GPG key (the one in the main branch).
 
 We suggest that you download install.sh and its *.sig file and 
 verify the two against our GPG key before actually running it:
-```
-! [ -f ./install.sh ] || { echo "there is already an install.sh in your directory, aborting"; return 1 } && \
+
+<install>
+
+<!-- auto-generated, do not modify here but in install.sh -->
+```bash
+! [ -f ./install.sh ] || (echo "there is already an install.sh in your directory, aborting"; exit 1) && \
 wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
 wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
 wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import - && \
 gpg --verify ./install.sh.sig ./install.sh && \
 chmod +x ./install.sh && \
-echo "verification successful" || { echo "verification failed, don't continue"; return 99 } 
+echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
+./install.sh
 ```
+
+</install>
 
 <details>
 <summary>click here for an explanation of each command</summary>

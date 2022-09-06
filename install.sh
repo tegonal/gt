@@ -7,6 +7,21 @@
 #         /___/
 #                                         Version: v0.3.0-SNAPSHOT
 #
+#######  Description  #############
+#
+#  installation script which downloads and set ups the latest or a specific tag of gget
+#
+#######  Usage  ###################
+#
+#    ! [ -f ./install.sh ] || (echo "there is already an install.sh in your directory, aborting"; exit 1) && \
+#    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
+#    wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import - && \
+#    gpg --verify ./install.sh.sig ./install.sh && \
+#    chmod +x ./install.sh && \
+#    echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
+#    ./install.sh
+#
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
@@ -160,6 +175,13 @@ function exitIfValueMissing() {
 	[[ -n "${2:-}" ]] || die "only %s provided but not a corresponding value" "$1"
 }
 
+function parseError() {
+	die "unknown $1 $2\nHelp:
+	-t|--tag        (optional) the tag which shall be installed -- default: latest
+	-d|--directory  (optional) the installation directory -- default: \$HOME/.local/lib and
+	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gget if directory is not set otherwise nothing in which case no symbolic link is setup"
+}
+
 function main() {
 	local tag=""
 	local installDir=""
@@ -179,8 +201,8 @@ function main() {
 			exitIfValueMissing "$@"
 			symbolicLink=$2 && shift
 			;;
-		-*) die "unknown option $1" ;;
-		*) die "unknown argument $1" ;;
+		-*) parseError "option" "$1" ;;
+		*) parseError "argument" "$1" ;;
 		esac
 		shift
 	done
@@ -198,13 +220,18 @@ function main() {
 	if [[ -z $installDir ]]; then
 		prefix=$(readlink -m "$HOME/.local")
 		installDir="$prefix/lib/$projectName"
-		symbolicLink="$prefix/bin/$projectName"
+		if [[ -z $symbolicLink ]]; then
+			symbolicLink="$prefix/bin/$projectName"
+		fi
 		echo "using default installation directory ($installDir) and symbolic link ($symbolicLink), use --directory and --ln to specify custom values"
 	fi
 	installDir=$(readlink -m "$installDir")
 	# if symbolicLink is relative, then make it absolute using pwd
 	if [[ -n $symbolicLink && $symbolicLink != /* ]]; then
-		symbolicLink="$(pwd)/$symbolicLink"
+		local currentDir
+		currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+		local -r currentDir
+		symbolicLink="$currentDir/$symbolicLink"
 	fi
 
 	install "$tag" "$installDir" "$symbolicLink"
