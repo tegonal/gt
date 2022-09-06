@@ -33,7 +33,7 @@ function release() {
 		find "$scriptsDir/../src" "$scriptsDir/../install.sh" -name "*.sh" -not -name "*.doc.sh" "$@"
 	}
 
-	local -r additionalPattern="(GGET_(?:LATEST_)VERSION=['\"])[^'\"]+(['\"])"
+	local -r additionalPattern="(GGET_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
 	releaseFiles --project-dir "$projectDir" -p "$additionalPattern" --sign-fn findScripts "$@"
 }
 
