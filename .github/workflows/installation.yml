@@ -1,0 +1,23 @@
+name: "Installation"
+on:
+  push:
+    paths:
+      - 'install.sh'
+      - 'install.doc.sh'
+  pull_request:
+    paths:
+      - 'install.sh'
+      - 'install.doc.sh'
+
+jobs:
+  Installation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check installation works
+        run: |
+          tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX)
+          mkdir -p "$tmpDir"
+          currentDir=$(pwd)
+          cd "$tmpDir"
+          "$currentDir/install.doc.sh"
