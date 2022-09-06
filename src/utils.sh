@@ -167,7 +167,8 @@ function latestRemoteTagIncludingChecks() {
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	local currentDir
-	currentDir=$(pwd) || die "could not determine currentDir"
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+	local -r currentDir
 
 	local tagPattern
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
