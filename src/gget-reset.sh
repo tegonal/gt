@@ -115,7 +115,7 @@ function gget_reset() {
 		# we know that set -e is disabled for gget_reset_resetRemote due to ||
 		#shellcheck disable=SC2310
 		gget_reset_resetRemote "$remote" || die "could not remove gpg directory for remote %s, see above" "$remote"
-		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false -t "$remote"
+		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false -r "$remote"
 	else
 		withCustomOutputInput 7 8 gget_reset_allRemotes || die "could not remove gpg directories, see above"
 		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false
