@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/github-commons
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Creative Commons Zero v1.0 Universal
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.3.1
+#                                         Version: v0.5.0
 #
 #######  Description  #############
 #
@@ -44,7 +44,7 @@ export GGET_VERSION='v0.5.0-SNAPSHOT'
 
 if ! [[ -v dir_of_github_commons ]]; then
 	dir_of_github_commons="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
-	declare -r dir_of_github_commons
+	readonly dir_of_github_commons
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -99,6 +99,7 @@ function replaceTagInPullRequestTemplate() {
 	local -r url=$2
 	local -r tag=$3
 	shift 3 || die "could not shift by 3"
+
 	perl -0777 -i \
 		-pe "s#($url/blob/)[^/]+/#\${1}$tag/#;" \
 		"$file"
