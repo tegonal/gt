@@ -31,19 +31,9 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$projectDir/lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_github_commons/gget/pull-hook-functions.sh"
-sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
-
-function additionalReleasePrepareSteps() {
-	# keep in sync with local -r
-	exitIfVarsNotAlreadySetBySource version additionalPattern
-	# we help shellcheck to realise that version and additionalPattern are initialised
-	local -r version="$version" additionalPattern="$additionalPattern"
-
-	# same as in pull-hook.sh
-	local -r githubUrl="https://github.com/tegonal/gget"
-	replaceTagInPullRequestTemplate "$projectDir/.github/PULL_REQUEST_TEMPLATE.md" "$githubUrl" "$version"
-
-	updateVersionScripts -v "$version" -p "$additionalPattern" -d "./install.sh"
+version=v0.5.2
+additionalPattern="(GGET_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
+function foo(){
+	source "$scriptsDir/additional-release-files-preparations.sh"
 }
-additionalReleasePrepareSteps
+foo

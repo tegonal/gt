@@ -1,0 +1,58 @@
+#
+#    __                          __
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/github-commons
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Creative Commons Zero v1.0 Universal
+#  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
+#         /___/
+#                                         Version: v0.5.0-SNAPSHOT
+#
+###################################
+name: "gget update"
+on:
+  schedule:
+    - cron: '0 4 * * MON'
+  push:
+    branches:
+      - do-gget-update
+
+jobs:
+  Update:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'tegonal'
+    steps:
+      - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
+      - uses: actions/checkout@v3
+      - name: Install gget
+        run: |
+          set -e
+          # see install.doc.sh in root of this project, MODIFY THERE NOT HERE
+          currentDir=$(pwd) && \
+          tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
+          wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc" && \
+          wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc.sig" && \
+          gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
+          echo "public key trusted" && \
+          mkdir ./gpg && \
+          gpg --homedir ./gpg --import ./signing-key.public.asc && \
+          wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
+          wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
+          gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
+          chmod +x ./install.sh && \
+          echo "verification successful" && verificationResult=true || (echo "verification failed, don't continue"; exit 1) && \
+          ./install.sh && \
+          false || cd "$currentDir" && rm -r "$tmpDir" && "${verificationResult:-false}"
+          # end install.doc.sh
+      - name: gget update
+        run: gget update
+      - name: Create pull request if necessary
+        uses: peter-evans/create-pull-request@v4
+        with:
+          branch: gget-update
+          base: main
+          title: Updates via gget
+          commit-message: update files pulled via gget
+          body: "following the changes after running: gget update"
+          delete-branch: true
+          token: ${{ secrets.GGET_UPDATE_TOKEN }}
+          push-to-fork: ${{ secrets.GGET_UPDATE_FORK }}
