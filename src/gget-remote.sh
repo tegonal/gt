@@ -181,24 +181,18 @@ function gget_remote_add() {
 
 	local -i numberOfImportedKeys=0
 
-	function gget_remote_importGpgKeys() {
-		findAscInDir "$repo/.gget" -print0 >&3
+	function gget_remote_importKeyCallback() {
+		local -r publicKey=$1
+		local -r sig=$2
+		shift 2 || die "could not shift by 2"
 
-		echo ""
-		local file
-		while read -u 4 -r -d $'\0' file; do
-			if importGpgKey "$gpgDir" "$file" --confirm=true; then
-				mv "$file" "$publicKeysDir/" || die "unable to move public key %s into public keys directory %s" "$file" "$publicKeysDir"
-				((++numberOfImportedKeys))
-			else
-				echo "deleting gpg key file $file"
-				rm "$file" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$file"
-			fi
-		done
+		mv "$publicKey" "$publicKeysDir/" || die "unable to move public key %s into public keys directory %s" "$publicKey" "$publicKeysDir"
+		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature %s into public keys directory %s" "$sig" "$publicKeysDir"
+		((++numberOfImportedKeys))
 	}
-	withCustomOutputInput 3 4 gget_remote_importGpgKeys
+	validateGpgKeysAndImport "$repo/.gget" "$gpgDir" "$publicKeysDir" gget_remote_importKeyCallback false
 
-	deleteDirChmod777 "$repo/.gget" || logWarning "was not able to delete %s, please do it manually" "$repo/.gget"
+	deleteDirChmod777 "$repo/.gget" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gget"
 
 	if ((numberOfImportedKeys == 0)); then
 		if [[ $unsecure == true ]]; then

@@ -181,3 +181,66 @@ function latestRemoteTagIncludingChecks() {
 	logInfo >&2 "latest is \033[0;36m%s\033[0m" "$tag"
 	echo "$tag"
 }
+
+function validateGpgKeysAndImport() {
+	local sourceDir gpgDir publicKeysDir callback autoTrust
+	# params is required for parseFnArgs thus:
+	# shellcheck disable=SC2034
+	local -ra params=(sourceDir gpgDir publicKeysDir callback autoTrust)
+	parseFnArgs params "$@"
+
+	exitIfArgIsNotFunction "$callback" 4
+
+	local autoTrustPattern
+	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+
+	local -r sigExtension="sig"
+
+	function validateGpgKeysAndImport_do() {
+		findAscInDir "$sourceDir" -print0 >&3
+		echo ""
+		local publicKey
+		while read -u 4 -r -d $'\0' publicKey; do
+
+			printf "Verifying if we trust the public key %s\n" "$publicKey"
+
+			local confirm
+			confirm="--confirm=$(invertBool "$autoTrust")"
+
+			local importIt=false
+
+			if ! [[ -f "$publicKey.$sigExtension" ]]; then
+				logWarning "There is no %s.sig next to the public key %s, cannot verify it" "$(basename "$publicKey")" "$publicKey"
+			else
+				# note we verify the signature of the public key based on the normal gpg dir
+				# i.e. not based on the gpg dir of the remote but of the user
+				# which means we trust the public key only if tbe user trusts the public key which created the sig
+				if gpg --verify "$publicKey.$sigExtension" "$publicKey"; then
+					confirm="false"
+					importIt=true
+				else
+					logWarning "gpg verification failed for public key \033[0;36m%s\033[0m -- if you trust this repo, then import the public key which signed %s into your personal gpg store" "$publicKey" "$(basename "$publicKey")"
+				fi
+			fi
+
+			if [[ $importIt != true ]]; then
+				if [[ $autoTrust == true ]]; then
+					logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustPattern"
+					importIt=true
+				elif askYesOrNo "You can still import it via manual consent, do you want to proceed and take a look at the public key?"; then
+					importIt=true
+				else
+					echo "Decision: do not continue! Skipping this public key accordingly"
+				fi
+			fi
+
+			if [[ $importIt == true ]] && importGpgKey "$gpgDir" "$publicKey" "--confirm=$confirm"; then
+				"$callback" "$publicKey" "$publicKey.$sigExtension"
+			else
+				logInfo "deleting gpg key file $publicKey for security reasons"
+				rm "$publicKey" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$publicKey"
+			fi
+		done
+	}
+	withCustomOutputInput 3 4 validateGpgKeysAndImport_do
+}

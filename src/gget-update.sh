@@ -138,6 +138,9 @@ function gget_update() {
 	function gget_update_rePullRemote() {
 		local -r remote=$1
 		shift 1
+
+		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+
 		withCustomOutputInput 5 6 gget_update_rePullInternal "$remote"
 	}
 

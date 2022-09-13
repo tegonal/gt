@@ -93,6 +93,8 @@ function gget_reset() {
 	function gget_reset_resetRemote() {
 		local -r remote=$1
 
+		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+
 		local gpgDir
 		source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 		if [[ -d $gpgDir ]]; then
