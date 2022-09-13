@@ -184,20 +184,13 @@ function gget_pull() {
 				fi
 			else
 				initialiseGpgDir "$gpgDir"
-				local confirm
-				confirm="--confirm=$(invertBool "$autoTrust")"
 
 				local -i numberOfImportedKeys=0
-				function gget_pull_importGpgKeys() {
-					findAscInDir "$publicKeysDir" -print0 >&3
-					local file
-					while read -u 4 -r -d $'\0' file; do
-						if importGpgKey "$gpgDir" "$file" "$confirm"; then
-							((++numberOfImportedKeys))
-						fi
-					done
+				function gget_pull_importKeyCallback() {
+					((++numberOfImportedKeys))
 				}
-				withCustomOutputInput 3 4 gget_pull_importGpgKeys
+				validateGpgKeysAndImport "$publicKeysDir" "$gpgDir" "$publicKeysDir" gget_pull_importKeyCallback "$autoTrust"
+
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
 						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecurePattern"
