@@ -58,8 +58,8 @@ function gget_remote_cleanupRemoteOnUnexpectedExit() {
 	shift 2
 
 	# shellcheck disable=SC2181
-	if ! ((result == 0)) && [[ -d $1 ]]; then
-		deleteDirChmod777 "$1"
+	if ! ((result == 0)) && [[ -d $repo ]]; then
+		deleteDirChmod777 "$repo"
 	fi
 
 	# revert side effect of cd
