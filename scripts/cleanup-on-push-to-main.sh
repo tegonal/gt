@@ -59,7 +59,13 @@ function cleanupOnPushToMain() {
 		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md ${additionalHelp[i + 2]}
 	done || die "replacing help snippets failed, see above"
 
-	logSuccess "Updating bash docu and README completed"
+	local -r indent='          '
+	local installScript
+	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' < "$projectDir/install.doc.sh" | sed "s/^/$indent/" )
+	perl -0777 -i -pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$installScript\n$indent\${2}@" \
+		"$projectDir/.github/workflows/gget-update.yml"
+
+  logSuccess "Updating bash docu and README completed"
 }
 
 ${__SOURCED__:+return}

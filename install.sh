@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.3.0-SNAPSHOT
+#                                         Version: v0.6.0-SNAPSHOT
 #
 #######  Description  #############
 #
@@ -13,14 +13,21 @@
 #
 #######  Usage  ###################
 #
-#    ! [ -f ./install.sh ] || (echo "there is already an install.sh in your directory, aborting"; exit 1) && \
+#    currentDir=$(pwd) && \
+#    tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc.sig" && \
+#    gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
+#    echo "public key trusted" && \
+#    mkdir ./gpg && \
+#    gpg --homedir ./gpg --import ./signing-key.public.asc && \
 #    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
 #    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
-#    wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import - && \
-#    gpg --verify ./install.sh.sig ./install.sh && \
+#    gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 #    chmod +x ./install.sh && \
-#    echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
-#    ./install.sh
+#    echo "verification successful" && verificationResult=true || (echo "verification failed, don't continue"; exit 1) && \
+#    ./install.sh && \
+#    false || cd "$currentDir" && rm -r "$tmpDir" && "${verificationResult:-false}"
 #
 ###################################
 set -euo pipefail

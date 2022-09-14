@@ -63,55 +63,81 @@ For instance, the [README of v0.5.2](https://github.com/tegonal/gget/tree/v0.5.2
 
 ## using install.sh
 
-This script downloads the latest or a specific tag of gget and verifies gget's files against 
+`intall.sh` downloads the latest or a specific tag of gget and verifies gget's files against 
 the current GPG key (the one in the main branch).
 
-We suggest that you download install.sh and its *.sig file and 
-verify the two against our GPG key before actually running it:
+We suggest you verify install.sh against the public key of this repository and 
+the public key of this repository against 
+[Tegonal's public key for github](https://tegonal.com/gpg/github.asc). 
+
+The following commands will do this but require you to first import our gpg key. 
+If you haven't done this already, then execute:
+```
+wget -O- https://tegonal.com/gpg/github.asc | gpg --import -
+```
+
+Now you are ready to execute the following commands which download and verify the public key as well as the install.sh 
+and of course execute the install.sh as such.
+
 
 <install>
 
 <!-- auto-generated, do not modify here but in install.sh -->
 ```bash
-! [ -f ./install.sh ] || (echo "there is already an install.sh in your directory, aborting"; exit 1) && \
+currentDir=$(pwd) && \
+tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
+wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc" && \
+wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc.sig" && \
+gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
+echo "public key trusted" && \
+mkdir ./gpg && \
+gpg --homedir ./gpg --import ./signing-key.public.asc && \
 wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
 wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
-wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import - && \
-gpg --verify ./install.sh.sig ./install.sh && \
+gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 chmod +x ./install.sh && \
-echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
-./install.sh
+echo "verification successful" && verificationResult=true || (echo "verification failed, don't continue"; exit 1) && \
+./install.sh && \
+false || cd "$currentDir" && rm -r "$tmpDir" && "${verificationResult:-false}"
 ```
 
 </install>
 
 <details>
-<summary>click here for an explanation of each command</summary>
+<summary>click here for an explanation of the commands</summary>
 
-1. `! [ -f ./install.sh ]`  
-   We don't want to override an existing `./install.sh` thus we check if there is already one and abort if this is the case
-2. `wget .../install.sh`  
+1. `mktemp ...`  
+   create a temp directory so that we don't run into troubles overwriting files in your current dir
+2. `wget .../signing-key.public.asc`  
+   download the public key of this repo, which can be used to verify the integrity of released files.
+3. `wget .../signing-key.public.asc.sig`    
+   download the signature file of signing-key.public.asc
+4. `gpg --verify ...`  
+   verify the public key against your gpg store
+5. `gpg --homedir ./gpg --import`  
+   create a local gpg store and import the public key of this repository
+6. `wget .../install.sh`  
    download the install.sh
-3. `wget .../install.sh.sig`  
+7. `wget .../install.sh.sig`  
    download the signature file of install.sh
-4. `wget .../signing-key.public.asc | gpg --import -`  
-   import the current public key of gget
-5. `gpg --verify...`  
-   verify the install.sh you downloaded is (still) valid
-6. `chmod +x ./install.sh`  
+8. `gpg --homedir ./gpg --verify...`  
+   verify the install.sh you downloaded is (still) valid against the public key of this repo
+9. `chmod +x ./install.sh`  
    make install.sh executable
-7. `echo "..."`  
+10. `echo "..."`  
    output the result of the verification
+11. `./install.sh`
+    execute the installation as such
+12. `false || cd "$currentDir" && rm -r "$tmpDir ...`
+    cleanup step: go back to where you have been before and delete the tmpDir
 
 </details>
-
-If successful you can install gget by just calling `./install.sh` (you might want to remove it afterwards)
 
 Per default, it downloads the latest tag and installs it into `$HOME/.local/lib/gget` 
 and sets up a symbolic link at `$HOME/.local/bin/gget`.
 
-You can tweak this behaviour as shown as follows:
-```
+You can tweak this behaviour as shown as follows (replace the `./install.sh ...` command above):
+```bash
 # Download the latest tag, configure default installation directory and symbolic link
 install.sh
 
@@ -131,28 +157,49 @@ Last but not least, see [additional installation steps](#additional-installation
 
 1. [![Download](https://img.shields.io/badge/Download-v0.5.2-%23007ec6)](https://github.com/tegonal/gget/releases/tag/v0.5.2)
 2. extract the zip/tar.gz 
-3. open a terminal at the corresponding folder and verify the scripts against our public key:  
+3. open a terminal at the corresponding folder and verify the public key of this repo against [our public key](https://tegonal.com/gpg/github.asc):  
    ```bash
-   wget -O- https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc | gpg --import -
-   find ./src -name "*.sig" -print0 | while read -r -d $'\0' sig; do gpg --verify "$sig"; done && echo "verification successful" || echo "verification failed, don't continue"
-   ```  
-4. copy the src directory to a place where you want to store gget:
+   wget -O- https://tegonal.com/gpg/github.asc | gpg --import -
+   gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc
+   ```
+4. then verify the files in ./src against the public key of this repository
+   ```bash
+   mkdir ./gpg
+   gpg --homedir ./gpg --import ./signing-key.public.asc 
+   find ./src -name "*.sig" -print0 | while read -r -d $'\0' sig; do gpg --homedir ./gpg --verify "$sig"; done && \
+     echo "verification successful" || echo "verification failed, don't continue"
+   rm -r ./gpg
+   ```
+5. copy the src directory to a place where you want to store gget:
    1. For instance, if you only want it for the current user, then place it into $HOME/.local/lib/gget
    2. if it shall be available for all users, then place it e.g. in /opt/gget or
    3. into your project directory in case you want that other contributors can use it as well without an own installation
-5. optional: create a symlink:
+6. optional: create a symlink:
    1. only for the current user `ln -s "$HOME/.local/lib/gget/src/gget.sh" "$HOME/.local/bin/gget"`
    2. globally `ln -s "$HOME/.local/lib/gget/src/gget.sh" "/usr/local/bin/gget"`
    3. in project: `ln -s ./lib/gget/src/get.sh ./gget`
-6. See [additional installation steps](#additional-installation-steps)
+7. See [additional installation steps](#additional-installation-steps)
 
 ## additional installation steps
 
-Typically you add the following to your .gitignore file:
+Typically, you add the following to your .gitignore file when fetching files via gget in your repository:
 ```gitignore
 .gget/**/repo
 .gget/**/gpg
 ```
+
+Whether you commit the fetched files or not (i.e. put them on the ignore list as well) is up to you.
+For instance, if you don't want to commit them and you put everything into `lib/...` (default location) then you 
+would add the following to your `.gitignore` in addition
+```gitignore
+lib/**
+```
+
+Users cloning your project or pulling the latest changes would then execute: 
+```bash
+gget re-pull
+```
+to fetch all ignored files.
 
 # Usage
 
@@ -174,7 +221,7 @@ self-update   update gget to the latest version
 --version  prints the version of this script
 
 INFO: Version of gget.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-help>
@@ -197,7 +244,7 @@ list     list all remotes
 --version  prints the version of this script
 
 INFO: Version of gget-remote.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-remote-help>
@@ -355,7 +402,7 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 gget pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 
 INFO: Version of gget-pull.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-pull-help>
@@ -428,7 +475,7 @@ gget re-pull
 gget re-pull -r tegonal-scripts --only-missing false --auto-trust true
 
 INFO: Version of gget-re-pull.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-re-pull-help>
@@ -487,7 +534,7 @@ gget reset
 gget reset --auto-trust true
 
 INFO: Version of gget-reset.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-reset-help>
@@ -547,7 +594,7 @@ gget update -r tegonal-scripts
 gget update -r tegonal-scripts -t v1.0.0
 
 INFO: Version of gget-update.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-update-help>
@@ -595,7 +642,7 @@ gget self-update
 gget self-update --force
 
 INFO: Version of gget-self-update.sh is:
-v0.5.0-SNAPSHOT
+v0.5.2
 ```
 
 </gget-self-update-help>

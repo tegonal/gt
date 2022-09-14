@@ -41,7 +41,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.5.0-SNAPSHOT'
+export GGET_VERSION='v0.6.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gget ]]; then
 	declare intermediateSource=${BASH_SOURCE[0]:-$0}
