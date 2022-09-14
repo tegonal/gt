@@ -73,7 +73,7 @@ the public key of this repository against
 The following commands will do this but require you to first import our gpg key. 
 If you haven't done this already, then execute:
 ```
-wget -O- https://tegonal.com/gpg/github.asc | gpg --import -
+wget -O- https://www.tegonal.com/assets/gpg/github.asc | gpg --import -
 ```
 
 Now you are ready to execute the following commands which download and verify the public key as well as the install.sh 
