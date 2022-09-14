@@ -192,7 +192,7 @@ function gget_remote_add() {
 	fi
 
 	gpg --homedir "$gpgDir" --list-sig || die "was not able to list the gpg keys, looks like a broken setup, aborting"
-	logSuccess "remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -t <VERSION> -p <PATH>" "$remote" "$numberOfImportedKeys" "$remote"
+	logSuccess "remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -p <PATH>" "$remote" "$numberOfImportedKeys" "$remote"
 }
 
 function gget_remote_list() {
