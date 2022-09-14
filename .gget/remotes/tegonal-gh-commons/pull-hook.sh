@@ -23,13 +23,20 @@ if ! [[ -v dir_of_github_commons ]]; then
 	readonly dir_of_github_commons
 fi
 sourceOnce "$dir_of_github_commons/gget/pull-hook-functions.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
-declare _tag=$1 source=$2 _target=$3
-shift 3
-if [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
-	replacePlaceholdersContributorsAgreement "$source" "gget"
-elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
-	# same as in additional-release-files-preparations.sh
-  declare githubUrl="https://github.com/tegonal/gget"
-	replacePlaceholderPullRequestTemplate "$source" "$githubUrl" "$GGET_LATEST_VERSION"
-fi
+function pullHook() {
+	local _tag source _target
+	# shellcheck disable=SC2034
+	local -ra params=(_tag source _target)
+	parseFnArgs params "$@"
+
+	if [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
+		replacePlaceholdersContributorsAgreement "$source" "gget"
+	elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
+		# same as in additional-release-files-preparations.sh
+		local -r githubUrl="https://github.com/tegonal/gget"
+		replacePlaceholderPullRequestTemplate "$source" "$githubUrl" "$GGET_LATEST_VERSION"
+	fi
+}
+pullHook "$@"
