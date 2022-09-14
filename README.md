@@ -221,7 +221,7 @@ self-update   update gget to the latest version
 --version  prints the version of this script
 
 INFO: Version of gget.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-help>
@@ -244,7 +244,7 @@ list     list all remotes
 --version  prints the version of this script
 
 INFO: Version of gget-remote.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-remote-help>
@@ -402,7 +402,7 @@ gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 gget pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 
 INFO: Version of gget-pull.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-pull-help>
@@ -475,7 +475,7 @@ gget re-pull
 gget re-pull -r tegonal-scripts --only-missing false --auto-trust true
 
 INFO: Version of gget-re-pull.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-re-pull-help>
@@ -534,7 +534,7 @@ gget reset
 gget reset --auto-trust true
 
 INFO: Version of gget-reset.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-reset-help>
@@ -594,7 +594,7 @@ gget update -r tegonal-scripts
 gget update -r tegonal-scripts -t v1.0.0
 
 INFO: Version of gget-update.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-update-help>
@@ -642,7 +642,7 @@ gget self-update
 gget self-update --force
 
 INFO: Version of gget-self-update.sh is:
-v0.5.2
+v0.6.0-SNAPSHOT
 ```
 
 </gget-self-update-help>
