@@ -5,3 +5,5 @@ v0.5.0	src/.github/CODE_OF_CONDUCT.md	../.github/CODE_OF_CONDUCT.md	293a9bc0bf45
 v0.5.0	src/.github/PULL_REQUEST_TEMPLATE.md	../.github/PULL_REQUEST_TEMPLATE.md	9112d1ea1f72ea250cdfe686fc152e63f2e0cdcea9c46935289471d7a3f54c35af8a3f283570f5d863e936c7782939c7b1548cb7d4ccda712bbf9314926f58cb
 v0.5.0	src/gget/pull-hook-functions.sh	remotes/tegonal-gh-commons/lib/src/gget/pull-hook-functions.sh	5d3949dd43a106f3d0c7f772e3a8cb801b1ea0384236a08ba71315ff060c0068ed07767f7b9ab4c44d690f95bcf99548cde04511751422910aaaa2643df2696b
 v0.5.0	src/.github/Contributor Agreement.txt	../.github/Contributor Agreement.txt	f3b5080e1e1f23e6c5a44a23d0911f55df4e754de3fdbc377d8feb4b6d053482810e02e1bca15764136209dd791666e5d28c672b41c056da33e649b1bd56c806
+v0.5.0	src/dotfiles/.editorconfig	../.editorconfig	be152950285065d48a4df291432a39ec4471bbd2fa206473474c43dfccb1d2b7dcebf71e9e39f0d2d4134b19fcb469cb2573e400957e07fa6141ea70e8587346
+v0.5.0	src/dotfiles/.shellcheckrc	../.shellcheckrc	1e68a6d1b293f8f0af41673068b0e875f195a537cd532d42b8a40e95ddcc7d571b5f311af55422dd19d8e8adb8557e9e225e0bd1c3e92aa278b761b87d73d6c3
