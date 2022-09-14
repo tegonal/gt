@@ -57,4 +57,4 @@ jobs:
           body: "following the changes after running: gget update"
           delete-branch: true
           token: ${{ secrets.GGET_UPDATE_TOKEN }}
-          push-to-fork: ${{ secrets.GGET_UPDATE_FORK }}
+          push-to-fork: ${{ secrets.FORK_FOR_PR }}
