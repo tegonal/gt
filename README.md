@@ -26,7 +26,7 @@ In this sense, gget is a bit like a package manager which is based on git reposi
 You have scripts you use in multiple projects and would like to have a single place where you maintain them.
 Maybe you even made them public so that others can use them as well 
 (as we have done with [Tegonal scripts](https://github.com/tegonal/scripts)).
-This tool provides an easy way to fetch them into your project.
+This tool provides an easy way to pull them into your project.
 
 Likewise, you can use gget to pull config files, templates etc. which you use in multiple projects but want to maintain 
 at a single place.
@@ -56,6 +56,7 @@ For instance, the [README of v0.6.0](https://github.com/tegonal/gget/tree/v0.6.0
   - [reset](#reset)
   - [update](#update)
   - [self-update](#self-update)
+- [FAQ](#faq)
 - [Contributors and contribute](#contributors-and-contribute)
 - [License](#license)
 
@@ -646,6 +647,21 @@ v0.7.0-SNAPSHOT
 ```
 
 </gget-self-update-help>
+
+# FAQ
+ 
+## 1. How is gget different from git submodules?
+
+Short version:
+
+- git (v2.73.3) submodules only support to checkout a certain branch but not a certain tag.
+- gget only supports to pull files from a certain tag but from a random branch
+
+Longer version:
+- gget also integrates file integrity checks based on GPG
+- allows to fetch only parts of a repository (maybe possible for submodules via sparse checkout)
+- allows to place it at different places
+- is not intended to push changes back
 
 # Contributors and contribute
 
