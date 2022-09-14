@@ -29,13 +29,16 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/releasing/release-files.sh"
 
 function release() {
-	function findScripts() {
-		find "$scriptsDir/../src" "$scriptsDir/../install.sh" "$scriptsDir/../install.doc.sh" \
-			-name "*.sh" \( -not -name "*.doc.sh" -o -name "install.doc.sh" \) "$@"
+	function findFilesToRelease() {
+		find "$projectDir/src" \
+		"$projectDir/install.sh" "$projectDir/install.doc.sh" \
+		"$projectDir/.github/workflows/gget-update.yml" \
+			\( -not -name "*.doc.sh" -o -name "install.doc.sh" \) \
+			"$@"
 	}
 
 	local -r additionalPattern="(GGET_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
-	releaseFiles --project-dir "$projectDir" -p "$additionalPattern" --sign-fn findScripts "$@"
+	releaseFiles --project-dir "$projectDir" -p "$additionalPattern" --sign-fn findFilesToRelease "$@"
 }
 
 ${__SOURCED__:+return}
