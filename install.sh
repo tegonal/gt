@@ -130,12 +130,12 @@ function install() {
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir="$gpgDir" --list-sig || true
 
-	find "$repoDir" -name "*.sig" -print0 | while read -r -d $'\0' sigFile; do
+	find "$repoDir" -name "*.sig" -not -path "$repoDir/.gget/signing-key.public.asc.sig" -print0 | while read -r -d $'\0' sigFile; do
 		local file=${sigFile::-4}
 		echo "verifying $file"
 		local output
 		if ! output="$(gpg --homedir="$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
-			printf "verification failed for %s:\n%s\n\n" "$sigFile" "$output"
+			printf "verification failed for %s:\n%s\n\n" "$file" "$output"
 			return 2
 		fi
 	done || die "verification failed, see above"
