@@ -74,6 +74,7 @@ function gget_reset() {
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		gpgOnly "--gpg-only" '(optional) if set, then only the gpg keys are reset but the files are not re-pulled -- default: false'
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -84,14 +85,15 @@ function gget_reset() {
 			# resets all remotes
 			gget reset
 
-			# resets all remotes and imports gpg keys without manual consent
-			gget reset --auto-trust true
+			# resets the gpg keys of all remotes without re-pulling the corresponding files
+			gget reset --gpg-only true
 		EOM
 	)
 
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+	if ! [[ -v gpgOnly ]]; then gpgOnly=false; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
@@ -162,10 +164,14 @@ function gget_reset() {
 		# we know that set -e is disabled for gget_reset_resetRemote due to ||
 		#shellcheck disable=SC2310
 		gget_reset_resetRemote "$remote" || die "could not remove gpg directory for remote %s, see above" "$remote"
-		gget_re_pull -w "$workingDir" --only-missing false -r "$remote"
+		if [[ $gpgOnly != true ]]; then
+			gget_re_pull -w "$workingDir" --only-missing false -r "$remote"
+		fi
 	else
 		withCustomOutputInput 7 8 gget_reset_allRemotes || die "could not remove gpg directories, see above"
-		gget_re_pull -w "$workingDir" --only-missing false
+		if [[ $gpgOnly != true ]]; then
+			gget_re_pull -w "$workingDir" --only-missing false
+		fi
 	fi
 }
 

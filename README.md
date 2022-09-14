@@ -518,6 +518,7 @@ Following the output of running `gget reset --help`:
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
 -w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
+--gpg-only               (optional) if set, then only the gpg keys are reset but the files are not re-pulled -- default: false
 
 --help     prints this help
 --version  prints the version of this script
@@ -529,8 +530,8 @@ gget reset -r tegonal-scripts
 # resets all remotes
 gget reset
 
-# resets all remotes and imports gpg keys without manual consent
-gget reset --auto-trust true
+# resets the gpg keys of all remotes without re-pulling the corresponding files
+gget reset --gpg-only true
 
 INFO: Version of gget-reset.sh is:
 v0.6.0-SNAPSHOT
