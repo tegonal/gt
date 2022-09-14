@@ -43,6 +43,8 @@ jobs:
           ./install.sh && \
           false || cd "$currentDir" && rm -r "$tmpDir" && "${verificationResult:-false}"
           # end install.doc.sh
+      - name: reset gpg keys
+        run: gget reset --gpg-only true
       - name: gget update
         run: gget update
       - name: Create pull request if necessary
