@@ -518,7 +518,6 @@ Following the output of running `gget reset --help`:
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
 -w|--working-directory   (optional) path which gget shall use as working directory -- default: .gget
---auto-trust             (optional) if set to true, all public-keys stored in .gget/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 
 --help     prints this help
 --version  prints the version of this script

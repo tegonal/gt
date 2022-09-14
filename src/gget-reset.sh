@@ -53,16 +53,27 @@ sourceOnce "$dir_of_gget/gget-re-pull.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
+function gget_reset_backToCurrentDir() {
+	local -r currentDir=$1
+	shift 1 || die "could not shift by 1"
+
+	# revert side effect of cd
+	cd "$currentDir"
+}
+
 function gget_reset() {
-	local defaultWorkingDir
+	local defaultWorkingDir unsecurePattern
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
-	local remote workingDir autoTrust
+	local currentDir
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+	local -r currentDir
+
+	local remote workingDir
 	# shellcheck disable=SC2034
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -81,7 +92,6 @@ function gget_reset() {
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
-	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
@@ -95,14 +105,49 @@ function gget_reset() {
 
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 
-		local gpgDir
+		local publicKeysDir gpgDir repo
 		source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
-		if [[ -d $gpgDir ]]; then
-			deleteDirChmod777 "$gpgDir"
-			logInfo "removed $gpgDir"
+		if [[ -d $publicKeysDir ]]; then
+			logInfo "Going to re-establish gpg trust, removing %s" "$publicKeysDir"
+			deleteDirChmod777 "$publicKeysDir" || die "could not delete the public keys dir of remote \033[0;36m%s\033[0m" "$remote"
 		else
-			logInfo "$gpgDir does not exist, not necessary to reset"
+			logInfo "%s does not exist, not necessary to reset" "$publicKeysDir"
 		fi
+		mkdir "$publicKeysDir" || die "was not able to create the public keys dir at %s" "$publicKeysDir"
+		initialiseGpgDir "$gpgDir"
+
+		# can be a problematic side effect, leaving as note here in case we run into issues at some point
+		# alternatively we could use `git -C "$repo"` for every git command
+		# we partly undo this cd in gget_reset_backToCurrentDir. Yet, every script which would depend on
+		# currentDir after this line can be influenced by this cd
+		cd "$repo"
+
+		# we want to expand $currentDir here and not when signal happens (as they might be out of scope)
+		# shellcheck disable=SC2064
+		trap "gget_reset_backToCurrentDir '$currentDir'" EXIT SIGINT
+
+		local defaultBranch
+		defaultBranch=$(determineDefaultBranch "$remote")
+		if ! checkoutGgetDir "$remote" "$defaultBranch"; then
+			die "no .gget directory defined in remote \033[0;36m%s\033[0m, cannot (re-)pull gpg keys" "$remote"
+		fi
+
+		if noAscInDir "$repo/.gget"; then
+			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gget\033[0m but no GPG key ending in *.asc defined in it" "$remote"
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+		fi
+
+		local -i numberOfImportedKeys=0
+		function gget_reset_importKeyCallback() {
+			((++numberOfImportedKeys))
+		}
+
+		importRemotesPulledPublicKeys "$workingDirAbsolute" "$remote" gget_reset_importKeyCallback
+
+		if ((numberOfImportedKeys == 0)); then
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+		fi
+		cd "$currentDir"
 	}
 
 	function gget_reset_allRemotes() {
@@ -117,10 +162,10 @@ function gget_reset() {
 		# we know that set -e is disabled for gget_reset_resetRemote due to ||
 		#shellcheck disable=SC2310
 		gget_reset_resetRemote "$remote" || die "could not remove gpg directory for remote %s, see above" "$remote"
-		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false -r "$remote"
+		gget_re_pull -w "$workingDir" --only-missing false -r "$remote"
 	else
 		withCustomOutputInput 7 8 gget_reset_allRemotes || die "could not remove gpg directories, see above"
-		gget_re_pull -w "$workingDir" --auto-trust "$autoTrust" --only-missing false
+		gget_re_pull -w "$workingDir" --only-missing false
 	fi
 }
 

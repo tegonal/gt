@@ -89,13 +89,13 @@ function replacePulledEntry() {
 }
 
 function readPulledTsv() {
-	local workingDirAbsolute remote callback fileDescriptorOut fileDescriptorIn
+	local workingDirAbsolute remote readPulledTsv_callback fileDescriptorOut fileDescriptorIn
 	# params is required for parseFnArgs thus:
 	# shellcheck disable=SC2034
-	local -ra params=(workingDirAbsolute remote callback fileDescriptorOut fileDescriptorIn)
+	local -ra params=(workingDirAbsolute remote readPulledTsv_callback fileDescriptorOut fileDescriptorIn)
 	parseFnArgs params "$@"
 
-	exitIfArgIsNotFunction "$callback" 3
+	exitIfArgIsNotFunction "$readPulledTsv_callback" 3
 
 	local pulledTsv
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
@@ -112,6 +112,6 @@ function readPulledTsv() {
 		local entryAbsolutePath
 		#shellcheck disable=SC2310
 		entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
-		"$callback" "$entryTag" "$entryFile" "$entryRelativePath" "$entryAbsolutePath" || return $?
+		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$entryAbsolutePath" || return $?
 	done
 }

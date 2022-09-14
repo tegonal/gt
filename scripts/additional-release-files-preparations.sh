@@ -44,6 +44,12 @@ function additionalReleasePrepareSteps() {
 	local -r githubUrl="https://github.com/tegonal/gget"
 	replaceTagInPullRequestTemplate "$projectDir/.github/PULL_REQUEST_TEMPLATE.md" "$githubUrl" "$version"
 
-	updateVersionScripts -v "$version" -p "$additionalPattern" -d "./install.sh"
+	local -ra additionalScripts=(
+		"$projectDir/install.sh"
+		"$projectDir/.gget/remotes/tegonal-gh-commons/pull-hook.sh"
+	)
+	for script in "${additionalScripts[@]}"; do
+		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script"
+	done
 }
 additionalReleasePrepareSteps
