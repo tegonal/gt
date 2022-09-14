@@ -50,16 +50,13 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-commands.sh"
 
 function gget_remote_cleanupRemoteOnUnexpectedExit() {
 	local -r result=$?
-	# maybe we still show commands at this point due to unexpected exit, thus turn it off just in case
-	{ set +x; } 2>/dev/null
 
-	local -r repo=$1
+	local -r remoteDir=$1
 	local -r currentDir=$2
-	shift 2
+	shift 2 || die "could not shift by 2"
 
-	# shellcheck disable=SC2181
-	if ! ((result == 0)) && [[ -d $repo ]]; then
-		deleteDirChmod777 "$repo"
+	if ! ((result == 0)) && [[ -d $remoteDir ]]; then
+		deleteDirChmod777 "$remoteDir"
 	fi
 
 	# revert side effect of cd
@@ -154,10 +151,9 @@ function gget_remote_add() {
 	cp "$repo/.git/config" "$gitconfig"
 
 	local defaultBranch
-	defaultBranch="$(git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' || (logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" && echo "main"))"
-	git fetch --depth 1 "$remote" "$defaultBranch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
+	defaultBranch=$(determineDefaultBranch "$remote")
 
-	if ! git checkout "$remote/$defaultBranch" -- '.gget'; then
+	if ! checkoutGgetDir "$remote" "$defaultBranch"; then
 		if [[ $unsecure == true ]]; then
 			logWarning "no .gget directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
 			echo "$unsecurePattern true" >>"$pullArgsFile" || logWarning "was not able to write '%s true' into %s, please do it manually" "$unsecurePattern" "$pullArgsFile"
@@ -180,19 +176,11 @@ function gget_remote_add() {
 	fi
 
 	local -i numberOfImportedKeys=0
-
 	function gget_remote_importKeyCallback() {
-		local -r publicKey=$1
-		local -r sig=$2
-		shift 2 || die "could not shift by 2"
-
-		mv "$publicKey" "$publicKeysDir/" || die "unable to move public key %s into public keys directory %s" "$publicKey" "$publicKeysDir"
-		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature %s into public keys directory %s" "$sig" "$publicKeysDir"
 		((++numberOfImportedKeys))
 	}
-	validateGpgKeysAndImport "$repo/.gget" "$gpgDir" "$publicKeysDir" gget_remote_importKeyCallback false
 
-	deleteDirChmod777 "$repo/.gget" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gget"
+	importRemotesPulledPublicKeys "$workingDirAbsolute" "$remote" gget_remote_importKeyCallback
 
 	if ((numberOfImportedKeys == 0)); then
 		if [[ $unsecure == true ]]; then

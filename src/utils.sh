@@ -183,13 +183,13 @@ function latestRemoteTagIncludingChecks() {
 }
 
 function validateGpgKeysAndImport() {
-	local sourceDir gpgDir publicKeysDir callback autoTrust
+	local sourceDir gpgDir publicKeysDir validateGpgKeysAndImport_callback autoTrust
 	# params is required for parseFnArgs thus:
 	# shellcheck disable=SC2034
-	local -ra params=(sourceDir gpgDir publicKeysDir callback autoTrust)
+	local -ra params=(sourceDir gpgDir publicKeysDir validateGpgKeysAndImport_callback autoTrust)
 	parseFnArgs params "$@"
 
-	exitIfArgIsNotFunction "$callback" 4
+	exitIfArgIsNotFunction "$validateGpgKeysAndImport_callback" 4
 
 	local autoTrustPattern
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
@@ -232,10 +232,12 @@ function validateGpgKeysAndImport() {
 				else
 					echo "Decision: do not continue! Skipping this public key accordingly"
 				fi
+			else
+				logInfo "trust confirmed"
 			fi
 
 			if [[ $importIt == true ]] && importGpgKey "$gpgDir" "$publicKey" "--confirm=$confirm"; then
-				"$callback" "$publicKey" "$publicKey.$sigExtension"
+				"$validateGpgKeysAndImport_callback" "$publicKey" "$publicKey.$sigExtension"
 			else
 				logInfo "deleting gpg key file $publicKey for security reasons"
 				rm "$publicKey" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$publicKey"
@@ -243,4 +245,48 @@ function validateGpgKeysAndImport() {
 		done
 	}
 	withCustomOutputInput 3 4 validateGpgKeysAndImport_do
+}
+
+function importRemotesPulledPublicKeys() {
+	local workingDirAbsolute remote importRemotesPulledPublicKeys_callback
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote importRemotesPulledPublicKeys_callback)
+	parseFnArgs params "$@"
+
+	exitIfArgIsNotFunction "$importRemotesPulledPublicKeys_callback" 3
+
+	local gpgDir publicKeysDir repo
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+
+	function importRemotesPublicKeys_importKeyCallback() {
+		local -r publicKey=$1
+		local -r sig=$2
+		shift 2 || die "could not shift by 2"
+
+		mv "$publicKey" "$publicKeysDir/" || die "unable to move public key %s into public keys directory %s" "$publicKey" "$publicKeysDir"
+		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature %s into public keys directory %s" "$sig" "$publicKeysDir"
+		"$importRemotesPulledPublicKeys_callback" "$publicKey" "$sig"
+	}
+	validateGpgKeysAndImport "$repo/.gget" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
+
+	deleteDirChmod777 "$repo/.gget" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gget"
+}
+
+function determineDefaultBranch() {
+	local -r remote=$1
+	shift || die "could not shift by 1"
+	git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
+		(
+			logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" "$remote"
+			echo "main"
+		)
+}
+
+function checkoutGgetDir() {
+	local -r remote=$1
+	local -r branch=$2
+	shift 2 || die "could not shift by 2"
+
+	git fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
+	git checkout "$remote/$branch" -- '.gget' && find ./.gget -maxdepth 1 -type d -not -path ./.gget -exec rm -r {} \;
 }
