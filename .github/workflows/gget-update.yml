@@ -56,5 +56,5 @@ jobs:
           commit-message: update files pulled via gget
           body: "following the changes after running: gget update"
           delete-branch: true
-          token: ${{ secrets.GGET_UPDATE_TOKEN }}
-          push-to-fork: ${{ secrets.FORK_FOR_PR }}
+          token: ${{ secrets.AUTO_PR_TOKEN }}
+          push-to-fork: ${{ secrets.AUTO_PR_FORK_NAME }}
