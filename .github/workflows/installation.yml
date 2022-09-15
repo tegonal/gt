@@ -1,25 +1,35 @@
 name: "Installation"
 on:
   push:
-    paths:
-      - 'install.sh'
-      - 'install.doc.sh'
-  pull_request:
-    paths:
-      - 'install.sh'
-      - 'install.doc.sh'
+    branches:
+      - main
 
 jobs:
-  Installation:
+  install:
+    name: "Install"
     runs-on: ubuntu-latest
     steps:
       - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
         run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
       - uses: actions/checkout@v3
-      - name: Check installation works
+      - name: Check it works
         run: |
           tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX)
           mkdir -p "$tmpDir"
           currentDir=$(pwd)
           cd "$tmpDir"
-          "$currentDir/install.doc.sh"
+          "$currentDir/install.sh"
+      - name: run self-update
+        run: gget self-update
+
+  installDoc:
+    name: "Install.doc.sh"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
+      - uses: actions/checkout@v3
+      - name: Check it works
+        run: ./install.doc.sh
+      - name: run self-update
+        run: gget self-update
