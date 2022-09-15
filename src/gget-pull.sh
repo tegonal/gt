@@ -51,6 +51,10 @@ function gget_pull_cleanupRepo() {
 	find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
 }
 
+function gget_pull_noop() {
+	true
+}
+
 function gget_pull() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
@@ -264,18 +268,13 @@ function gget_pull() {
 	}
 	gget_pull_pullSignatureOfSingleFetchedFile
 
-	function gget_pull_noop() {
-		true
-	}
-	local pullHook="$pullHookFile"
-	if [[ -f $pullHook ]]; then
-		if ! [[ -x "$pullHook" ]]; then
-			die "there is a file at %s but it is not executable.\nEither make it executable:\n\033[35;1msudo chmod +x %s\033[0m\nOr rename/delete it:\nmv %s %s.bak" "$pullHook" "$pullHook" "$pullHook" "$pullHook"
-		fi
-	else
-		pullHook="gget_pull_noop"
+	local pullHookBefore="gget_pull_noop"
+	local pullHookAfter="gget_pull_noop"
+	if [[ -f $pullHookFile ]]; then
+		sourceOnce "$pullHookFile"
+		pullHookBefore="gget_pullHook_${remote//-/_}_before"
+		pullHookAfter="gget_pullHook_${remote//-/_}_after"
 	fi
-	local -r pullHook
 
 	local -i numberOfPulledFiles=0
 
@@ -342,8 +341,9 @@ function gget_pull() {
 			fi
 		fi
 
-		"$pullHook" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
+		"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$file" "$absoluteTarget" || return $?
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
+		"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$file" "$absoluteTarget" || return $?
 
 		((++numberOfPulledFiles))
 	}
