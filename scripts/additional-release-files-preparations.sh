@@ -32,12 +32,13 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_github_commons/gget/pull-hook-functions.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function additionalReleasePrepareSteps() {
 	# keep in sync with local -r
 	exitIfVarsNotAlreadySetBySource version additionalPattern
-	# we help shellcheck to realise that version and additionalPattern are initialised
+	# we help shellcheck to realise that these variables are initialised
 	local -r version="$version" additionalPattern="$additionalPattern"
 
 	# same as in pull-hook.sh
