@@ -91,7 +91,6 @@ and of course execute the install.sh as such.
 <install>
 
 <!-- auto-generated, do not modify here but in install.sh -->
-
 ```bash
 currentDir=$(pwd) && \
 tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
@@ -224,7 +223,6 @@ Following the output of running `gget --help`:
 <gget-help>
 
 <!-- auto-generated, do not modify here but in src/gget.sh -->
-
 ```text
 Commands:
 pull          pull files from a previously defined remote
@@ -251,7 +249,6 @@ Following the output of running `gget remote --help`:
 <gget-remote-help>
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
-
 ```text
 Commands:
 add      add a remote
@@ -272,7 +269,6 @@ Some examples (see documentation of each sub command in subsection for more deta
 <gget-remote>
 
 <!-- auto-generated, do not modify here but in src/gget-remote.sh -->
-
 ```bash
 #!/usr/bin/env bash
 
@@ -394,7 +390,6 @@ Following the output of running `gget pull --help`:
 <gget-pull-help>
 
 <!-- auto-generated, do not modify here but in src/gget-pull.sh -->
-
 ```text
 Parameters:
 -r|--remote                  name of the remote repository
@@ -435,7 +430,6 @@ Full usage example:
 <gget-pull>
 
 <!-- auto-generated, do not modify here but in src/gget-pull.sh -->
-
 ```bash
 #!/usr/bin/env bash
 
@@ -506,7 +500,6 @@ Following the output of running `gget re-pull --help`:
 <gget-re-pull-help>
 
 <!-- auto-generated, do not modify here but in src/gget-re-pull.sh -->
-
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
@@ -538,7 +531,6 @@ Full usage example:
 <gget-re-pull>
 
 <!-- auto-generated, do not modify here but in src/gget-re-pull.sh -->
-
 ```bash
 #!/usr/bin/env bash
 
@@ -568,7 +560,6 @@ Following the output of running `gget reset --help`:
 <gget-reset-help>
 
 <!-- auto-generated, do not modify here but in src/gget-reset.sh -->
-
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
@@ -599,7 +590,6 @@ Full usage example:
 <gget-reset>
 
 <!-- auto-generated, do not modify here but in src/gget-reset.sh -->
-
 ```bash
 #!/usr/bin/env bash
 
@@ -629,7 +619,6 @@ Following the output of running `gget update --help`:
 <gget-update-help>
 
 <!-- auto-generated, do not modify here but in src/gget-update.sh -->
-
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
@@ -661,7 +650,6 @@ Full usage example:
 <gget-update>
 
 <!-- auto-generated, do not modify here but in src/gget-update.sh -->
-
 ```bash
 #!/usr/bin/env bash
 
@@ -680,7 +668,8 @@ gget update -r tegonal-scripts -t v1.0.0
 ### GitHub Workflow
 
 This repository contains a github workflow which runs every week to check if there are updates for:
-- the files which have been pulled as well as 
+
+- the files which have been pulled as well as
 - the public keys of the remotes.
 
 You can re-use it in your repository. We suggest you fetch it via gget 😉
@@ -715,7 +704,8 @@ function gget_pullHook_gget_after(){
   true
 }
 ```
-Just make sure you replace YOUR_SLUG with your actual slug. 
+
+Just make sure you replace YOUR_SLUG with your actual slug.
 
 ## self-update
 
@@ -725,7 +715,6 @@ Following the output of running `gget self-update --help`:
 <gget-self-update-help>
 
 <!-- auto-generated, do not modify here but in src/gget-self-update.sh -->
-
 ```text
 Parameters:
 --force   if set to true, then install.sh will be called even if gget is already on latest tag
