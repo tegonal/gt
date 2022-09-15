@@ -7,15 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: install shellcheck 0.8.0
-        run: |
-          set -e
-          echo "ab6ee1b178f014d1b86d1e24da20d1139656c8b0ed34d2867fbb834dad02bf0a  shellcheck-v0.8.0.linux.x86_64.tar.xz" > shellcheck-v0.8.0.linux.x86_64.tar.xz.sha256
-          wget https://github.com/koalaman/shellcheck/releases/download/v0.8.0/shellcheck-v0.8.0.linux.x86_64.tar.xz
-          sha256sum -c shellcheck-v0.8.0.linux.x86_64.tar.xz.sha256
-          tar -xf ./shellcheck-v0.8.0.linux.x86_64.tar.xz
-          chmod +x ./shellcheck-v0.8.0/shellcheck
-          mkdir -p "$HOME/.local/bin"
-          ln -s "$(pwd)/shellcheck-v0.8.0/shellcheck" "$HOME/.local/bin/shellcheck" || echo "installation failed, see above"
+      - name: install shellcheck v0.8.0
+        run: ./lib/tegonal-scripts/src/ci/install-shellcheck.sh
       - name: before-pr.sh
         run: ./scripts/before-pr.sh
