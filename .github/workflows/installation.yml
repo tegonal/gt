@@ -38,7 +38,7 @@ jobs:
     name: "Install old version, self-update to latest"
     strategy:
       matrix:
-        tag: [v0.5.2, v0.5.0, v0.4.1]
+        tag: [v0.6.1]
     runs-on: ubuntu-latest
     steps:
       - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST

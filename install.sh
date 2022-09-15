@@ -169,7 +169,7 @@ function install() {
 	else
 		echo "no symbolic link set up, please do manually if required"
 	fi
-	logSuccess "installation completed, $projectName set up in %s" "$installDir"
+	logSuccess "installation completed, %s %s set up in %s" "$projectName" "$tag" "$installDir"
 	if [[ -n $symbolicLink ]]; then
 		echo ""
 		echo "Testing the symbolic link, following the output of calling $projectName --help"
