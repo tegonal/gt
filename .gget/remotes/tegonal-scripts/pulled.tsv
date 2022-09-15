@@ -23,3 +23,4 @@ v0.16.0	src/releasing/update-version-README.sh	../lib/tegonal-scripts/src/releas
 v0.16.0	src/releasing/update-version-scripts.sh	../lib/tegonal-scripts/src/releasing/update-version-scripts.sh	1a11c297bab08d90734079db2103782e9dd0d4c1827887ffb5ea54cbef4642daadd4aa41f06bf5d1850d3dd34322820433f8764d5bdbbd1ef7a3ca02e751ce22
 v0.16.0	src/releasing/release-files.sh	../lib/tegonal-scripts/src/releasing/release-files.sh	e46c61b77c75148c986f7a7c28243666d4795afe5f56af36e7bd5b398ed56d3861e6271ac4c2185b5b706f19db732d77ba2811e604ad9bcdb2e40cacf2eb0ac2
 v0.16.0	src/qa/run-shellcheck.sh	../lib/tegonal-scripts/src/qa/run-shellcheck.sh	8bff7b3a6910c9bf75cebdf91986d4db4a680ff2357938555ec5cd8a498ef63b9a09c30c941e32abe4a0f51e5e70af3aecfe9d0bf7df2bc9aa7d50728ec7d86b
+v0.17.0	src/ci/install-shellcheck.sh	../lib/tegonal-scripts/src/ci/install-shellcheck.sh	9a2655ff29a549d101832bd629a8f67c866ff45e2c13b9065e588ef76cfed5e0c7c024c69b2b4d1c9f90b78d55000bd4fee611d2d0441ef39af90acbf0cfd524
