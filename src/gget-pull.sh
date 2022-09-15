@@ -264,6 +264,8 @@ function gget_pull() {
 	}
 	gget_pull_pullSignatureOfSingleFetchedFile
 
+	cd "$currentDir"
+
 	local pullHookBefore="gget_pull_noop"
 	local pullHookAfter="gget_pull_noop"
 	if [[ -f $pullHookFile ]]; then
@@ -366,6 +368,7 @@ function gget_pull() {
 	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0 ||
 		# `while read` will fail because there is no \0
 		true)
+
 
 	endTime=$(date +%s.%3N)
 	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
