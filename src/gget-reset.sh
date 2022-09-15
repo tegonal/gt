@@ -106,6 +106,7 @@ function gget_reset() {
 		local -r remote=$1
 
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+		exitIfRepoBrokenAndReInitIfAbsent "$workingDirAbsolute" "$remote"
 
 		local publicKeysDir gpgDir repo
 		source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
@@ -150,6 +151,7 @@ function gget_reset() {
 			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
 		fi
 		cd "$currentDir"
+		logSuccess "re-established trust with remote \033[0;36m%s\033[0m" "$remote"
 	}
 
 	function gget_reset_allRemotes() {

@@ -290,3 +290,19 @@ function checkoutGgetDir() {
 	git fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
 	git checkout "$remote/$branch" -- '.gget' && find ./.gget -maxdepth 1 -type d -not -path ./.gget -exec rm -r {} \;
 }
+
+function exitIfRepoBrokenAndReInitIfAbsent() {
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
+
+	local remoteDir repo
+	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+
+	if [[ -f $repo ]]; then
+		die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
+	else
+		reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
+	fi
+}

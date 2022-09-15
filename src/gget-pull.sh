@@ -141,7 +141,7 @@ function gget_pull() {
 	exitIfWorkingDirDoesNotExist "$workingDirAbsolute"
 	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
-	local remoteDir publicKeysDir repo gpgDir pulledTsv pullHookFile gitconfig
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile gitconfig
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -154,11 +154,7 @@ function gget_pull() {
 		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
 
-	if [[ -f $repo ]]; then
-		die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
-	else
-		reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
-	fi
+	exitIfRepoBrokenAndReInitIfAbsent "$workingDirAbsolute" "$remote"
 
 	local tagToPull="$tag"
 	# tag was actually omitted, so we use the latest remote tag instead
