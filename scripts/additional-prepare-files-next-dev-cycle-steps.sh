@@ -35,6 +35,7 @@ function additionalPrepareNextSteps() {
 	local -r devVersion="$devVersion" additionalPattern="$additionalPattern"
 
 	# we only update the version in the header but not the GGET_LATEST_VERSION on purpose
+	# i.e. we omit -p on purpose (compared to additional-release-files-preparations.sh)
 	updateVersionScripts -v "$devVersion" -d "$projectDir/.gget/remotes/tegonal-gh-commons/pull-hook.sh"
 }
 additionalPrepareNextSteps

@@ -143,10 +143,15 @@ function gget_re_pull() {
 
 	function gget_re_pull_allRemotes() {
 		gget_remote_list -w "$workingDirAbsolute" >&7
+		local -i count=0
 		local remote
 		while read -u 8 -r remote; do
 			gget_re_pull_rePullRemote "$remote"
+			((++count))
 		done
+		if ((count == 0)); then
+			logInfo "Nothing to re-pull as no remote is defined yet.\nUse the \033[0;35mgget remote add ...\033[0m command to specify one -- for more info: gget remote add --help"
+		fi
 	}
 
 	if [[ -n $remote ]]; then
