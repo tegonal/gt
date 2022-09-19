@@ -240,7 +240,7 @@ function gget_pull() {
 		git fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
 	fi
 
-	git checkout "tags/$tagToPull" -- "$path" || return $?
+	git checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
 
 	function gget_pull_mentionUnsecure() {
 		if [[ $unsecure != true ]]; then
@@ -263,8 +263,6 @@ function gget_pull() {
 		fi
 	}
 	gget_pull_pullSignatureOfSingleFetchedFile
-
-	cd "$currentDir"
 
 	local pullHookBefore="gget_pull_noop"
 	local pullHookAfter="gget_pull_noop"
@@ -369,6 +367,7 @@ function gget_pull() {
 		# `while read` will fail because there is no \0
 		true)
 
+	cd "$currentDir"
 
 	endTime=$(date +%s.%3N)
 	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
