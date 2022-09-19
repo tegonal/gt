@@ -29,6 +29,10 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/releasing/release-files.sh"
 
 function release() {
+	if ! wget -q -O- "https://api.github.com/repos/tegonal/gget/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"'; then
+		die "installation workflow failed, you should not release ;-)"
+	fi
+
 	function findFilesToRelease() {
 		find "$projectDir/src" \
 		"$projectDir/install.sh" "$projectDir/install.doc.sh" \
