@@ -131,8 +131,9 @@ function install() {
 	gpg --homedir="$gpgDir" --list-sig || true
 
 	find "$repoDir" \
+	  -type f \
 		-name "*.sig" \
-		-not -path "$repoDir/.gget/*.sig" \
+		-not -path "$repoDir/.gget/signing-key.public.asc.sig" \
 		-not -path "$repoDir/.gget/remotes/*/public-keys/*.sig" \
 		-print0 |
 		while read -r -d $'\0' sigFile; do
