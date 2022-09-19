@@ -104,9 +104,9 @@ wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
 wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
 gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 chmod +x ./install.sh && \
-echo "verification successful" && verificationResult=true || (echo "verification failed, don't continue"; exit 1) && \
-./install.sh && \
-false || cd "$currentDir" && rm -r "$tmpDir" && "${verificationResult:-false}"
+echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
+./install.sh && result=true || (echo "installation failed"; exit 1) && \
+false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
 ```
 
 </install>
