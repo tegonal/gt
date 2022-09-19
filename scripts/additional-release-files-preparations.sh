@@ -41,6 +41,14 @@ function additionalReleasePrepareSteps() {
 	# we help shellcheck to realise that these variables are initialised
 	local -r version="$version" additionalPattern="$additionalPattern"
 
+	logInfo "going to update version in non-sh files to %s" "$version"
+	local -ra additionalFilesWithVersions=(
+		"$projectDir/.github/workflows/gget-update.yml"
+	)
+	for file in "${additionalFilesWithVersions[@]}"; do
+		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file"
+	done
+
 	# same as in pull-hook.sh
 	local -r githubUrl="https://github.com/tegonal/gget"
 	replaceTagInPullRequestTemplate "$projectDir/.github/PULL_REQUEST_TEMPLATE.md" "$githubUrl" "$version"
