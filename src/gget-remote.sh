@@ -195,7 +195,7 @@ function gget_remote_add() {
 	logSuccess "remote \033[0;36m%s\033[0m was set up successfully; imported %s GPG key(s) for verification.\nYou are ready to pull files via:\ngget pull -r %s -p <PATH>" "$remote" "$numberOfImportedKeys" "$remote"
 }
 
-function gget_remote_list() {
+function gget_remote_list_raw() {
 	source "$dir_of_gget/shared-patterns.source.sh"
 
 	local workingDir
@@ -231,13 +231,18 @@ function gget_remote_list() {
 	local cutLength
 	cutLength=$((${#remotesDir} + 2))
 
+	[[ -d $remotesDir ]] && find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo ""
+}
+
+function gget_remote_list() {
 	local output
-	output="$([[ -d $remotesDir ]] && find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo "")"
+	output=$(gget_remote_list_raw "$@")
 	if [[ $output == "" ]]; then
 		logInfo "No remote defined yet."
 		echo ""
-		echo "To add one, use: gget remote add ..."
-		echo "Following the corresponding documentation of \`gget remote add\`:"
+		printf "To add one, use: \033[0;35mgget remote add ...\033[0m\n"
+		echo "Following the output of calling \`gget remote add --help\`:"
+		echo ""
 		gget_remote_add "--help"
 	else
 		echo "$output"

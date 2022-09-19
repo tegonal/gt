@@ -142,7 +142,7 @@ function gget_re_pull() {
 	}
 
 	function gget_re_pull_allRemotes() {
-		gget_remote_list -w "$workingDirAbsolute" >&7
+		gget_remote_list_raw -w "$workingDirAbsolute" >&7
 		local -i count=0
 		local remote
 		while read -u 8 -r remote; do
