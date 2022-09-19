@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.16.0
+#                                         Version: v0.17.1
 #
 #######  Description  #############
 #
@@ -52,7 +52,7 @@ function trustGpgKey() {
 	# shellcheck disable=SC2034
 	local -ra params=(gpgDir keyId)
 	parseFnArgs params "$@"
-	echo -e "5\ny\n" | gpg --homedir "$gpgDir" --command-fd 0 --edit-key "$keyId" trust
+	echo -e "5\ny\n" | gpg --homedir "$gpgDir" --no-tty --command-fd 0 --edit-key "$keyId" trust
 }
 
 function importGpgKey() {
@@ -64,7 +64,7 @@ function importGpgKey() {
 
 	local outputKey
 	outputKey=$(
-		gpg --homedir "$gpgDir" --keyid-format LONG \
+		gpg --homedir "$gpgDir" --no-tty --keyid-format LONG \
 			--list-options show-user-notations,show-std-notations,show-usage,show-sig-expire \
 			--import-options show-only \
 			--import "$file"
@@ -84,10 +84,11 @@ function importGpgKey() {
 
 	if [[ $isTrusting == y ]]; then
 		echo "importing key $file"
-		gpg --homedir "$gpgDir" --import "$file" || die "failed to import $file"
+		gpg --homedir "$gpgDir" --batch --no-tty --import "$file" || die "failed to import $file"
 		local keyId
-		grep pub <<< "$outputKey" | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
+		grep pub <<<"$outputKey" | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
 			while read -r keyId; do
+				echo "establishing trust for key $keyId"
 				trustGpgKey "$gpgDir" "$keyId"
 			done
 	else
