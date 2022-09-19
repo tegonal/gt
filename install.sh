@@ -25,9 +25,9 @@
 #    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
 #    gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 #    chmod +x ./install.sh && \
-#    echo "verification successful" && verificationResult=true || (echo "verification failed, don't continue"; exit 1) && \
-#    ./install.sh && \
-#    false || cd "$currentDir" && rm -r "$tmpDir" && "${verificationResult:-false}"
+#    echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
+#    ./install.sh && result=true || (echo "installation failed"; exit 1) && \
+#    false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
 #
 ###################################
 set -euo pipefail
@@ -125,20 +125,25 @@ function install() {
 	# we will check the chosen version against the current gpg key,
 	# i.e. only if the signatures of the chosen version are still valid against the current key we are happy
 	local -r publicKey="$tmpDir/signing-key.public.asc"
-	wget -O- -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gget/signing-key.public.asc" >"$publicKey"
+	wget -O "$publicKey" -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gget/signing-key.public.asc"
 
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir="$gpgDir" --list-sig || true
 
-	find "$repoDir" -name "*.sig" -not -path "$repoDir/.gget/signing-key.public.asc.sig" -print0 | while read -r -d $'\0' sigFile; do
-		local file=${sigFile::-4}
-		echo "verifying $file"
-		local output
-		if ! output="$(gpg --homedir="$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
-			printf "verification failed for %s:\n%s\n\n" "$file" "$output"
-			return 2
-		fi
-	done || die "verification failed, see above"
+	find "$repoDir" \
+		-name "*.sig" \
+		-not -path "$repoDir/.gget/*.sig" \
+		-not -path "$repoDir/.gget/remotes/*/public-keys/*.sig" \
+		-print0 |
+		while read -r -d $'\0' sigFile; do
+			local file=${sigFile::-4}
+			echo "verifying $file"
+			local output
+			if ! output="$(gpg --homedir="$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
+				printf "verification failed for %s:\n%s\n\n" "$file" "$output"
+				return 2
+			fi
+		done || die "verification failed, see above"
 
 	echo "Verification complete, note that we did not verify $projectName's dependencies"
 	echo ""
