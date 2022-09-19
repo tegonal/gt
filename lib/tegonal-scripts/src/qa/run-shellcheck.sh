@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.16.0
+#                                         Version: v0.17.1
 #
 #######  Description  #############
 #
@@ -47,10 +47,11 @@ sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 function runShellcheck() {
 	exitIfCommandDoesNotExist "shellcheck" "see https://github.com/koalaman/shellcheck#installing"
 
-	if ! (($# == 2)); then
-		logError "Two parameters need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+	if (($# < 2)); then
+		logError "At least two parameters need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: dirs         name of array which contains paths in which *.sh files are searched'
-		echo >&2 '2: sourcePath   equivalent to shellcheck''s -P, path to search for sourced files, separated by :'
+		echo >&2 '2: sourcePath   equivalent to shellcheck'"'"'s -P, path to search for sourced files, separated by :'
+		echo >&2 '3... args       additional args which are passed to the find command'
 		printStackTrace
 		exit 9
 	fi
@@ -77,7 +78,7 @@ function runShellcheck() {
 		else
 			((++fileCounter))
 			declare output
-			output=$(shellcheck -C -x -o all -P "$sourcePath" "$script" 2>&1 || true)
+			output=$(shellcheck -C -x -o all -P "$sourcePath" "$script"  2>&1 || true)
 			if [[ $output != "" ]]; then
 				printf "%s\n" "$output"
 				((++fileWithIssuesCounter))
@@ -89,7 +90,7 @@ function runShellcheck() {
 		fi
 		printf "."
 	done < <(
-		find "${runShellcheck_paths[@]}" -name '*.sh' -print0 ||
+		find "${runShellcheck_paths[@]}" -name '*.sh' "$@" -print0 ||
 			# `while read` will fail because there is no \0
 			true
 	); then

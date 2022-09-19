@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.16.0
+#                                         Version: v0.17.1
 #
 #######  Description  #############
 #
@@ -32,7 +32,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v0.16.0'
+export TEGONAL_SCRIPTS_VERSION='v0.17.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -45,7 +45,7 @@ function updateVersionScripts() {
 	# shellcheck disable=SC2034
 	local -ra params=(
 		version '-v' 'the version which shall be used'
-		directory '-d|--directory' '(optional) the working directory -- default: ./src'
+		directory '-d|--directory' '(optional) the working directory in which *.sh are searched (also in subdirectories) / you can also specify a file -- default: ./src'
 		additionalPattern '-p|--pattern' '(optional) pattern which is used in a perl command (separator /) to search & replace additional occurrences. It should define two match groups and the replace operation looks as follows: '"\\\${1}\$version\\\${2}"
 	)
 	local -r examples=$(
@@ -68,7 +68,13 @@ function updateVersionScripts() {
 	if ! [[ -v additionalPattern ]]; then additionalPattern=""; fi
 	exitIfNotAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
 
-	echo "set version $version in bash headers in directory $directory"
+	local where
+	if [[ -f $directory ]]; then
+		where="in file $directory"
+	else
+		where="directory $directory (and subdirectories)"
+	fi
+	echo "set version $version in bash headers in $where"
 	if [[ -n $additionalPattern ]]; then
 		echo "also going to search for $additionalPattern and replace with \${1}$version\${2}"
 	fi
