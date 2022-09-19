@@ -42,10 +42,12 @@ function gget_self_update() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
+	local -r forcePattern='--force'
+
 	local forceInstall
 	# shellcheck disable=SC2034
 	local -ar params=(
-		forceInstall "--force" "if set to true, then install.sh will be called even if gget is already on latest tag"
+		forceInstall "$forcePattern" "if set to true, then install.sh will be called even if gget is already on latest tag"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -80,10 +82,10 @@ function gget_self_update() {
 		if [[ $currentBranch == "$latestTag" ]]; then
 			logInfoWithoutNewline "latest version of gget (%s) is already installed" "$latestTag"
 			if [[ $forceInstall != true ]]; then
-				printf ", nothing to do in addition\n"
+				printf ", nothing to do in addition (specify %s true if you want to re-install)\n" "$forcePattern"
 				return 0
 			else
-				printf ", but '--force true' was specified, going to re-install it\n"
+				printf ", but '%s true' was specified, going to re-install it\n" "$forcePattern"
 			fi
 		fi
 		cd "$currentDir" || die "could not cd back to the current dir"

@@ -20,7 +20,7 @@ jobs:
           cd "$tmpDir"
           "$currentDir/install.sh"
       - name: run self-update
-        run: gget self-update
+        run: gget self-update --force true
 
   installDoc:
     name: "Install.doc.sh latest"
@@ -32,13 +32,13 @@ jobs:
       - name: Check it works
         run: ./install.doc.sh
       - name: run self-update
-        run: gget self-update
+        run: gget self-update --force true
 
   installOld:
     name: "Install old version, self-update to latest"
     strategy:
       matrix:
-        tag: [v0.7.2]
+        tag: [v0.7.3]
     runs-on: ubuntu-latest
     steps:
       - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
@@ -52,4 +52,4 @@ jobs:
           cd "$tmpDir"
           "$currentDir/install.sh" -t ${{ matrix.tag }}
       - name: run self-update
-        run: gget self-update
+        run: gget self-update --force true
