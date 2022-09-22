@@ -25,4 +25,4 @@ local -r unsecurePattern='--unsecure'
 
 local -r defaultWorkingDir='.gget'
 local -r workingDirParamDocu="(optional) path which gget shall use as working directory -- default: $defaultWorkingDir"
-local -r autoTrustParamDocu="(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false"
+local -r autoTrustParamDocu="(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false"
