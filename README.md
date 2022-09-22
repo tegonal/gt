@@ -751,6 +751,12 @@ Longer version:
 - allows to place it at different places
 - is not intended to push changes back
 
+# Does gget run on all linux distros?
+
+Most likely not, it was tested only on Ubuntu 22.04.  
+For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gget update` work 
+(could be that executing other gget commands require more dependencies).
+
 # Contributors and contribute
 
 Our thanks go to [code contributors](https://github.com/tegonal/gget/graphs/contributors)
