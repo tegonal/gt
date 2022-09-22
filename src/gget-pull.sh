@@ -235,7 +235,7 @@ function gget_pull() {
 		logInfo "tag %s already exists locally, skipping fetching from remote" "$tagToPull"
 	else
 		local remoteTags
-		remoteTags=$(git ls-remote -t "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
+		remoteTags=$(remoteTagsSorted "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
 		grep "$tagToPull" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToPull" "$remoteTags" || return $?
 		git fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
 	fi
@@ -321,7 +321,7 @@ function gget_pull() {
 				printf "Won't pull the file, remove the entry from %s if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$source"
 				return
-			elif ! grep --line-regexp "$entry" "$pulledTsv" >/dev/null; then
+			elif ! grep -x "$entry" "$pulledTsv" >/dev/null; then
 				local currentLocation newLocation
 				currentLocation=$(realpath --relative-to="$currentDir" "$workingDirAbsolute/$entryRelativePath" || echo "$workingDirAbsolute/$entryRelativePath")
 				newLocation=$(realpath --relative-to="$currentDir" "$pullDir/$targetFile" || echo "$pullDir/$targetFile")
