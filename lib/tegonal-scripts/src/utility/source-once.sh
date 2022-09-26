@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.17.1
+#                                         Version: v0.18.1
 #
 #######  Description  #############
 #
@@ -54,7 +54,7 @@ function determineSourceOnceGuard() {
 		traceAndDie "you need to pass the file name, for which we shall calculate the guard, to determineSourceOnceGuard"
 	fi
 	local -r file="$1"
-	readlink -m "$file" | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@sourceOnceGuard_\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
+	(readlink -f "$file" || realpath "$file") | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@sourceOnceGuard_\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
 }
 
 function sourceOnce_exitIfNotAtLeastOneArg() {
