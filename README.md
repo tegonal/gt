@@ -61,6 +61,7 @@ For instance, the [README of v0.7.4](https://github.com/tegonal/gget/tree/v0.7.4
 	- [reset](#reset)
 	- [update](#update)
 		- [GitHub Workflow](#github-workflow)
+        - [Gitlab Job](#gitlab-job) <!-- if you change this anchor then update src/gitlab/install-gget.sh -->
 	- [self-update](#self-update)
 - [FAQ](#faq)
 - [Contributors and contribute](#contributors-and-contribute)
@@ -672,6 +673,10 @@ This repository contains a github workflow which runs every week to check if the
 - the files which have been pulled as well as
 - the public keys of the remotes.
 
+It requires you to define a variable named PUBLIC_GPG_KEYS_WE_TRUST which represents an armored export of all
+gpg public keys you trust signing the public keys of remotes, 
+i.e. those are used to verify the public keys of the remotes you added via `gget remote add`.
+
 You can re-use it in your repository. We suggest you fetch it via gget 😉
 
 ```bash
@@ -679,7 +684,12 @@ gget remote add -r gget -u https://github.com/tegonal/gget
 gget pull -r gget -p .github/workflows/gget-update.yml -d ./ 
 ```
 
-Note thought, that it contains the following condition (so that it does not run in forks):
+Accordingly, you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc) to PUBLIC_GPG_KEYS_WE_TRUST in order
+that this workflow can update the workflow itself.
+
+#### Required modifications
+
+You need to change one condition in the workflow which we added in order that this workflow does not run in forks:
 
 ```yml
 if: github.repository_owner == 'tegonal'
@@ -706,6 +716,74 @@ function gget_pullHook_gget_after(){
 ```
 
 Just make sure you replace YOUR_SLUG with your actual slug.
+
+### Gitlab Job
+
+This repository contains a `.gitlab-ci.yml` which defines two job templates:
+1. gget-update which checks if there are updates for:
+   - the files which have been pulled
+   - the public keys of the remotes
+
+   and creates a Merge Request if there are some.
+
+2. gget-update-stop-pipeline which cancels itself and thus stops the pipeline
+
+You can re-use it in your repository. We suggest you fetch it via gget 😉
+
+```bash
+gget remote add -r gget -u https://github.com/tegonal/gget
+gget pull -r gget -p src/gitlab/
+```
+
+In your `.gitlab-ci.yml` you need to add `gget` to your stages and it should be the first stage:
+```yml
+stages:
+- gget
+...
+```
+At some point you add in addition
+```yml
+include: 'lib/gget/src/gitlab/.gitlab-ci.yml'
+```
+
+That's it, this defines the two jobs. Yet, you need some extra configuration to be ready to use it...
+
+<details>
+<summary>I need some modifications to the standard job</summary>
+
+If you need to run additional before_script or the like, then you can re-define
+the job e.g. as follows (after the `include` above):
+```yaml
+gget-update:
+  extends: .gget-update
+  # your modifications here, e.g. for an additional step in before_script
+  before_script:
+	- !reference [.gget-update, before_script]
+    - cd subdirectory
+```
+
+</details>
+
+#### Additional configuration
+
+The `gget-update` job (the `install-gget.sh` to be precise) 
+requires you to define a variable named PUBLIC_GPG_KEYS_WE_TRUST which represents an armored export of all
+gpg public keys you trust signing the public keys of remotes, 
+i.e. those are used to verify the public keys of the remotes you added via `gget remote add`.
+
+For instance, if you fetched the gitlab job via gget as suggested, 
+then you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc) 
+to PUBLIC_GPG_KEYS_WE_TRUST in order that this job can update itself.
+
+Moreover, the `create-mr.sh` requires an access token which is stored in variable GGET_UPDATE_API_TOKEN. 
+It is used to create the merge request.
+
+The gitlab job uses the image [gitlab-git](https://github.com/tegonal/gitlab-git) which requires you to define 
+the variable GITBOT_SSH_PRIVATE_KEY and a deploy key for it. 
+See [Basic Setup](https://github.com/tegonal/gitlab-git#basic-setup) for more information
+
+Now, all that is left is to create a scheduled pipeline (CI/CD -> Schedules) where you need to define Variable 
+`DO_GGET_UPDATE` with value `true`. Up to you how often you want to let it run (we run it weekly).
 
 ## self-update
 

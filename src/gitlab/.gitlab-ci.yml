@@ -1,0 +1,45 @@
+.gget-install:
+  script: &gget-install-script
+    - ./lib/gget/src/gitlab/install-gget.sh
+
+.gget-create-mr:
+  script: &gget-create-mr-script
+    - ./lib/gget/src/gitlab/create-mr.sh
+
+.gget-update:
+  stage: gget
+  image: tegonal/gitlab-git:latest
+  rules:
+    - if: $DO_GGET_UPDATE
+  variables:
+    GITBOT_USERNAME: 'gget bot'
+    GITBOT_EMAIL: 'gget@tegonal.com'
+  before_script:
+    - apk update && apk add bash git gnupg perl coreutils curl && apk upgrade
+    - tmpDir=$(mktemp -d -t gget-update-XXXXXXXXXX) && cd "$tmpDir"
+    - source /scripts/clone-current.sh
+    - export PATH="$PATH:$HOME/.local/bin"
+  script:
+    - *gget-install-script
+    - gget reset --gpg-only true
+    - gget update
+    - *gget-create-mr-script
+
+gget-update:
+  extends: .gget-update
+
+.gget-update-stop-pipeline:
+  stage: gget
+  image: alpine:latest
+  rules:
+    - if: $DO_GGET_UPDATE
+  needs: [ "gget-update" ]
+  script:
+    - apk update && apk add curl
+    - echo 'stopping the pipeline on purpose...'
+    - 'curl --request POST --header "PRIVATE-TOKEN: $GGET_UPDATE_API_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${CI_JOB_ID}/cancel"'
+    - sleep
+    - echo 'cancel failed, stopping via exit...'
+    - exit 1
+gget-update-stop-pipeline:
+  extends: .gget-update-stop-pipeline
