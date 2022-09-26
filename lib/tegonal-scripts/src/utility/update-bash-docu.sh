@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.17.1
+#                                         Version: v0.18.1
 #
 #
 #######  Description  #############
@@ -30,12 +30,10 @@
 #
 #    find . -name "*.sh" \
 #    	-not -name "*.doc.sh" \
-#    	-not -path "**.history/*" \
-#    	-not -name "update-docu.sh" \
 #    	-print0 |
 #    	while read -r -d $'\0' script; do
 #    		declare script="${script:2}"
-#    		replaceSnippetForScript "$dir_of_tegonal_scripts/$script" "${script////-}" . README.md
+#    		updateBashDocumentation "$dir_of_tegonal_scripts/$script" "${script////-}" . README.md
 #    	done
 #
 ###################################

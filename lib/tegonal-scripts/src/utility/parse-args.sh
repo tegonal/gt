@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.17.1
+#                                         Version: v0.18.1
 #
 #######  Description  #############
 #
@@ -95,9 +95,9 @@ function parse_args_describeParameterTriple() {
 	EOM
 }
 
-function parse_args_checkParameterDefinitionIsTriple() {
+function parse_args_exitIfParameterDefinitionIsNotTriple() {
 	if ! (($# == 1)); then
-		logError "One parameter needs to be passed to parse_args_checkParameterDefinitionIsTriple, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		logError "One parameter needs to be passed to parse_args_exitIfParameterDefinitionIsNotTriple, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: params   the name of an array which contains the parameter definitions'
 		printStackTrace
 		exit 9
@@ -122,7 +122,7 @@ function parseArguments {
 	local -r parseArguments_version=$3
 	shift 3 || die "could not shift by 3"
 
-	parse_args_checkParameterDefinitionIsTriple parseArguments_paramArr
+	parse_args_exitIfParameterDefinitionIsNotTriple parseArguments_paramArr
 
 	local -ri parseArguments_arrLength="${#parseArguments_paramArr[@]}"
 
@@ -192,7 +192,7 @@ function parse_args_printHelp {
 	local -r examples=$2
 	local -r version=$3
 
-	parse_args_checkParameterDefinitionIsTriple parse_args_printHelp_paramArr
+	parse_args_exitIfParameterDefinitionIsNotTriple parse_args_printHelp_paramArr
 
 	local arrLength="${#parse_args_printHelp_paramArr[@]}"
 
@@ -226,11 +226,12 @@ function parse_args_printHelp {
 }
 
 function exitIfNotAllArgumentsSet {
-	if ! (($# == 3)); then
+	if ! (($# == 3)) && ! (($# == 4)); then
 		logError "Three arguments need to be passed to exitIfNotAllArgumentsSet, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1: params    the name of an array which contains the parameter definitions'
-		echo >&2 '2: examples  a string containing examples (or an empty string)'
-		echo >&2 '3: version    the version which shall be shown if one uses --version'
+		echo >&2 '1: params    						the name of an array which contains the parameter definitions'
+		echo >&2 '2: examples 						a string containing examples (or an empty string)'
+		echo >&2 '3: version    					the version which shall be shown if one uses --version'
+		echo >&2 '4: printStackTraceFrom	(optional) defines from how many calls we show the stacktrace -- default 3 '
 		printStackTrace
 		exit 9
 	fi
@@ -239,8 +240,14 @@ function exitIfNotAllArgumentsSet {
 	local -rn exitIfNotAllArgumentsSet_paramArr=$1
 	local -r exitIfNotAllArgumentsSet_examples=$2
 	local -r exitIfNotAllArgumentsSet_version=$3
+	shift 3 || die "could not shift by 3"
 
-	parse_args_checkParameterDefinitionIsTriple exitIfNotAllArgumentsSet_paramArr
+	# it is handy to see the stacktrace if it is not a direct call from command line
+	# where we assume that the script as such has a "main" function, this one calls one function from this file and
+	# this calls exitIfNotAllArgumentsSet i.e. if we have more than 3 calls, then we are not directly from command line
+	local -r printStackTraceIfMoreThan=${1:-3}
+
+	parse_args_exitIfParameterDefinitionIsNotTriple exitIfNotAllArgumentsSet_paramArr
 
 	local -ri exitIfNotAllArgumentsSet_arrLength="${#exitIfNotAllArgumentsSet_paramArr[@]}"
 	local -i exitIfNotAllArgumentsSet_good=1 exitIfNotAllArgumentsSet_i
@@ -259,8 +266,7 @@ function exitIfNotAllArgumentsSet {
 		echo >&2 "following the help documentation:"
 		echo >&2 ""
 		parse_args_printHelp >&2 exitIfNotAllArgumentsSet_paramArr "$exitIfNotAllArgumentsSet_examples" "$exitIfNotAllArgumentsSet_version"
-		if ((${#FUNCNAME} > 1)); then
-			# it is handy to see the stacktrace if it is not a direct call from command line
+		if ((${#FUNCNAME[@]} > printStackTraceIfMoreThan)); then
 			printStackTrace
 		fi
 		exit 1
