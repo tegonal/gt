@@ -39,16 +39,16 @@ function cleanupOnPushToMain() {
 		-not -name "*.source.sh" \
 		-print0 |
 		while read -r -d $'\0' script; do
-			declare relative
+			local relative
 			relative="$(realpath --relative-to="$projectDir" "$script")"
-			declare id="${relative:4:-3}"
+			local id="${relative:4:-3}"
 			updateBashDocumentation "$script" "${id////-}" . README.md || return $?
 			replaceHelpSnippet "$script" "${id////-}-help" . README.md || return $?
 		done || die "updating bash documentation and help snippets failed, see above"
 
 	updateBashDocumentation "$projectDir/install.sh" "install" . README.md || die "could not update install documentation"
 
-	declare additionalHelp=(
+	local -ra additionalHelp=(
 		gget_remote_add "src/gget-remote.sh" "add --help"
 		gget_remote_remove "src/gget-remote.sh" "remove --help"
 		gget_remote_list "src/gget-remote.sh" "list --help"
@@ -59,13 +59,34 @@ function cleanupOnPushToMain() {
 		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md ${additionalHelp[i + 2]}
 	done || die "replacing help snippets failed, see above"
 
-	local -r indent='          '
 	local installScript
-	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' < "$projectDir/install.doc.sh" | sed "s/^/$indent/" )
-	perl -0777 -i -pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$installScript\n$indent\${2}@" \
-		"$projectDir/.github/workflows/gget-update.yml"
+	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' <"$projectDir/install.doc.sh")
 
-  logSuccess "Updating bash docu and README completed"
+	local -ra includeInstallSh=(
+		"$projectDir/.github/workflows/gget-update.yml" 10
+		"$projectDir/src/gitlab/install-gget.sh" 0
+	)
+	local -r arrLength="${#includeInstallSh[@]}"
+	local -i i
+	for ((i = 0; i < arrLength; i += 2)); do
+		local file="${includeInstallSh[i]}"
+		if ! [[ -f $file ]]; then
+			returnDying "file $file does not exist" || return $?
+		fi
+
+		local indentNum="${includeInstallSh[i + 1]}"
+		local indent
+		indent=$(printf "%-${indentNum}s" "") || return $?
+		local content
+		# cannot use search/replace variable substitution
+		# shellcheck disable=SC2001
+		content=$(sed "s/^/$indent/" <<<"$installScript") || return $?
+		perl -0777 -i \
+			-pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@" \
+			"$file" || return $?
+	done || die "could not replace the install instructions"
+
+	logSuccess "Cleanup on push to main completed"
 }
 
 ${__SOURCED__:+return}

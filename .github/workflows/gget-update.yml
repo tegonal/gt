@@ -26,7 +26,7 @@ jobs:
       - name: Install gget
         run: |
           set -e
-          # see install.doc.sh in root of this project, MODIFY THERE NOT HERE
+          # see install.doc.sh in https://github.com/tegonal/gget, MODIFY THERE NOT HERE (please report bugs)
           currentDir=$(pwd) && \
           tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
           wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc" && \
@@ -50,11 +50,11 @@ jobs:
       - name: Create pull request if necessary
         uses: peter-evans/create-pull-request@v4
         with:
-          branch: gget-update
+          branch: gget/update
           base: main
-          title: Updates via gget
+          title: Changes via gget update
           commit-message: update files pulled via gget
-          body: "following the changes after running: gget update"
+          body: "following the changes after running `gget update` (among other things)"
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ secrets.AUTO_PR_FORK_NAME }}
