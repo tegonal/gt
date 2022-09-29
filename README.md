@@ -719,6 +719,13 @@ Just make sure you replace YOUR_SLUG with your actual slug.
 
 ### Gitlab Job
 
+The setup requires three steps:
+1. pull files and include in your .gitlab-ci.yml
+2. configure Variables and Deploy Keys
+3. Setup a Scheduled Pipeline
+
+#### setup .gitlab-ci.yml
+
 This repository contains a `.gitlab-ci.yml` which defines two job templates:
 1. gget-update which checks if there are updates for:
    - the files which have been pulled
@@ -781,6 +788,8 @@ It is used to create the merge request.
 The gitlab job uses the image [gitlab-git](https://github.com/tegonal/gitlab-git) which requires you to define 
 the variable GITBOT_SSH_PRIVATE_KEY and a deploy key for it. 
 See [Basic Setup](https://github.com/tegonal/gitlab-git#basic-setup) for more information
+
+#### Scheduled job
 
 Now, all that is left is to create a scheduled pipeline (CI/CD -> Schedules) where you need to define Variable 
 `DO_GGET_UPDATE` with value `true`. Up to you how often you want to let it run (we run it weekly).
