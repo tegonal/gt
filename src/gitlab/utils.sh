@@ -5,13 +5,13 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.8.0-SNAPSHOT
+#                                         Version: v0.8.0
 #
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.8.0-SNAPSHOT'
+export GGET_VERSION='v0.8.0'
 
 function exitIfEnvVarNotSet() {
 	local -rn exitIfEnvVarNotSet_arr=$1
