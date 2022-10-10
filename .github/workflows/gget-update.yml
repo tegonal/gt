@@ -47,6 +47,8 @@ jobs:
         run: gget reset --gpg-only true
       - name: gget update
         run: gget update
+      - name: git status
+        run: git status
       - name: Create pull request if necessary
         uses: peter-evans/create-pull-request@v4
         with:
