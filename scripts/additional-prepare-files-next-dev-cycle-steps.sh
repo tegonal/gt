@@ -34,8 +34,8 @@ function additionalPrepareNextSteps() {
 	# we help shellcheck to realise that these variables are initialised
 	local -r devVersion="$devVersion" additionalPattern="$additionalPattern"
 
-	# we only update the version in the header but not the GGET_LATEST_VERSION on purpose
+	# we only update the version in the header but not the GT_LATEST_VERSION on purpose
 	# i.e. we omit -p on purpose (compared to additional-release-files-preparations.sh)
-	updateVersionScripts -v "$devVersion" -d "$projectDir/.gget/remotes/tegonal-gh-commons/pull-hook.sh"
+	updateVersionScripts -v "$devVersion" -d "$projectDir/.gt/remotes/tegonal-gh-commons/pull-hook.sh"
 }
 additionalPrepareNextSteps

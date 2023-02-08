@@ -14,13 +14,13 @@ jobs:
       - uses: actions/checkout@v3
       - name: Check it works
         run: |
-          tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX)
+          tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX)
           mkdir -p "$tmpDir"
           currentDir=$(pwd)
           cd "$tmpDir"
           "$currentDir/install.sh"
       - name: run self-update
-        run: gget self-update --force true
+        run: gt self-update --force true
 
   installDoc:
     name: "Install.doc.sh latest"
@@ -32,7 +32,7 @@ jobs:
       - name: Check it works
         run: ./install.doc.sh
       - name: run self-update
-        run: gget self-update --force true
+        run: gt self-update --force true
 
   installOld:
     name: "Install old version, self-update to latest"
@@ -46,10 +46,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: install ${{ matrix.tag }}
         run: |
-          tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX)
+          tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX)
           mkdir -p "$tmpDir"
           currentDir=$(pwd)
           cd "$tmpDir"
           "$currentDir/install.sh" -t ${{ matrix.tag }}
       - name: run self-update
-        run: gget self-update --force true
+        run: gt self-update --force true

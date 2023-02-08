@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -9,7 +9,7 @@
 #
 #######  Description  #############
 #
-#  'pull' command of gget: utility to pull files from a previously defined git remote repository
+#  'pull' command of gt: utility to pull files from a previously defined git remote repository
 #
 #######  Usage  ###################
 #
@@ -17,45 +17,45 @@
 #
 #    # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 #    # in version v0.1.0 (i.e. tag v0.1.0 is used)
-#    gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
+#    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 #
 #    # pull the directory src/utility/ from remote tegonal-scripts
 #    # in version v0.1.0 (i.e. tag v0.1.0 is used)
-#    gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+#    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 #
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.10.0-SNAPSHOT'
+export GT_VERSION='v0.10.0-SNAPSHOT'
 
-if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	readonly dir_of_gget
+if ! [[ -v dir_of_gt ]]; then
+	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly dir_of_gt
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
+	dir_of_tegonal_scripts="$dir_of_gt/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
-sourceOnce "$dir_of_gget/pulled-utils.sh"
-sourceOnce "$dir_of_gget/utils.sh"
+sourceOnce "$dir_of_gt/pulled-utils.sh"
+sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function gget_pull_cleanupRepo() {
+function gt_pull_cleanupRepo() {
 	local -r repository=$1
 	find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
 }
 
-function gget_pull_noop() {
+function gt_pull_noop() {
 	true
 }
 
-function gget_pull() {
+function gt_pull() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
@@ -63,7 +63,7 @@ function gget_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
@@ -85,23 +85,23 @@ function gget_pull() {
 		cat <<-EOM
 			# pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 			# in version v0.1.0 (i.e. tag v0.1.0 is used)
-			gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
+			gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 
 			# pull the directory src/utility/ from remote tegonal-scripts
 			# in version v0.1.0 (i.e. tag v0.1.0 is used)
-			gget pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+			gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 
 			# pull the file .github/CODE_OF_CONDUCT.md and put it into the pull directory .github
 			# without repeating the path (option --chop-path), i.e is pulled directly into .github/CODE_OF_CONDUCT.md
 			# and not into .github/.github/CODE_OF_CONDUCT.md
-			gget pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
+			gt pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 		EOM
 	)
 
 	# parsing once so that we get workingDir and remote
 	# redirecting output to /dev/null because we don't want to see 'ignored argument warnings' twice
 	# || true because --help returns 99 and we don't want to exit at this point (because we redirect output)
-	parseArguments params "$examples" "$GGET_VERSION" "$@" >/dev/null || true
+	parseArguments params "$examples" "$GT_VERSION" "$@" >/dev/null || true
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 
 	local -a args=()
@@ -117,7 +117,7 @@ function gget_pull() {
 		fi
 	fi
 	args+=("$@")
-	parseArguments params "$examples" "$GGET_VERSION" "${args[@]}"
+	parseArguments params "$examples" "$GT_VERSION" "${args[@]}"
 
 	if ! [[ -v chopPath ]]; then chopPath=false; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
@@ -131,7 +131,7 @@ function gget_pull() {
 	if ! [[ -v pullDir && -v workingDir && -n $workingDir && -v remote && -n $remote ]]; then
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 	fi
-	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local workingDirAbsolute pullDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
@@ -142,7 +142,7 @@ function gget_pull() {
 	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
 	local publicKeysDir repo gpgDir pulledTsv pullHookFile gitconfig
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
 		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"
@@ -186,10 +186,10 @@ function gget_pull() {
 				initialiseGpgDir "$gpgDir"
 
 				local -i numberOfImportedKeys=0
-				function gget_pull_importKeyCallback() {
+				function gt_pull_importKeyCallback() {
 					((++numberOfImportedKeys))
 				}
-				validateGpgKeysAndImport "$publicKeysDir" "$gpgDir" "$publicKeysDir" gget_pull_importKeyCallback "$autoTrust"
+				validateGpgKeysAndImport "$publicKeysDir" "$gpgDir" "$publicKeysDir" gt_pull_importKeyCallback "$autoTrust"
 
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
@@ -208,7 +208,7 @@ function gget_pull() {
 
 	# we want to expand $repo here and not when signal happens (as $repo might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gget_pull_cleanupRepo '$repo'" EXIT SIGINT
+	trap "gt_pull_cleanupRepo '$repo'" EXIT SIGINT
 
 	cd "$repo"
 	if ! git remote | grep "$remote" >/dev/null; then
@@ -242,7 +242,7 @@ function gget_pull() {
 
 	git checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
 
-	function gget_pull_mentionUnsecure() {
+	function gt_pull_mentionUnsecure() {
 		if [[ $unsecure != true ]]; then
 			printf " -- you can disable this check via: %s true\n" "$unsecurePattern"
 		else
@@ -252,29 +252,29 @@ function gget_pull() {
 
 	local -r sigExtension="sig"
 
-	function gget_pull_pullSignatureOfSingleFetchedFile() {
+	function gt_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
 			if ! git checkout "tags/$tagToPull" -- "$path.$sigExtension"; then
 				logErrorWithoutNewline "no signature file found for %s, aborting pull" "$path"
-				gget_pull_mentionUnsecure >&2
+				gt_pull_mentionUnsecure >&2
 				return 1
 			fi
 		fi
 	}
-	gget_pull_pullSignatureOfSingleFetchedFile
+	gt_pull_pullSignatureOfSingleFetchedFile
 
-	local pullHookBefore="gget_pull_noop"
-	local pullHookAfter="gget_pull_noop"
+	local pullHookBefore="gt_pull_noop"
+	local pullHookAfter="gt_pull_noop"
 	if [[ -f $pullHookFile ]]; then
 		sourceOnce "$pullHookFile"
-		pullHookBefore="gget_pullHook_${remote//-/_}_before"
-		pullHookAfter="gget_pullHook_${remote//-/_}_after"
+		pullHookBefore="gt_pullHook_${remote//-/_}_before"
+		pullHookAfter="gt_pullHook_${remote//-/_}_after"
 	fi
 
 	local -i numberOfPulledFiles=0
 
-	function gget_pull_moveFile() {
+	function gt_pull_moveFile() {
 		local file=$1
 
 		local targetFile
@@ -354,14 +354,14 @@ function gget_pull() {
 			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m" "$file" || return $?
 			# or true as we will try to cleanup the repo on exit
 			rm "$file.$sigExtension" || true
-			gget_pull_moveFile "$file"
+			gt_pull_moveFile "$file"
 		elif [[ $doVerification == true ]]; then
 			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
-			gget_pull_mentionUnsecure
+			gt_pull_mentionUnsecure
 			# or true as we will try to cleanup the repo on exit
 			rm "$file" || true
 		else
-			gget_pull_moveFile "$file"
+			gt_pull_moveFile "$file"
 		fi
 	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0 ||
 		# `while read` will fail because there is no \0
@@ -381,4 +381,4 @@ function gget_pull() {
 }
 
 ${__SOURCED__:+return}
-gget_pull "$@"
+gt_pull "$@"

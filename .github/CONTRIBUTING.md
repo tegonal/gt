@@ -10,37 +10,37 @@ Following a few guidelines so that others can quickly benefit from your contribu
 
 ## Code of Conduct
 This project and everyone participating in it is governed by this project's 
-[Code of Conduct](https://github.com/tegonal/gget/tree/main/.github/CODE_OF_CONDUCT.md). 
+[Code of Conduct](https://github.com/tegonal/gt/tree/main/.github/CODE_OF_CONDUCT.md). 
 By participating, you are expected to uphold this code. Please report unacceptable behaviour to info@tutteli.ch
 
 ## How to Contribute
 - Star scripts if you like it.
 
 - Need help using one of the scripts?  
-  Open a [new discussion](https://github.com/tegonal/gget/discussions/new?category=q-a) 
+  Open a [new discussion](https://github.com/tegonal/gt/discussions/new?category=q-a) 
   and write down your question there and we will get back to you.
   
 - Found a bug?  
-  [Open an issue](https://github.com/tegonal/gget/issues/new?template=bug_report.md).
+  [Open an issue](https://github.com/tegonal/gt/issues/new?template=bug_report.md).
   
 - Missing a feature?  
-  Open a [new discussion](https://github.com/tegonal/gget/discussions/new?category=ideas)
+  Open a [new discussion](https://github.com/tegonal/gt/discussions/new?category=ideas)
   and write down your need and we will get back to you.
   
 - You do not have a particular feature in mind but would like to contribute with code?
-  Please have a look at the [help wanted issues](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
-  Open a [new discussion](https://github.com/tegonal/gget/discussions/new?category=contributor-q-a) if there are not any.  
+  Please have a look at the [help wanted issues](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+  Open a [new discussion](https://github.com/tegonal/gt/discussions/new?category=contributor-q-a) if there are not any.  
   There are certainly ways you can still help us with coding.  
 
 - Found spelling mistakes?  
   Nice catch :mag: Please fix it and create a pull request.
   
 - You have other ideas how a certain script could be improved?   
-  Open a [new discussion](https://github.com/tegonal/gget/discussions/new?category=ideas)
+  Open a [new discussion](https://github.com/tegonal/gt/discussions/new?category=ideas)
   and write down your idea, we are looking forward to it.
 
 In any case, if you are uncertain how you can contribute, then contact us via a 
-[new discussion](https://github.com/tegonal/gget/discussions/new?category=contributor-q-a)
+[new discussion](https://github.com/tegonal/gt/discussions/new?category=contributor-q-a)
 and we will figure it out together :smile:
 
 ## Your First Code Contribution
@@ -54,8 +54,8 @@ The following are a few guidelines on how we suggest you start.
 3. Read up the [Coding Conventions](#coding-conventions) (there are only 5 points).
 
 Perfect, you are setup and ready to go. 
-Have a look at [help wanted issues](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
-where [good first issues](https://github.com/tegonal/gget/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+Have a look at [help wanted issues](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
+where [good first issues](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 are easier to start with.
 Please write a comment such as `I'll work on this` in the issue,
 this way we can assign the task to you (so that others know there is already someone working on the issue)
@@ -69,7 +69,7 @@ Dealing with Git for the first time? Here are some recommendations for how to se
   should be descriptive of the issue or the change being made, e.g `#108-path-exists`.) Working
   on a new branch makes it easier to make more than one pull request.
 - add this repository as a remote repository using
- `git remote add upstream https://github.com/tegonal/gget.git`. You will use this to
+ `git remote add upstream https://github.com/tegonal/gt.git`. You will use this to
   fetch changes made in this repository.
 - to ensure your branch is up-to-date, rebase your work on
   upstream/main using `git rebase upstream/main` or `git pull -r upstream main`.
@@ -78,7 +78,7 @@ Dealing with Git for the first time? Here are some recommendations for how to se
 
 You can read more on Git [here](https://git-scm.com/book/).
 
-Contact us via a [new discussion](https://github.com/tegonal/gget/discussions/new?category=contributor-q-a)
+Contact us via a [new discussion](https://github.com/tegonal/gt/discussions/new?category=contributor-q-a)
 whenever you need help to get up and running or have questions.
 
 We recommend you create a pull request (see [About pull requests](https://help.github.com/en/articles/about-pull-requests) for help)
@@ -104,7 +104,7 @@ However, here a few hints in order that your pull request is merged quickly.
 
 ## Pull Request Checklist
 Please make sure you can check every item on the following list before you create a pull request:  
-- [ ] your pull request is rebased on the [latest commit on main](https://github.com/tegonal/gget/commits/main)
+- [ ] your pull request is rebased on the [latest commit on main](https://github.com/tegonal/gt/commits/main)
 - [ ] Your pull request addresses only “one thing”. It cannot be meaningfully split up into multiple pull requests.
 - [ ] There is no error if you run ./scripts/before-pr.sh
 - [ ] Make sure you have no changes after running ./scripts/before-pr.sh and `git commit --amend` otherwise

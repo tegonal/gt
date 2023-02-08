@@ -1,45 +1,45 @@
-.gget-install:
-  script: &gget-install-script
-    - ./lib/gget/src/gitlab/install-gget.sh
+.gt-install:
+  script: &gt-install-script
+    - ./lib/gt/src/gitlab/install-gt.sh
 
-.gget-create-mr:
-  script: &gget-create-mr-script
-    - ./lib/gget/src/gitlab/create-mr.sh
+.gt-create-mr:
+  script: &gt-create-mr-script
+    - source ./lib/gt/src/gitlab/create-mr.sh
 
-.gget-update:
-  stage: gget
+.gt-update:
+  stage: gt
   image: tegonal/gitlab-git:latest
   rules:
-    - if: $DO_GGET_UPDATE
+    - if: $DO_GT_UPDATE
   variables:
-    GITBOT_USERNAME: 'gget bot'
-    GITBOT_EMAIL: 'gget@tegonal.com'
+    GITBOT_USERNAME: 'gt bot'
+    GITBOT_EMAIL: 'gt@tegonal.com'
   before_script:
     - apk update && apk add bash git gnupg perl coreutils curl && apk upgrade
-    - tmpDir=$(mktemp -d -t gget-update-XXXXXXXXXX) && cd "$tmpDir"
+    - tmpDir=$(mktemp -d -t gt-update-XXXXXXXXXX) && cd "$tmpDir"
     - source /scripts/clone-current.sh
     - export PATH="$PATH:$HOME/.local/bin"
   script:
-    - *gget-install-script
-    - gget reset --gpg-only true
-    - gget update
-    - *gget-create-mr-script
+    - *gt-install-script
+    - gt reset --gpg-only true
+    - gt update
+    - *gt-create-mr-script
 
-gget-update:
-  extends: .gget-update
+gt-update:
+  extends: .gt-update
 
-.gget-update-stop-pipeline:
-  stage: gget
+.gt-update-stop-pipeline:
+  stage: gt
   image: alpine:latest
   rules:
-    - if: $DO_GGET_UPDATE
-  needs: [ "gget-update" ]
+    - if: $DO_GT_UPDATE
+  needs: [ "gt-update" ]
   script:
     - apk update && apk add curl
     - echo 'stopping the pipeline on purpose...'
-    - 'curl --request POST --header "PRIVATE-TOKEN: $GGET_UPDATE_API_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${CI_JOB_ID}/cancel"'
+    - 'curl --request POST --header "PRIVATE-TOKEN: $GT_UPDATE_API_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${CI_JOB_ID}/cancel"'
     - sleep
     - echo 'cancel failed, stopping via exit...'
     - exit 1
-gget-update-stop-pipeline:
-  extends: .gget-update-stop-pipeline
+gt-update-stop-pipeline:
+  extends: .gt-update-stop-pipeline

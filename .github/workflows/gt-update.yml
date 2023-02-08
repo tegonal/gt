@@ -1,19 +1,19 @@
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
 #                                         Version: v0.9.0
 #
 ###################################
-name: "gget update"
+name: "gt update"
 on:
   schedule:
     - cron: '0 4 * * MON'
   push:
     branches:
-      - do-gget-update
+      - do-gt-update
   workflow_dispatch:
 
 jobs:
@@ -24,20 +24,20 @@ jobs:
       - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
         run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
       - uses: actions/checkout@v3
-      - name: Install gget
+      - name: Install gt
         run: |
           set -e
-          # see install.doc.sh in https://github.com/tegonal/gget, MODIFY THERE NOT HERE (please report bugs)
+          # see install.doc.sh in https://github.com/tegonal/gt, MODIFY THERE NOT HERE (please report bugs)
           currentDir=$(pwd) && \
-          tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
-          wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc" && \
-          wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc.sig" && \
+          tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc.sig" && \
           gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
           echo "public key trusted" && \
           mkdir ./gpg && \
           gpg --homedir ./gpg --import ./signing-key.public.asc && \
-          wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
-          wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/main/install.sh" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/main/install.sh.sig" && \
           gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
           chmod +x ./install.sh && \
           echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
@@ -45,19 +45,19 @@ jobs:
           false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
       - name: reset gpg keys
-        run: gget reset --gpg-only true
-      - name: gget update
-        run: gget update
+        run: gt reset --gpg-only true
+      - name: gt update
+        run: gt update
       - name: git status
         run: git status
       - name: Create pull request if necessary
         uses: peter-evans/create-pull-request@v4
         with:
-          branch: gget/update
+          branch: gt/update
           base: main
-          title: Changes via gget update
-          commit-message: update files pulled via gget
-          body: "following the changes after running `gget update` (among other things)"
+          title: Changes via gt update
+          commit-message: update files pulled via gt
+          body: "following the changes after running `gt update` (among other things)"
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ secrets.AUTO_PR_FORK_NAME }}

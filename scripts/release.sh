@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -29,19 +29,19 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/releasing/release-files.sh"
 
 function release() {
-	if ! wget -q -O- "https://api.github.com/repos/tegonal/gget/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"' > /dev/null; then
+	if ! wget -q -O- "https://api.github.com/repos/tegonal/gt/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"' > /dev/null; then
 		die "installation workflow failed, you should not release ;-)"
 	fi
 
 	function findFilesToRelease() {
 		find "$projectDir/src" \
 		"$projectDir/install.sh" "$projectDir/install.doc.sh" \
-		"$projectDir/.github/workflows/gget-update.yml" \
+		"$projectDir/.github/workflows/gt-update.yml" \
 			\( -not -name "*.doc.sh" -o -name "install.doc.sh" \) \
 			"$@"
 	}
 
-	local -r additionalPattern="(GGET_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
+	local -r additionalPattern="(GT_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
 	releaseFiles --project-dir "$projectDir" -p "$additionalPattern" --sign-fn findFilesToRelease "$@"
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -17,13 +17,13 @@ set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
 
-if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	readonly dir_of_gget
+if ! [[ -v dir_of_gt ]]; then
+	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly dir_of_gt
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
+	dir_of_tegonal_scripts="$dir_of_gt/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
@@ -62,7 +62,7 @@ function checkWorkingDirExists() {
 	shift 1 || die "could not shift by 1"
 
 	local workingDirPattern
-	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	if ! [[ -d $workingDirAbsolute ]]; then
 		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDirAbsolute"
@@ -84,12 +84,12 @@ function exitIfRemoteDirDoesNotExist() {
 	parseFnArgs params "$@"
 
 	local remoteDir
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d $remoteDir ]]; then
 		logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
-		sourceOnce "$dir_of_gget/gget-remote.sh"
-		gget_remote_list -w "$workingDirAbsolute"
+		sourceOnce "$dir_of_gt/gt-remote.sh"
+		gt_remote_list -w "$workingDirAbsolute"
 		exit 9
 	fi
 }
@@ -122,7 +122,7 @@ function initialiseGitDir() {
 	parseFnArgs params "$@"
 
 	local repo gitconfig
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	mkdir -p "$repo" || die "could not create the repo at %s" "$repo"
 	git --git-dir="$repo/.git" init || die "could not git init the repo at %s" "$repo"
@@ -140,7 +140,7 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 	parseFnArgs params "$@"
 
 	local repo
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d "$repo/.git" ]]; then
 		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
@@ -164,14 +164,14 @@ function latestRemoteTagIncludingChecks() {
 	parseFnArgs params "$@"
 
 	local repo
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
 	local tagPattern
-	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
 	cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
@@ -191,7 +191,7 @@ function validateGpgKeysAndImport() {
 	exitIfArgIsNotFunction "$validateGpgKeysAndImport_callback" 4
 
 	local autoTrustPattern
-	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local -r sigExtension="sig"
 
@@ -256,7 +256,7 @@ function importRemotesPulledPublicKeys() {
 	exitIfArgIsNotFunction "$importRemotesPulledPublicKeys_callback" 3
 
 	local gpgDir publicKeysDir repo
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
   # shellcheck disable=SC2317   # called by name
 	function importRemotesPublicKeys_importKeyCallback() {
@@ -268,9 +268,9 @@ function importRemotesPulledPublicKeys() {
 		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature %s into public keys directory %s" "$sig" "$publicKeysDir"
 		"$importRemotesPulledPublicKeys_callback" "$publicKey" "$sig"
 	}
-	validateGpgKeysAndImport "$repo/.gget" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
+	validateGpgKeysAndImport "$repo/.gt" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
 
-	deleteDirChmod777 "$repo/.gget" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gget"
+	deleteDirChmod777 "$repo/.gt" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gt"
 }
 
 function determineDefaultBranch() {
@@ -283,13 +283,13 @@ function determineDefaultBranch() {
 		)
 }
 
-function checkoutGgetDir() {
+function checkoutGtDir() {
 	local -r remote=$1
 	local -r branch=$2
 	shift 2 || die "could not shift by 2"
 
 	git fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
-	git checkout "$remote/$branch" -- '.gget' && find ./.gget -maxdepth 1 -type d -not -path ./.gget -exec rm -r {} \;
+	git checkout "$remote/$branch" -- '.gt' && find ./.gt -maxdepth 1 -type d -not -path ./.gt -exec rm -r {} \;
 }
 
 function exitIfRepoBrokenAndReInitIfAbsent() {
@@ -299,7 +299,7 @@ function exitIfRepoBrokenAndReInitIfAbsent() {
 	parseFnArgs params "$@"
 
 	local remoteDir repo
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	if [[ -f $repo ]]; then
 		die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"

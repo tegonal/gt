@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -9,49 +9,49 @@
 #
 #######  Description  #############
 #
-#  'update' command of gget: utility to update already pulled files
+#  'update' command of gt: utility to update already pulled files
 #
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
 #
 #    # updates all pulled files of all remotes to latest tag
-#    gget update
+#    gt update
 #
 #    # updates all pulled files of remote tegonal-scripts to latest tag
-#    gget update -r tegonal-scripts
+#    gt update -r tegonal-scripts
 #
 #    # updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0
-#    gget update -r tegonal-scripts -t v1.0.0
+#    gt update -r tegonal-scripts -t v1.0.0
 #
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.10.0-SNAPSHOT'
+export GT_VERSION='v0.10.0-SNAPSHOT'
 
-if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	readonly dir_of_gget
+if ! [[ -v dir_of_gt ]]; then
+	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly dir_of_gt
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$(realpath "$dir_of_gt/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_gget/pulled-utils.sh"
-sourceOnce "$dir_of_gget/utils.sh"
-sourceOnce "$dir_of_gget/gget-pull.sh"
-sourceOnce "$dir_of_gget/gget-remote.sh"
+sourceOnce "$dir_of_gt/pulled-utils.sh"
+sourceOnce "$dir_of_gt/utils.sh"
+sourceOnce "$dir_of_gt/gt-pull.sh"
+sourceOnce "$dir_of_gt/gt-remote.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function gget_update() {
+function gt_update() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir autoTrust tag
 	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
@@ -65,22 +65,22 @@ function gget_update() {
 		# shellcheck disable=SC2312
 		cat <<-EOM
 			# updates all pulled files of all remotes to latest tag
-			gget update
+			gt update
 
 			# updates all pulled files of remote tegonal-scripts to latest tag
-			gget update -r tegonal-scripts
+			gt update -r tegonal-scripts
 
 			# updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0
-			gget update -r tegonal-scripts -t v1.0.0
+			gt update -r tegonal-scripts -t v1.0.0
 		EOM
 	)
 
-	parseArguments params "$examples" "$GGET_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@"
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v tag ]]; then tag=""; fi
-	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
@@ -95,7 +95,7 @@ function gget_update() {
 	local -i pulled=0
 	local -i errors=0
 
-	function gget_update_incrementError() {
+	function gt_update_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
 		shift 2
@@ -104,8 +104,8 @@ function gget_update() {
 		return 1
 	}
 
-  # shellcheck disable=SC2317   # called by name
-	function gget_update_rePullInternal() {
+	# shellcheck disable=SC2317   # called by name
+	function gt_update_rePullInternal() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
 
@@ -117,50 +117,50 @@ function gget_update() {
 			tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag, see above"
 		fi
 
-		function gget_update_rePullInternal_callback() {
+		function gt_update_rePullInternal_callback() {
 			local _entryTag entryFile _entryRelativePath entryAbsolutePath
 			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 			local -ra params=(_entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 
-			# we know that set -e is disabled for gget_update_incrementError due to ||
+			# we know that set -e is disabled for gt_update_incrementError due to ||
 			#shellcheck disable=SC2310
-			parentDir=$(dirname "$entryAbsolutePath") || gget_update_incrementError "$entryFile" "$remote" || return $?
-			if gget_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
+			parentDir=$(dirname "$entryAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return $?
+			if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 				((++pulled))
 			else
-				gget_update_incrementError "$entryFile" "$remote"
+				gt_update_incrementError "$entryFile" "$remote"
 			fi
 		}
-		readPulledTsv "$workingDirAbsolute" "$remote" gget_update_rePullInternal_callback 5 6
+		readPulledTsv "$workingDirAbsolute" "$remote" gt_update_rePullInternal_callback 5 6
 	}
 
-	function gget_update_rePullRemote() {
+	function gt_update_rePullRemote() {
 		local -r remote=$1
 		shift 1
 
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 
-		withCustomOutputInput 5 6 gget_update_rePullInternal "$remote"
+		withCustomOutputInput 5 6 gt_update_rePullInternal "$remote"
 	}
 
-	function gget_update_allRemotes() {
-		gget_remote_list_raw -w "$workingDirAbsolute" >&7
+	function gt_update_allRemotes() {
+		gt_remote_list_raw -w "$workingDirAbsolute" >&7
 		local -i count=0
 		local remote
 		while read -u 8 -r remote; do
-			gget_update_rePullRemote "$remote"
+			gt_update_rePullRemote "$remote"
 			((++count))
 		done
 		if ((count == 0)); then
-			logInfo "Nothing updated as no remote is defined yet.\nUse the \033[0;35mgget remote add ...\033[0m command to specify one -- for more info: gget remote add --help"
+			logInfo "Nothing updated as no remote is defined yet.\nUse the \033[0;35mgt remote add ...\033[0m command to specify one -- for more info: gt remote add --help"
 		fi
 	}
 
 	if [[ -n $remote ]]; then
-		gget_update_rePullRemote "$remote"
+		gt_update_rePullRemote "$remote"
 	else
-		withCustomOutputInput 7 8 gget_update_allRemotes
+		withCustomOutputInput 7 8 gt_update_allRemotes
 	fi
 
 	endTime=$(date +%s.%3N)
@@ -174,4 +174,4 @@ function gget_update() {
 }
 
 ${__SOURCED__:+return}
-gget_update "$@"
+gt_update "$@"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -11,7 +11,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.10.0-SNAPSHOT'
+export GT_VERSION='v0.10.0-SNAPSHOT'
 
 function exitIfEnvVarNotSet() {
 	local -rn exitIfEnvVarNotSet_arr=$1
@@ -26,7 +26,7 @@ function exitIfEnvVarNotSet() {
 	done
 	if [[ $error == true ]]; then
 		echo "In GitLab, go to Settings => CI/CD => Variables and define it/them there"
-		echo "See also https://github.com/tegonal/gget/tree/${GGET_VERSION}#gitlab-job for further information"
+		echo "See also https://github.com/tegonal/gt/tree/${GT_VERSION}#gitlab-job for further information"
 		exit 1
 	fi
 }

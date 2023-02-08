@@ -10,8 +10,8 @@ body:
     id: version
     attributes:
       label: Affected Version
-      description: What version of gget are you running?
-      placeholder: "v0.1.0"
+      description: What version of gt are you running?
+      placeholder: "v0.9.0"
     validations:
       required: true
   - type: textarea
