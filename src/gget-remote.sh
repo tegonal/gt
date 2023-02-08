@@ -71,7 +71,7 @@ function gget_remote_add() {
 	local -r currentDir
 
 	local remote url pullDir unsecure workingDir
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ra params=(
 		remote "$remotePattern" 'name to refer to this the remote repository'
 		url '-u|--url' 'url of the remote repository'
@@ -199,7 +199,7 @@ function gget_remote_list_raw() {
 	source "$dir_of_gget/shared-patterns.source.sh"
 
 	local workingDir
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ra params=(
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
 	)
@@ -253,7 +253,7 @@ function gget_remote_remove() {
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ra params=(
 		remote "$remotePattern" 'define the name of the remote which shall be removed'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
@@ -304,8 +304,7 @@ function gget_remote_remove() {
 
 		function gget_remote_remove_readCallback() {
 			local _entryTag _entryFile _entryRelativePath entryAbsolutePath
-			# params is required for parseFnArgs thus:
-			# shellcheck disable=SC2034
+			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 			rm "$entryAbsolutePath"
@@ -338,8 +337,7 @@ function gget_remote_source() {
 }
 
 function gget_remote() {
-	# is used in parseCommands but shellcheck is not able to deduce this, thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseCommands by name
 	local -ra commands=(
 		add 'add a remote'
 		remove 'remove a remote'

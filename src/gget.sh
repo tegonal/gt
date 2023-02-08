@@ -70,8 +70,7 @@ function gget_source() {
 }
 
 function gget() {
-	# is used in parseCommands but shellcheck is not able to deduce this, thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseCommands by name
 	local -ra commands=(
 		pull "pull files from a previously defined remote"
 		re-pull "re-pull files defined in pulled.tsv of a specific or all remotes"

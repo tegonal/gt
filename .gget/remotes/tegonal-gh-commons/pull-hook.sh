@@ -28,7 +28,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function gget_pullHook_tegonal_gh_commons_before() {
 	local _tag source _target
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(_tag source _target)
 	parseFnArgs params "$@"
 
@@ -43,7 +43,7 @@ function gget_pullHook_tegonal_gh_commons_before() {
 
 function gget_pullHook_tegonal_gh_commons_after() {
 	local _tag source target
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(_tag source target)
 	parseFnArgs params "$@"
 

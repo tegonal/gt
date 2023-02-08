@@ -70,7 +70,7 @@ function gget_reset() {
 	local -r currentDir
 
 	local remote workingDir
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
