@@ -176,6 +176,7 @@ function gget_remote_add() {
 	fi
 
 	local -i numberOfImportedKeys=0
+	# shellcheck disable=SC2317   # called by name
 	function gget_remote_importKeyCallback() {
 		((++numberOfImportedKeys))
 	}
@@ -299,6 +300,7 @@ function gget_remote_remove() {
 		fi
 	fi
 
+  # shellcheck disable=SC2317   # called by name
 	function gget_remote_remove_read() {
 		local -i numberOfDeletedFiles=0
 

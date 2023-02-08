@@ -195,6 +195,7 @@ function validateGpgKeysAndImport() {
 
 	local -r sigExtension="sig"
 
+  # shellcheck disable=SC2317   # called by name
 	function validateGpgKeysAndImport_do() {
 		findAscInDir "$sourceDir" -print0 >&3
 		echo ""
@@ -257,6 +258,7 @@ function importRemotesPulledPublicKeys() {
 	local gpgDir publicKeysDir repo
 	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
 
+  # shellcheck disable=SC2317   # called by name
 	function importRemotesPublicKeys_importKeyCallback() {
 		local -r publicKey=$1
 		local -r sig=$2

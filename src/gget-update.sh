@@ -104,6 +104,7 @@ function gget_update() {
 		return 1
 	}
 
+  # shellcheck disable=SC2317   # called by name
 	function gget_update_rePullInternal() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
