@@ -54,7 +54,7 @@ function gget_update() {
 	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir autoTrust tag
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the files of this remote are updated, otherwise all'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
@@ -104,6 +104,7 @@ function gget_update() {
 		return 1
 	}
 
+  # shellcheck disable=SC2317   # called by name
 	function gget_update_rePullInternal() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
@@ -118,8 +119,7 @@ function gget_update() {
 
 		function gget_update_rePullInternal_callback() {
 			local _entryTag entryFile _entryRelativePath entryAbsolutePath
-			# params is required for parseFnArgs thus:
-			# shellcheck disable=SC2034
+			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 			local -ra params=(_entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 

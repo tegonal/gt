@@ -17,16 +17,14 @@ if ! [[ -v dir_of_gget_gitlab ]]; then
 fi
 source "$dir_of_gget_gitlab/utils.sh"
 
-# is passed to exitIfEnvVarNotSet by name
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034   # is passed to exitIfEnvVarNotSet by name
 declare -a envVars=(
 	PUBLIC_GPG_KEYS_WE_TRUST
 )
 exitIfEnvVarNotSet envVars
 readonly PUBLIC_GPG_KEYS_WE_TRUST
 
-# passed by name to cleanupTmp
-# shellcheck disable=SC2034
+# shellcheck disable=SC2034   # is passed to cleanupTmp by name
 readonly -a tmpPaths=(tmpDir)
 trap 'cleanupTmp tmpPaths' EXIT
 

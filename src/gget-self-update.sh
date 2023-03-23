@@ -45,7 +45,7 @@ function gget_self_update() {
 	local -r forcePattern='--force'
 
 	local forceInstall
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ar params=(
 		forceInstall "$forcePattern" "if set to true, then install.sh will be called even if gget is already on latest tag"
 	)
@@ -61,7 +61,6 @@ function gget_self_update() {
 	)
 
 	parseArguments params "$examples" "$GGET_VERSION" "$@"
-	# shellcheck disable=SC2034
 	if ! [[ -v forceInstall ]]; then forceInstall="false"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
 

@@ -35,8 +35,7 @@ function pulledTsvHeader() {
 }
 function pulledTsvEntry() {
 	local tag file relativeTarget sha512
-	# params is required for parseFnArgs thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(tag file relativeTarget sha512)
 	parseFnArgs params "$@"
 	printf "%s\t" "$tag" "$file" "$relativeTarget"
@@ -77,8 +76,7 @@ function grepPulledEntryByFile() {
 
 function replacePulledEntry() {
 	local pulledTsv file entry
-	# params is required for parseFnArgs thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(pulledTsv file entry)
 	parseFnArgs params "$@"
 	# we are aware of that the || disables set -e for grepPulledEntryByFile but we want to be sure we die in case of general set -e
@@ -90,8 +88,7 @@ function replacePulledEntry() {
 
 function readPulledTsv() {
 	local workingDirAbsolute remote readPulledTsv_callback fileDescriptorOut fileDescriptorIn
-	# params is required for parseFnArgs thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(workingDirAbsolute remote readPulledTsv_callback fileDescriptorOut fileDescriptorIn)
 	parseFnArgs params "$@"
 

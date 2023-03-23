@@ -59,7 +59,7 @@ function gget_re_pull() {
 	local -r onlyMissingPattern="--only-missing"
 
 	local remote workingDir autoTrust onlyMissing
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
@@ -106,6 +106,7 @@ function gget_re_pull() {
 		return 1
 	}
 
+  # shellcheck disable=SC2317   # called by name
 	function gget_re_pull_rePullInternal() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
@@ -113,7 +114,7 @@ function gget_re_pull() {
 		function gget_re_pull_rePullInternal_callback() {
 			local entryTag entryFile _entryRelativePath entryAbsolutePath
 			# params is required for parseFnArgs thus:
-			# shellcheck disable=SC2034
+			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 

@@ -26,7 +26,7 @@ sourceOnce "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
 function customRunShellcheck() {
 	declare srcDir="$scriptsDir/../src"
 
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to runShellcheck by name
   declare -a dirs=("$srcDir" "$scriptsDir" "$scriptsDir/../install.sh")
   declare sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
   runShellcheck dirs "$sourcePath"
