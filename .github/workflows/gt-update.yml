@@ -10,7 +10,7 @@
 name: "gt update"
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 4 * * MON'
   workflow_dispatch:
 
 jobs:
