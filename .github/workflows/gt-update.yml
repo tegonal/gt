@@ -11,9 +11,6 @@ name: "gt update"
 on:
   schedule:
     - cron: '*/5 * * * *'
-  push:
-    branches:
-      - do-gt-update
   workflow_dispatch:
 
 jobs:
