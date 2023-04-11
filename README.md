@@ -1,17 +1,17 @@
 <!-- for main -->
-
-[![Download](https://img.shields.io/badge/Download-v0.10.1-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.10.1)
+<!--
+[![Download](https://img.shields.io/badge/Download-v0.10.2-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.10.2)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Code Quality](https://github.com/tegonal/gt/workflows/Code%20Quality/badge.svg?event=push&branch=main)](https://github.com/tegonal/gt/actions/workflows/code-quality.yml?query=branch%3Amain)
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
-
+-->
 <!-- for main end -->
 <!-- for release -->
-<!--
-[![Download](https://img.shields.io/badge/Download-v0.10.1-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.10.1)
+
+[![Download](https://img.shields.io/badge/Download-v0.10.2-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.10.2)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
--->
+
 <!-- for release end -->
 
 # gt
@@ -41,7 +41,7 @@ at a single place.
 ❗ You are taking a _sneak peek_ at the next version.
 Please have a look at the README of the git tag in case you are looking for the documentation of the corresponding
 version.
-For instance, the [README of v0.10.1](https://github.com/tegonal/gt/tree/v0.10.1/README.md).
+For instance, the [README of v0.10.2](https://github.com/tegonal/gt/tree/v0.10.2/README.md).
 
 ---
 
@@ -165,7 +165,7 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ## manually
 
-1. [![Download](https://img.shields.io/badge/Download-v0.10.1-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.10.1)
+1. [![Download](https://img.shields.io/badge/Download-v0.10.2-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.10.2)
 2. extract the zip/tar.gz
 3. open a terminal at the corresponding folder and verify the public key of this repo
    against [our public key](https://tegonal.com/gpg/github.asc):
@@ -237,7 +237,7 @@ self-update   update gt to the latest version
 --version  prints the version of this script
 
 INFO: Version of gt.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-help>
@@ -260,7 +260,7 @@ list     list all remotes
 --version  prints the version of this script
 
 INFO: Version of gt-remote.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-remote-help>
@@ -421,7 +421,7 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 gt pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 
 INFO: Version of gt-pull.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-pull-help>
@@ -522,7 +522,7 @@ gt re-pull
 gt re-pull -r tegonal-scripts --only-missing false --auto-trust true
 
 INFO: Version of gt-re-pull.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-re-pull-help>
@@ -581,7 +581,7 @@ gt reset
 gt reset --gpg-only true
 
 INFO: Version of gt-reset.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-reset-help>
@@ -641,7 +641,7 @@ gt update -r tegonal-scripts
 gt update -r tegonal-scripts -t v1.0.0
 
 INFO: Version of gt-update.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-update-help>
@@ -817,7 +817,7 @@ gt self-update
 gt self-update --force
 
 INFO: Version of gt-self-update.sh is:
-v0.11.0-SNAPSHOT
+v0.10.2
 ```
 
 </gt-self-update-help>
