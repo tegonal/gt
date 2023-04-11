@@ -125,22 +125,25 @@ function install() {
 	# we will check the chosen version against the current gpg key,
 	# i.e. only if the signatures of the chosen version are still valid against the current key we are happy
 	local -r publicKey="$tmpDir/signing-key.public.asc"
-	wget -O "$publicKey" -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc"
+	wget -O "$publicKey" -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc" || die "could not fetch public key from main branch"
 
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
-	gpg --homedir="$gpgDir" --list-sig || true
+	gpg --homedir "$gpgDir" --list-sig || true
 
+  # TODO remove .gget with 1.0.0
 	find "$repoDir" \
 	  -type f \
 		-name "*.sig" \
 		-not -path "$repoDir/.gt/signing-key.public.asc.sig" \
 		-not -path "$repoDir/.gt/remotes/*/public-keys/*.sig" \
+		-not -path "$repoDir/.gget/signing-key.public.asc.sig" \
+		-not -path "$repoDir/.gget/remotes/*/public-keys/*.sig" \
 		-print0 |
 		while read -r -d $'\0' sigFile; do
 			local file=${sigFile::-4}
 			echo "verifying $file"
 			local output
-			if ! output="$(gpg --homedir="$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
+			if ! output="$(gpg --homedir "$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
 				printf "verification failed for %s:\n%s\n\n" "$file" "$output"
 				return 2
 			fi
@@ -154,7 +157,7 @@ function install() {
 		echo "Looks like $projectName was already installed in $installDir"
 		printf "Current tag in use is \033[0;36m%s\033[0m\n" "$currentBranch"
 		printf "going to replace the current installation with this one (%s)\n" "$tag"
-		# necessary because .git files are sometime 700 and would require sudo to delete
+		# necessary because .git files are sometimes mod 700 and would require sudo to delete
 		deleteDirChmod777 "$installDir"
 		if [[ -n $symbolicLink ]]; then
 			rm "$symbolicLink" >/dev/null 2>&1 || true
