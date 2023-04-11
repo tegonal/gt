@@ -16,7 +16,7 @@
 
 # gt
 
-g(it)get is a bash based script which pulls a file or a directory stored in a git repository.
+g(it)t(ools) is a bash based script which pulls a file or a directory stored in a git repository.
 It includes automatic verification via GPG.  
 It enables that files can be maintained at a single place and pulled into multiple projects (e.g. scripts, config files
 etc.)

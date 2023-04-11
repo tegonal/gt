@@ -1,5 +1,6 @@
 name: "Installation"
 on:
+  pull_request:
   push:
     branches:
       - main
