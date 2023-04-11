@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.10.1
+#                                         Version: v0.11.0-SNAPSHOT
 #
 #######  Description  #############
 #
@@ -41,7 +41,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GT_VERSION='v0.10.1'
+export GT_VERSION='v0.11.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gt ]]; then
 	declare intermediateSource=${BASH_SOURCE[0]:-$0}
