@@ -2,7 +2,7 @@
 # shellcheck disable=SC2034,SC2168,SC2154
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -21,7 +21,7 @@ local -r publicKeysDir="$remoteDir/public-keys"
 local -r repo="$remoteDir/repo"
 local -r gpgDir="$publicKeysDir/gpg"
 local -r pulledTsv="$remoteDir/pulled.tsv"
-# note if you change this structure, then you need to adopt gget-pull.sh => pullArgsFile
+# note if you change this structure, then you need to adopt gt-pull.sh => pullArgsFile
 local -r pullArgsFile="$remoteDir/pull.args"
 local -r pullHookFile="$remoteDir/pull-hook.sh"
 local -r gitconfig="$remoteDir/gitconfig"

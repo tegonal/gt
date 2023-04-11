@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -16,15 +16,15 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.10.0-SNAPSHOT'
+export GT_VERSION='v0.10.0-SNAPSHOT'
 
-if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	readonly dir_of_gget
+if ! [[ -v dir_of_gt ]]; then
+	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly dir_of_gt
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$dir_of_gget/../lib/tegonal-scripts/src"
+	dir_of_tegonal_scripts="$dir_of_gt/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
@@ -55,8 +55,8 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 		cat -A >&2 <<<"Expected Header: $expectedHeader"
 		cat -A >&2 <<<"Current  Header: $currentHeader"
 		echo >&2 ""
-		echo >&2 "In case you updated gget, then check the release notes for migration hints:"
-		echo >&2 "https://github.com/tegonal/gget/releases/tag/$GGET_VERSION"
+		echo >&2 "In case you updated gt, then check the release notes for migration hints:"
+		echo >&2 "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
 		exit 100
 	fi
 }
@@ -95,7 +95,7 @@ function readPulledTsv() {
 	exitIfArgIsNotFunction "$readPulledTsv_callback" 3
 
 	local pulledTsv
-	source "$dir_of_gget/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 	if ! [[ -f $pulledTsv ]]; then
 		logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
 		return 0

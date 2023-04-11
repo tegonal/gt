@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -12,20 +12,20 @@ set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
 
-if ! [[ -v dir_of_gget_gitlab ]]; then
-	dir_of_gget_gitlab="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	readonly dir_of_gget_gitlab
+if ! [[ -v dir_of_gt_gitlab ]]; then
+	dir_of_gt_gitlab="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly dir_of_gt_gitlab
 fi
-source "$dir_of_gget_gitlab/utils.sh"
+source "$dir_of_gt_gitlab/utils.sh"
 
 # shellcheck disable=SC2034   # is passed to exitIfEnvVarNotSet by name
 declare -a envVars=(
-	GGET_UPDATE_API_TOKEN
+	GT_UPDATE_API_TOKEN
 	CI_API_V4_URL
 	CI_PROJECT_ID
 )
 exitIfEnvVarNotSet envVars
-readonly GGET_UPDATE_API_TOKEN CI_API_V4_URL CI_PROJECT_ID
+readonly GT_UPDATE_API_TOKEN CI_API_V4_URL CI_PROJECT_ID
 
 declare gitStatus
 gitStatus=$(git status --porcelain) || {
@@ -38,14 +38,14 @@ if [[ $gitStatus == "" ]]; then
 	exit 0
 fi
 
-echo "Detected updates, going to push changes to branch gget/update"
+echo "Detected updates, going to push changes to branch gt/update"
 
-git branch -D "gget/update" 2 &>/dev/null || true
-git checkout -b "gget/update"
+git branch -D "gt/update" 2 &>/dev/null || true
+git checkout -b "gt/update"
 git add .
-git commit -m "Update files pulled via gget"
-git push -f --set-upstream origin gget/update || {
-	echo "could not force push gget/update to origin"
+git commit -m "Update files pulled via gt"
+git push -f --set-upstream origin gt/update || {
+	echo "could not force push gt/update to origin"
 	exit 1
 }
 
@@ -54,9 +54,9 @@ data=$(
 	# shellcheck disable=SC2312
 	cat <<-EOM
 		{
-		  "source_branch": "gget/update",
+		  "source_branch": "gt/update",
 		  "target_branch": "main",
-		  "title": "Changes via gget update",
+		  "title": "Changes via gt update",
 		  "allow_collaboration": true,
 		  "remove_source_branch": true
 		}
@@ -73,7 +73,7 @@ trap 'cleanupTmp tmpPaths' EXIT
 
 statusCode=$(
 	curl --request POST \
-		--header "PRIVATE-TOKEN: $GGET_UPDATE_API_TOKEN" \
+		--header "PRIVATE-TOKEN: $GT_UPDATE_API_TOKEN" \
 		--data "$data" --header "Content-Type: application/json" \
 		--output "$curlOutputFile" --write-out "%{response_code}" \
 		"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests"

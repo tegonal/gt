@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -49,9 +49,9 @@ function cleanupOnPushToMain() {
 	updateBashDocumentation "$projectDir/install.sh" "install" . README.md || die "could not update install documentation"
 
 	local -ra additionalHelp=(
-		gget_remote_add "src/gget-remote.sh" "add --help"
-		gget_remote_remove "src/gget-remote.sh" "remove --help"
-		gget_remote_list "src/gget-remote.sh" "list --help"
+		gt_remote_add "src/gt-remote.sh" "add --help"
+		gt_remote_remove "src/gt-remote.sh" "remove --help"
+		gt_remote_list "src/gt-remote.sh" "list --help"
 	)
 	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
 		# we actually want word splitting for additionalHelp[i+2] thus OK
@@ -63,8 +63,8 @@ function cleanupOnPushToMain() {
 	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' <"$projectDir/install.doc.sh")
 
 	local -ra includeInstallSh=(
-		"$projectDir/.github/workflows/gget-update.yml" 10
-		"$projectDir/src/gitlab/install-gget.sh" 0
+		"$projectDir/.github/workflows/gt-update.yml" 10
+		"$projectDir/src/gitlab/install-gt.sh" 0
 	)
 	local -r arrLength="${#includeInstallSh[@]}"
 	local -i i

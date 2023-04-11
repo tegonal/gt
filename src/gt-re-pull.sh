@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -9,52 +9,52 @@
 #
 #######  Description  #############
 #
-#  're-pull' command of gget: utility to pull files defined in pulled.tsv for all or one previously defined remote
+#  're-pull' command of gt: utility to pull files defined in pulled.tsv for all or one previously defined remote
 #
 #######  Usage  ###################
 #
 #    #!/usr/bin/env bash
 #
-#    # for each remote in .gget
-#    # - re-pull files defined in .gget/remotes/<remote>/pulled.tsv which are missing locally
-#    gget re-pull
+#    # for each remote in .gt
+#    # - re-pull files defined in .gt/remotes/<remote>/pulled.tsv which are missing locally
+#    gt re-pull
 #
-#    # re-pull files defined in .gget/remotes/tegonal-scripts/pulled.tsv which are missing locally
-#    gget re-pull -r tegonal-scripts
+#    # re-pull files defined in .gt/remotes/tegonal-scripts/pulled.tsv which are missing locally
+#    gt re-pull -r tegonal-scripts
 #
-#    # pull all files defined in .gget/remotes/tegonal-scripts/pulled.tsv regardless if they already exist locally or not
-#    gget re-pull -r tegonal-scripts --only-missing false
+#    # pull all files defined in .gt/remotes/tegonal-scripts/pulled.tsv regardless if they already exist locally or not
+#    gt re-pull -r tegonal-scripts --only-missing false
 #
 #    # uses a custom working directory and re-pulls files of remote tegonal-scripts which are missing locally
-#    gget re-pull -r tegonal-scripts -w .github/.gget
+#    gt re-pull -r tegonal-scripts -w .github/.gt
 #
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GGET_VERSION='v0.10.0-SNAPSHOT'
+export GT_VERSION='v0.10.0-SNAPSHOT'
 
-if ! [[ -v dir_of_gget ]]; then
-	dir_of_gget="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-	readonly dir_of_gget
+if ! [[ -v dir_of_gt ]]; then
+	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly dir_of_gt
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$dir_of_gget/../lib/tegonal-scripts/src")"
+	dir_of_tegonal_scripts="$(realpath "$dir_of_gt/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_gget/pulled-utils.sh"
-sourceOnce "$dir_of_gget/utils.sh"
-sourceOnce "$dir_of_gget/gget-pull.sh"
-sourceOnce "$dir_of_gget/gget-remote.sh"
+sourceOnce "$dir_of_gt/pulled-utils.sh"
+sourceOnce "$dir_of_gt/utils.sh"
+sourceOnce "$dir_of_gt/gt-pull.sh"
+sourceOnce "$dir_of_gt/gt-remote.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function gget_re_pull() {
+function gt_re_pull() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gget/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
 
@@ -70,22 +70,22 @@ function gget_re_pull() {
 		# shellcheck disable=SC2312
 		cat <<-EOM
 			# re-pull all files of remote tegonal-scripts which are missing locally
-			gget re-pull -r tegonal-scripts
+			gt re-pull -r tegonal-scripts
 
 			# re-pull all files of all remotes which are missing locally
-			gget re-pull
+			gt re-pull
 
 			# re-pull all files (not only missing) of remote tegonal-scripts, imports gpg keys without manual consent if necessary
-			gget re-pull -r tegonal-scripts --only-missing false --auto-trust true
+			gt re-pull -r tegonal-scripts --only-missing false --auto-trust true
 		EOM
 	)
 
-	parseArguments params "$examples" "$GGET_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@"
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v onlyMissing ]]; then onlyMissing=true; fi
-	exitIfNotAllArgumentsSet params "$examples" "$GGET_VERSION"
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
@@ -97,7 +97,7 @@ function gget_re_pull() {
 	local -i skipped=0
 	local -i errors=0
 
-	function gget_re_pull_incrementError() {
+	function gt_re_pull_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
 		shift 2
@@ -106,26 +106,25 @@ function gget_re_pull() {
 		return 1
 	}
 
-  # shellcheck disable=SC2317   # called by name
-	function gget_re_pull_rePullInternal() {
+	function gt_re_pull_rePullInternal() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
 
-		function gget_re_pull_rePullInternal_callback() {
+		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile _entryRelativePath entryAbsolutePath
 			# params is required for parseFnArgs thus:
 			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 
-			# we know that set -e is disabled for gget_re_pull_incrementError due to ||
+			# we know that set -e is disabled for gt_re_pull_incrementError due to ||
 			#shellcheck disable=SC2310
-			parentDir=$(dirname "$entryAbsolutePath") || gget_re_pull_incrementError "$entryFile" "$remote" || return $?
+			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return $?
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
-				if gget_pull -w "$workingDirAbsolute" -r "$remote" -t "$entryTag" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
+				if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$entryTag" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 					((++pulled))
 				else
-					gget_re_pull_incrementError "$entryFile" "$remote"
+					gt_re_pull_incrementError "$entryFile" "$remote"
 				fi
 			elif [[ $onlyMissing == true ]]; then
 				((++skipped))
@@ -133,32 +132,32 @@ function gget_re_pull() {
 			fi
 		}
 
-		readPulledTsv "$workingDirAbsolute" "$remote" gget_re_pull_rePullInternal_callback 5 6 || gget_re_pull_incrementError "$entryFile" "$remote"
+		readPulledTsv "$workingDirAbsolute" "$remote" gt_re_pull_rePullInternal_callback 5 6 || gt_re_pull_incrementError "$entryFile" "$remote"
 	}
 
-	function gget_re_pull_rePullRemote() {
+	function gt_re_pull_rePullRemote() {
 		local -r remote=$1
 		shift 1
-		withCustomOutputInput 5 6 gget_re_pull_rePullInternal "$remote"
+		withCustomOutputInput 5 6 gt_re_pull_rePullInternal "$remote"
 	}
 
-	function gget_re_pull_allRemotes() {
-		gget_remote_list_raw -w "$workingDirAbsolute" >&7
+	function gt_re_pull_allRemotes() {
+		gt_remote_list_raw -w "$workingDirAbsolute" >&7
 		local -i count=0
 		local remote
 		while read -u 8 -r remote; do
-			gget_re_pull_rePullRemote "$remote"
+			gt_re_pull_rePullRemote "$remote"
 			((++count))
 		done
 		if ((count == 0)); then
-			logInfo "Nothing to re-pull as no remote is defined yet.\nUse the \033[0;35mgget remote add ...\033[0m command to specify one -- for more info: gget remote add --help"
+			logInfo "Nothing to re-pull as no remote is defined yet.\nUse the \033[0;35mgt remote add ...\033[0m command to specify one -- for more info: gt remote add --help"
 		fi
 	}
 
 	if [[ -n $remote ]]; then
-		gget_re_pull_rePullRemote "$remote"
+		gt_re_pull_rePullRemote "$remote"
 	else
-		withCustomOutputInput 7 8 gget_re_pull_allRemotes
+		withCustomOutputInput 7 8 gt_re_pull_allRemotes
 	fi
 
 	endTime=$(date +%s.%3N)
@@ -175,4 +174,4 @@ function gget_re_pull() {
 }
 
 ${__SOURCED__:+return}
-gget_re_pull "$@"
+gt_re_pull "$@"

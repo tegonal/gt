@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gget
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/gt
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
@@ -9,20 +9,20 @@
 #
 #######  Description  #############
 #
-#  installation script which downloads and set ups the latest or a specific tag of gget
+#  installation script which downloads and set ups the latest or a specific tag of gt
 #
 #######  Usage  ###################
 #
 #    currentDir=$(pwd) && \
-#    tmpDir=$(mktemp -d -t gget-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
-#    wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc" && \
-#    wget "https://raw.githubusercontent.com/tegonal/gget/main/.gget/signing-key.public.asc.sig" && \
+#    tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc.sig" && \
 #    gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
 #    echo "public key trusted" && \
 #    mkdir ./gpg && \
 #    gpg --homedir ./gpg --import ./signing-key.public.asc && \
-#    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh" && \
-#    wget "https://raw.githubusercontent.com/tegonal/gget/main/install.sh.sig" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/main/install.sh" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/main/install.sh.sig" && \
 #    gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 #    chmod +x ./install.sh && \
 #    echo "verification successful" || (echo "verification failed, don't continue"; exit 1) && \
@@ -79,10 +79,10 @@ function deleteDirChmod777() {
 
 exitIfCommandDoesNotExist "git"
 
-declare projectName="gget"
+declare projectName="gt"
 declare repoUrl="https://github.com/tegonal/$projectName"
 declare tmpDir
-tmpDir=$(mktemp -d -t gget-install-XXXXXXXXXX)
+tmpDir=$(mktemp -d -t gt-install-XXXXXXXXXX)
 declare gpgDir="$tmpDir/gpg"
 declare repoDir="$tmpDir/repo"
 
@@ -125,7 +125,7 @@ function install() {
 	# we will check the chosen version against the current gpg key,
 	# i.e. only if the signatures of the chosen version are still valid against the current key we are happy
 	local -r publicKey="$tmpDir/signing-key.public.asc"
-	wget -O "$publicKey" -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gget/signing-key.public.asc"
+	wget -O "$publicKey" -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc"
 
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir="$gpgDir" --list-sig || true
@@ -133,8 +133,8 @@ function install() {
 	find "$repoDir" \
 	  -type f \
 		-name "*.sig" \
-		-not -path "$repoDir/.gget/signing-key.public.asc.sig" \
-		-not -path "$repoDir/.gget/remotes/*/public-keys/*.sig" \
+		-not -path "$repoDir/.gt/signing-key.public.asc.sig" \
+		-not -path "$repoDir/.gt/remotes/*/public-keys/*.sig" \
 		-print0 |
 		while read -r -d $'\0' sigFile; do
 			local file=${sigFile::-4}
@@ -192,7 +192,7 @@ function parseError() {
 	die "unknown $1 $2\nHelp:
 	-t|--tag        (optional) the tag which shall be installed -- default: latest
 	-d|--directory  (optional) the installation directory -- default: \$HOME/.local/lib and
-	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gget if directory is not set otherwise nothing in which case no symbolic link is setup"
+	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gt if directory is not set otherwise nothing in which case no symbolic link is setup"
 }
 
 function main() {
