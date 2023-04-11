@@ -194,7 +194,7 @@ function releaseFiles() {
 	# run again since we made changes
 	beforePr || return $?
 
-	local -r ggetDir="$projectsRootDir/.gget"
+	local -r ggetDir="$projectsRootDir/.gt"
 	local -r gpgDir="$ggetDir/gpg"
 	if ! rm -rf "$gpgDir"; then
 		logError "was not able to remove gpg directory %s\nPlease do this manually and re-run the release command" "$gpgDir"
