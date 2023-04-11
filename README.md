@@ -722,7 +722,7 @@ Just make sure you replace YOUR_SLUG with your actual slug.
 The setup requires three steps:
 1. pull files and include in your .gitlab-ci.yml
 2. configure Variables and Deploy Keys
-3. Setup a Scheduled Pipeline
+3. Set up a Scheduled Pipeline
 
 #### setup .gitlab-ci.yml
 

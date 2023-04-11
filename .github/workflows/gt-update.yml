@@ -10,7 +10,7 @@
 name: "gt update"
 on:
   schedule:
-    - cron: '0 4 * * MON'
+    - cron: '*/5 * * * *'
   push:
     branches:
       - do-gt-update
