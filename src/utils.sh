@@ -288,7 +288,7 @@ function checkoutGtDir() {
 	local -r branch=$2
 	shift 2 || die "could not shift by 2"
 
-	git fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote %s" "$remote"
+	git fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36%s\033[0m" "$remote"
 	git checkout "$remote/$branch" -- '.gt' && find ./.gt -maxdepth 1 -type d -not -path ./.gt -exec rm -r {} \;
 }
 
