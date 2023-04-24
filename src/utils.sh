@@ -53,7 +53,7 @@ function noAscInDir() {
 	local numberOfAsc
 	# we are aware of that set -e is disabled for findAscInDir
 	#shellcheck disable=SC2310
-	numberOfAsc=$(findAscInDir "$dir" | wc -l) || die "could not find the number of *.asc files in dir %s, see errors above" "$dir"
+	numberOfAsc=$(findAscInDir "$dir" | wc -l) || die "could not determine the number of *.asc files in dir %s, see errors above (use \`gt reset\` to re-import the remote's GPG keys)" "$dir"
 	((numberOfAsc == 0))
 }
 
