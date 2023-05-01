@@ -10,8 +10,13 @@ jobs:
     name: "Install latest"
     runs-on: ubuntu-latest
     steps:
-      - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
-        run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
+      - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: |
+          gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || "${success:-false}"
       - uses: actions/checkout@v3
       - name: Check it works
         run: |
@@ -27,8 +32,13 @@ jobs:
     name: "Install.doc.sh latest"
     runs-on: ubuntu-latest
     steps:
-      - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
-        run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
+      - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: |
+          gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || "${success:-false}"
       - uses: actions/checkout@v3
       - name: Check it works
         run: ./install.doc.sh
@@ -42,8 +52,13 @@ jobs:
         tag: [v0.10.2]
     runs-on: ubuntu-latest
     steps:
-      - name: Import gpg key(s) defined in secrets.PUBLIC_GPG_KEYS_WE_TRUST
-        run: gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}"
+      - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: |
+          gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || "${success:-false}"
       - uses: actions/checkout@v3
       - name: install ${{ matrix.tag }}
         run: |
