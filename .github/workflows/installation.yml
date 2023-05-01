@@ -16,7 +16,7 @@ jobs:
             || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
           false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
             || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
-          false || "${success:-false}"
+          false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
       - uses: actions/checkout@v3
       - name: Check it works
         run: |
@@ -38,7 +38,7 @@ jobs:
             || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
           false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
             || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
-          false || "${success:-false}"
+          false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
       - uses: actions/checkout@v3
       - name: Check it works
         run: ./install.doc.sh
@@ -58,7 +58,7 @@ jobs:
             || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
           false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
             || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
-          false || "${success:-false}"
+          false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
       - uses: actions/checkout@v3
       - name: install ${{ matrix.tag }}
         run: |
