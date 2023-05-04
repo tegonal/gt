@@ -133,6 +133,32 @@ function reInitialiseGitDir() {
 	cp "$gitconfig" "$repo/.git/config" || die "could not copy %s to %s" "$gitconfig" "$repo/.git/config"
 }
 
+function askToDeleteAndReInitialiseGitDirIfRemoteIsBroken() {
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
+
+	local repo gitconfig
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+
+	if ! git --git-dir="$repo/.git" remote | grep "$remote" >/dev/null; then
+		logError "looks like the .git directory of remote \033[0;36m%s\033[0m is broken. There is no remote %s set up in its gitconfig. Following the remotes:" "$remote" "$remote"
+		git --git-dir="$repo/.git" remote
+		if [[ -f $gitconfig ]]; then
+			if askYesOrNo "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
+				deleteDirChmod777 "$repo"
+				reInitialiseGitDir "$workingDirAbsolute" "$remote"
+			else
+				exit 1
+			fi
+		else
+			logInfo >&2 "%s does not exist, cannot ask to re-initialise the repo, must abort" "$gitconfig"
+			exit 1
+		fi
+	fi
+}
+
 function reInitialiseGitDirIfDotGitNotPresent() {
 	local workingDirAbsolute remote
 	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
@@ -145,6 +171,8 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 	if ! [[ -d "$repo/.git" ]]; then
 		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
 		reInitialiseGitDir "$workingDirAbsolute" "$remote"
+  else
+  	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
 	fi
 }
 
@@ -195,7 +223,7 @@ function validateGpgKeysAndImport() {
 
 	local -r sigExtension="sig"
 
-  # shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2317   # called by name
 	function validateGpgKeysAndImport_do() {
 		findAscInDir "$sourceDir" -print0 >&3
 		echo ""
@@ -258,7 +286,7 @@ function importRemotesPulledPublicKeys() {
 	local gpgDir publicKeysDir repo
 	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
-  # shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2317   # called by name
 	function importRemotesPublicKeys_importKeyCallback() {
 		local -r publicKey=$1
 		local -r sig=$2
