@@ -29,13 +29,14 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 function additionalPrepareNextSteps() {
-	# keep in sync with local -r
+	# keep in sync with local -r further below (3 lines at the time of writing)
 	exitIfVarsNotAlreadySetBySource devVersion additionalPattern
 	# we help shellcheck to realise that these variables are initialised
 	local -r devVersion="$devVersion" additionalPattern="$additionalPattern"
 
-	# we only update the version in the header but not the GT_LATEST_VERSION on purpose
-	# i.e. we omit -p on purpose (compared to additional-release-files-preparations.sh)
+	# we only update the version in the header but not the GT_LATEST_VERSION on purpose -- i.e. we omit
+	# -p on purpose (compared to additional-release-files-preparations.sh) -- because we don't want to set the SNAPSHOT
+	# version since this would cause that we set the SNAPSHOT version next time we update files via gget
 	updateVersionScripts -v "$devVersion" -d "$projectDir/.gt/remotes/tegonal-gh-commons/pull-hook.sh"
 }
 additionalPrepareNextSteps
