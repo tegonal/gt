@@ -133,7 +133,7 @@ function gt_re_pull() {
 			fi
 		}
 
-		readPulledTsv "$workingDirAbsolute" "$remote" gt_re_pull_rePullInternal_callback 5 6 || gt_re_pull_incrementError "$entryFile" "$remote"
+		readPulledTsv "$workingDirAbsolute" "$remote" gt_re_pull_rePullInternal_callback 5 6
 	}
 
 	function gt_re_pull_rePullRemote() {
