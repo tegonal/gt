@@ -210,25 +210,9 @@ function gt_pull() {
 	# shellcheck disable=SC2064
 	trap "gt_pull_cleanupRepo '$repo'" EXIT SIGINT
 
+	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
+
 	cd "$repo"
-	if ! git remote | grep "$remote" >/dev/null; then
-		logError "looks like the .git directory of remote \033[0;36m%s\033[0m is broken. There is no remote %s set up in its gitconfig." "$remote" "$remote"
-		if [[ -f $gitconfig ]]; then
-			if askYesOrNo "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
-				# cd only necessary because we did a cd $repo beforehand, could be removed if we don't do it
-				cd "$workingDir"
-				deleteDirChmod777 "$repo"
-				reInitialiseGitDir "$workingDir" "$remote"
-				# cd only necessary because we did a cd $repo and then cd $workingDir beforehand, could be removed if we don't do it
-				cd "$repo"
-			else
-				exit 1
-			fi
-		else
-			logInfo >&2 "%s does not exist, cannot ask to re-initialise the repo, must abort" "$gitconfig"
-			exit 1
-		fi
-	fi
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
 	if grep "$tagToPull" <<<"$tags" >/dev/null; then
