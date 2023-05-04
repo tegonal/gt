@@ -29,6 +29,7 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh"
 
 function prepareNextDevCycle() {
+	# similar as in release.sh, you might need to update it there as well if you change something here
 	local -r additionalPattern="(GT_VERSION=['\"])[^'\"]+(['\"])"
 	prepareFilesNextDevCycle --project-dir "$projectDir" -p "$additionalPattern" "$@"
 }
