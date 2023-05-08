@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -21,7 +21,7 @@
 #    shopt -s inherit_errexit
 #    MY_LIB_VERSION="v1.1.0"
 #
-#    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
+#    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
@@ -33,9 +33,7 @@
 #    # parameter definitions where each parameter definition consists of three values (separated via space)
 #    # VARIABLE_NAME PATTERN HELP_TEXT
 #    # where the HELP_TEXT is optional in the sense of that you can use an empty string
-#    # in case you use shellcheck then you need to suppress the warning for the last variable definition of params
-#    # as shellcheck doesn't get that we are passing `params` to parseArguments ¯\_(ツ)_/¯ (an open issue of shellcheck)
-#    # shellcheck disable=SC2034
+#    # shellcheck disable=SC2034   # is passed to parseArguments by name
 #    declare params=(
 #    	pattern '-p|--pattern' ''
 #    	version '-v' 'the version'
@@ -196,13 +194,13 @@ function parse_args_printHelp {
 
 	local arrLength="${#parse_args_printHelp_paramArr[@]}"
 
-	# is used as ref parameter, shellcheck is not able to deduce this
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to arrStringEntryMaxLength by name
 	local -a patterns=()
 	arrTakeEveryX parse_args_printHelp_paramArr patterns 3 1
 	local -i maxLength=$(($(arrStringEntryMaxLength patterns) + 2))
 
 	printf "\033[1;33mParameters:\033[0m\n"
+	local -i i
 	for ((i = 0; i < arrLength; i += 3)); do
 		local pattern="${parse_args_printHelp_paramArr[i + 1]}"
 		local help="${parse_args_printHelp_paramArr[i + 2]}"

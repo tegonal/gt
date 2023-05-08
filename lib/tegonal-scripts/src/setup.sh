@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -19,7 +19,7 @@
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
 #    	# Assumes your script is in (root is project folder) e.g. /src or /scripts and
-#    	# the tegonal scripts have been pulled via gget and put into /lib/tegonal-scripts
+#    	# the tegonal scripts have been pulled via gt and put into /lib/tegonal-scripts
 #    	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #    fi

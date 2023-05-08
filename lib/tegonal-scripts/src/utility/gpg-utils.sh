@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -16,7 +16,7 @@
 #    #!/usr/bin/env bash
 #    set -euo pipefail
 #    shopt -s inherit_errexit
-#    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
+#    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
@@ -28,8 +28,8 @@
 #    # import public-key.asc into gpg store located at ~/.gpg and trust automatically
 #    importGpgKey ~/.gpg ./public-key.asc --confirmation=false
 #
-#    # import public-key.asc into gpg store located at .gget/.gpg and trust automatically
-#    importGpgKey .gget/.gpg ./public-key.asc --confirmation=false
+#    # import public-key.asc into gpg store located at .gt/.gpg and trust automatically
+#    importGpgKey .gt/.gpg ./public-key.asc --confirmation=false
 #
 #    # trust key which is identified via info.com in gpg store located at ~/.gpg
 #    trustGpgKey ~/.gpg info.com
@@ -48,8 +48,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function trustGpgKey() {
 	local gpgDir keyId
-	# params is required for parseFnArgs thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(gpgDir keyId)
 	parseFnArgs params "$@"
 	echo -e "5\ny\n" | gpg --homedir "$gpgDir" --no-tty --command-fd 0 --edit-key "$keyId" trust
@@ -57,8 +56,7 @@ function trustGpgKey() {
 
 function importGpgKey() {
 	local gpgDir file withConfirmation
-	# params is required for parseFnArgs thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(gpgDir file withConfirmation)
 	parseFnArgs params "$@"
 
