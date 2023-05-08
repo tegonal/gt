@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -18,7 +18,7 @@
 #    shopt -s inherit_errexit
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
-#    	# Assumes tegonal's scripts were fetched with gget - adjust location accordingly
+#    	# Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #    fi
@@ -28,8 +28,7 @@
 #    	# declare the variable you want to use and repeat in `declare params`
 #    	local command dir
 #
-#    	# as shellcheck doesn't get that we are passing `params` to parseFnArgs ¯\_(ツ)_/¯ (an open issue of shellcheck)
-#    	# shellcheck disable=SC2034
+#    	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 #    	local -ra params=(command dir)
 #    	parseFnArgs params "$@"
 #
@@ -41,7 +40,7 @@
 #
 #    	# in case you want to use a vararg parameter as last parameter then name your last parameter for `params` varargs:
 #    	local command dir varargs
-#    	# shellcheck disable=SC2034
+#    	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 #    	local -ra params=(command dir varargs)
 #    	parseFnArgs params "$@"
 #
@@ -140,8 +139,7 @@ function parseFnArgs() {
 
 	# assign rest to varargs if used
 	if [[ $parseFnArgs_withVarArgs == true ]]; then
-		# is used afterwards
-		# shellcheck disable=SC2034
+		# shellcheck disable=SC2034   # varargs is defined in outer scope and will be used there, thus ok
 		varargs=("$@") || die "could not assign the rest of arguments to varargs"
 	fi
 }

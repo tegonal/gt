@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -17,7 +17,7 @@
 #    #!/usr/bin/env bash
 #    set -euo pipefail
 #    shopt -s inherit_errexit
-#    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
+#    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
@@ -57,7 +57,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/replace-snippet.sh"
 
 function replaceHelpSnippet() {
 	local script id dir pattern varargs
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(script id dir pattern varargs)
 	parseFnArgs params "$@"
 

@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please remotert bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -16,7 +16,7 @@
 #    #!/usr/bin/env bash
 #    set -euo pipefail
 #    shopt -s inherit_errexit
-#    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
+#    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
@@ -94,8 +94,7 @@ function exitIfGitHasChanges() {
 
 function countCommits() {
 	local from to
-	# params is required for parseFnArgs thus:
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
 	local -ra params=(from to)
 	parseFnArgs params "$@"
 	git rev-list --count "$from..$to" || die "could not count commits for $from..$to, see above"
@@ -158,7 +157,7 @@ function latestRemoteTag() {
 	local tag
 	# we are aware of that || will disable set -e for remoteTagsSorted
 	#shellcheck disable=SC2310
-	tag=$(remoteTagsSorted "$remote" | tail --lines=1) || die "could not get remote tags sorted, see above"
+	tag=$(remoteTagsSorted "$remote" | tail -n 1) || die "could not get remote tags sorted, see above"
 	if [[ -z $tag ]]; then
 		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet." "$remote"
 	fi

@@ -2,10 +2,10 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache 2.0
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.18.1
+#                                         Version: v1.0.0
 #
 #######  Description  #############
 #
@@ -16,7 +16,7 @@
 #    #!/usr/bin/env bash
 #    set -euo pipefail
 #    shopt -s inherit_errexit
-#    # Assumes tegonal's scripts were fetched with gget - adjust location accordingly
+#    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
@@ -32,7 +32,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v0.18.1'
+export TEGONAL_SCRIPTS_VERSION='v1.0.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -42,7 +42,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function updateVersionScripts() {
 	local version directory additionalPattern
-	# shellcheck disable=SC2034
+	# shellcheck disable=SC2034   # is passed to parseArguments by name
 	local -ra params=(
 		version '-v' 'the version which shall be used'
 		directory '-d|--directory' '(optional) the working directory in which *.sh are searched (also in subdirectories) / you can also specify a file -- default: ./src'
@@ -70,7 +70,7 @@ function updateVersionScripts() {
 
 	local where
 	if [[ -f $directory ]]; then
-		where="in file $directory"
+		where="file $directory"
 	else
 		where="directory $directory (and subdirectories)"
 	fi
