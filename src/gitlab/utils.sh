@@ -15,7 +15,7 @@ export GT_VERSION='v0.13.0-SNAPSHOT'
 
 function exitIfEnvVarNotSet() {
 	local -rn exitIfEnvVarNotSet_arr=$1
-	shift 1
+	shift 1 || exit 1
 
 	declare error=false
 	for envName in "${exitIfEnvVarNotSet_arr[@]}"; do

@@ -178,7 +178,7 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 
 function initialiseGpgDir() {
 	local -r gpgDir=$1
-	shift || die "could not shift by 1"
+	shift 1 || die "could not shift by 1"
 	mkdir "$gpgDir" || die "could not create the gpg directory at %s" "$gpgDir"
 	# it's OK if we are not able to set the rights as we only use it temporary. This will cause warnings by gpg
 	# so the user could be aware of that something went wrong
@@ -303,7 +303,7 @@ function importRemotesPulledPublicKeys() {
 
 function determineDefaultBranch() {
 	local -r remote=$1
-	shift || die "could not shift by 1"
+	shift 1 || die "could not shift by 1"
 	git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
 		(
 			logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" "$remote"

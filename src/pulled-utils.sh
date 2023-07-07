@@ -44,7 +44,7 @@ function pulledTsvEntry() {
 
 function exitIfHeaderOfPulledTsvIsWrong() {
 	local -r pulledTsv=$1
-	shift
+	shift 1 || die "could not shift by 1"
 	local currentHeader expectedHeader
 	currentHeader="$(head -n 1 "$pulledTsv")" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
 	# we are aware of that the || disables set -e for pulledTsvHeader
@@ -70,7 +70,7 @@ function setEntryVariables() {
 function grepPulledEntryByFile() {
 	local -r pulledTsv=$1
 	local -r file=$2
-	shift 2
+	shift 2 || die "could not shift by 2"
 	grep -E "^[^\t]+	$file" "$@" "$pulledTsv"
 }
 
