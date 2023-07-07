@@ -100,7 +100,7 @@ function gt_re_pull() {
 	function gt_re_pull_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
-		shift 2
+		shift 2 || die "could not shift by 2"
 		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
 		return 1
@@ -138,7 +138,7 @@ function gt_re_pull() {
 
 	function gt_re_pull_rePullRemote() {
 		local -r remote=$1
-		shift 1
+		shift 1 || die "could not shift by 1"
 		withCustomOutputInput 5 6 gt_re_pull_rePullInternal "$remote"
 	}
 
