@@ -63,5 +63,9 @@ function additionalReleasePrepareSteps() {
 	for script in "${additionalScripts[@]}"; do
 		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script"
 	done
+
+	perl -0777 -i \
+		-pe "s@(tegonal/gt/)[^/]+(/install.sh)@\${1}$version\${2}@g;" \
+		"$projectDir/install.doc" || returnDying "error during replacing the version in install.doc.sh" || return $?
 }
 additionalReleasePrepareSteps
