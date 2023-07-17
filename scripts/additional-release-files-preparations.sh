@@ -34,6 +34,7 @@ fi
 sourceOnce "$dir_of_github_commons/gt/pull-hook-functions.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-issue-templates.sh"
 
 function additionalReleasePrepareSteps() {
 	# keep in sync with local -r further below (3 lines at the time of writing)
@@ -52,6 +53,8 @@ function additionalReleasePrepareSteps() {
 	# same as in pull-hook.sh
 	local -r githubUrl="https://github.com/tegonal/gt"
 	replaceTagInPullRequestTemplate "$projectDir/.github/PULL_REQUEST_TEMPLATE.md" "$githubUrl" "$version" || die "could not fill the placeholders in PULL_REQUEST_TEMPLATE.md"
+
+	updateVersionIssueTemplates -v "$version"
 
 	local -ra additionalScripts=(
 		"$projectDir/install.sh"
