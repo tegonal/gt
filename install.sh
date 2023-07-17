@@ -21,8 +21,8 @@
 #    echo "public key trusted" && \
 #    mkdir ./gpg && \
 #    gpg --homedir ./gpg --import ./signing-key.public.asc && \
-#    wget "https://raw.githubusercontent.com/tegonal/gt/main/install.sh" && \
-#    wget "https://raw.githubusercontent.com/tegonal/gt/main/install.sh.sig" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/v0.12.0/install.sh" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/v0.12.0/install.sh.sig" && \
 #    gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 #    chmod +x ./install.sh && \
 #    echo "verification successful" || (echo "!! verification failed, don't continue !!"; exit 1) && \
