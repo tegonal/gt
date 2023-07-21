@@ -42,18 +42,51 @@ function pulledTsvEntry() {
 	printf "%s\n" "$sha512"
 }
 
+function migratePulledTsvFormat() {
+	local -r pulledTsv=$1
+	local -r fromVersion=$2
+	local -r toVersion=$3
+	shift 3 || die "could not shift by 2"
+
+	if [[ $fromVersion == "unspecified" ]]; then
+		# pulled.tsv without version pragma, convert to current
+		logInfo "Format migration available, going to rewrite %s it automatically from %s to version %s" "$pulledTsv" "$fromVersion" "$toVersion"
+		echo "$expectedVersionPragma" >>"$pulledTsv.new" || die "was not able to append the entry for file \033[0;36m%s\033[0m to %s" "$file" "$pulledTsv"
+		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to %s -- please do it manually" "$expectedVersionPragma" "$pulledTsv"
+		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override %s with the new content (which does not contain the entry for file \033[0;36m%s\033[0m)" "$pulledTsv" "$file"
+	else
+		die "no automatic migration available from $fromVersion to version $toVersion\nIn case you updated gt, then check the release notes for migration hints:\n%s" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
+	fi
+}
+
 function exitIfHeaderOfPulledTsvIsWrong() {
 	local -r pulledTsv=$1
 	shift 1 || die "could not shift by 1"
-	local currentHeader expectedHeader
-	currentHeader="$(head -n 1 "$pulledTsv")" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
+
+	local -r expectedVersion="1.0.0"
+	local -r expectedVersionPragma="#@ Version: $expectedVersion"
+	local currentVersionPragma currentHeader expectedHeader
+	currentVersionPragma="$(head -n 1 "$pulledTsv")" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
+	if [[ $currentVersionPragma != "$expectedVersionPragma" ]]; then
+		local -r versionRegex="#@ Version: ([0-9]\.[0-9]\.[0-9])"
+		local currentVersion
+		if [[ "$currentVersionPragma" =~ $versionRegex ]]; then
+			currentVersion="${BASH_REMATCH[1]}"
+		else
+			currentVersion="unspecified"
+		fi
+		logInfo "Format of \033[0;36m%s\033[0m changed\nLatest format version is: %s\nCurrent format version is: %s" "$pulledTsv" "$expectedVersion" "$currentVersion"
+		migratePulledTsvFormat "$pulledTsv" "$currentVersion" "$expectedVersion"
+	fi
+
+	currentHeader="$(head -n 2 "$pulledTsv" | tail -n 1)" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
 	# we are aware of that the || disables set -e for pulledTsvHeader
 	# shellcheck disable=SC2310
 	expectedHeader=$(pulledTsvHeader) || die "looks like we discovered a bug, was not able to create the pulledTsvHeader"
-	if [[ "$currentHeader" != "$expectedHeader" ]]; then
+	if [[ $currentHeader != "$expectedHeader" ]]; then
 		logError "looks like the format of \033[0;36m%s\033[0m changed:" "$pulledTsv"
-		cat -A >&2 <<<"Expected Header: $expectedHeader"
-		cat -A >&2 <<<"Current  Header: $currentHeader"
+		cat -A >&2 <<<"Expected Header (after Version pragma): $expectedHeader"
+		cat -A >&2 <<<"Current  Header (after Version pragma): $currentHeader"
 		echo >&2 ""
 		echo >&2 "In case you updated gt, then check the release notes for migration hints:"
 		echo >&2 "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
@@ -64,7 +97,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 function setEntryVariables() {
 	# yes the variables are not used here but they are (should be) in the parent scope
 	# shellcheck disable=SC2034
-	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1" ||  die "could not setEntryVariables for entry:\n%s" "$1"
+	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1" || die "could not setEntryVariables for entry:\n%s" "$1"
 }
 
 function grepPulledEntryByFile() {
