@@ -133,6 +133,10 @@ function gt_pull() {
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	if [[ "$path" =~ ^/.* ]]; then
+		die "Leading / not allowed for path, given: \033[0;36m%s\033[0m%s\033[0;36m%s\033[0m" "$path"
+	fi
+
 	local workingDirAbsolute pullDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	pullDirAbsolute=$(readlink -m "$pullDir")
