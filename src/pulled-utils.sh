@@ -50,12 +50,12 @@ function migratePulledTsvFormat() {
 
 	if [[ $fromVersion == "unspecified" ]]; then
 		# pulled.tsv without version pragma, convert to current
-		logInfo "Format migration available, going to rewrite %s it automatically from %s to version %s" "$pulledTsv" "$fromVersion" "$toVersion"
-		echo "$expectedVersionPragma" >>"$pulledTsv.new" || die "was not able to append the entry for file \033[0;36m%s\033[0m to %s" "$file" "$pulledTsv"
-		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to %s -- please do it manually" "$expectedVersionPragma" "$pulledTsv"
-		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override %s with the new content (which does not contain the entry for file \033[0;36m%s\033[0m)" "$pulledTsv" "$file"
+		logInfo "Format migration available, going to rewrite %s automatically from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m" "$pulledTsv" "$fromVersion" "$toVersion"
+		echo "$expectedVersionPragma" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to \033[0;36m%s\033[0m -- please do it manually" "$expectedVersionPragma" "$pulledTsv"
+		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able append the current %s to \033[0;36m%s\033[0m" "$pulledTsv" "$pulledTsv.new"
+		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override \033[0;36m%s\033[0m with the new content from %s" "$pulledTsv" "$pulledTsv.new"
 	else
-		die "no automatic migration available from $fromVersion to version $toVersion\nIn case you updated gt, then check the release notes for migration hints:\n%s" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
+		die "no automatic migration available from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m\nIn case you updated gt, then check the release notes for migration hints:\n%s" "$fromVersion" "$toVersion" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
 	fi
 }
 
