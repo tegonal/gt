@@ -255,6 +255,7 @@ function gt_pull() {
 	local pullHookBefore="gt_pull_noop"
 	local pullHookAfter="gt_pull_noop"
 	if [[ -f $pullHookFile ]]; then
+		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
 		sourceOnce "$pullHookFile" || die "could not source %s" "$pullHookFile"
 		pullHookBefore="gt_pullHook_${remote//-/_}_before"
 		pullHookAfter="gt_pullHook_${remote//-/_}_after"
@@ -342,6 +343,7 @@ function gt_pull() {
 			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m" "$file" || return $?
 			# or true as we will try to cleanup the repo on exit
 			rm "$file.$sigExtension" || true
+			# shellcheck disable=SC2310		# we are aware of that || will disable set -e for gt_pull_moveFile
 			gt_pull_moveFile "$file" || return $?
 		elif [[ $doVerification == true ]]; then
 			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
@@ -349,6 +351,7 @@ function gt_pull() {
 			# or true as we will try to cleanup the repo on exit
 			rm "$file" || true
 		else
+			# shellcheck disable=SC2310		# we are aware of that || will disable set -e for gt_pull_moveFile
 			gt_pull_moveFile "$file" || return $?
 		fi
 	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0 ||

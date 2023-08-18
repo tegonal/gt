@@ -94,13 +94,12 @@ function prepareFilesNextDevCycle() {
 	local -r additionalSteps="$projectsScriptsDir/additional-prepare-files-next-dev-cycle-steps.sh"
 	if [[ -f $additionalSteps ]]; then
 		logInfo "found $additionalSteps going to source it"
-		# we are aware of that || will disable set -e for sourceOnce
-		# shellcheck disable=SC2310
-		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
+		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
+		sourceOnce "$additionalSteps" || die "could not source %s" "$additionalSteps"
 	fi
 
-	# we are aware of that || will disable set -e for sourceOnce
-	# shellcheck disable=SC2310
+
+	# shellcheck disable=SC2310	# we are aware of that || will disable set -e for sourceOnce
 	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
 
 	# check if we accidentally have broken something, run formatting or whatever is done in beforePr

@@ -63,8 +63,7 @@ function checkCommandExists() {
 }
 
 function exitIfCommandDoesNotExist() {
-	# we are aware of that || will disable set -e for checkCommandExists
-	# shellcheck disable=SC2310
+	# shellcheck disable=SC2310 	# we are aware of that || will disable set -e for checkCommandExists
 	checkCommandExists "$@" || exit $?
 }
 
@@ -88,8 +87,8 @@ declare repoDir="$tmpDir/repo"
 
 function cleanup() {
 	# necessary because .git files are sometime 700 and would require sudo to delete
-	# we are aware of that || will disable set -e for deleteDirChmod777
-	#shellcheck disable=SC2310
+
+	#shellcheck disable=SC2310		# we are aware of that || will disable set -e for deleteDirChmod777
 	deleteDirChmod777 "$tmpDir" >/dev/null 2>&1 || true
 }
 
