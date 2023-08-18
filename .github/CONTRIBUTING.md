@@ -1,6 +1,6 @@
 # Contributing to scripts
 
-Thank you very much for taking your time to contribute to scripts :smiley:
+Thank you very much for taking your time to contribute to gt :smiley:
 
 Following a few guidelines so that others can quickly benefit from your contribution.
 
@@ -49,7 +49,7 @@ Fantastic, thanks for your effort!
 The following are a few guidelines on how we suggest you start.
  
 1. Fork the repository to your repositories (see [Fork a repo](https://help.github.com/en/articles/fork-a-repo) for help). 
-2. Use an IDE which supports bash coding and shellcheck (min. v0.8.0)
+2. Use an IDE which supports bash coding and shellcheck (min. v0.9.0)
    e.g. [visual studio code](https://code.visualstudio.com) with the [shellcheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck) plugin.
 3. Read up the [Coding Conventions](#coding-conventions) (there are only 5 points).
 
@@ -95,7 +95,7 @@ Finally, when you think your PR (short for pull request) is ready, then please:
 ## Coding Conventions
 So far we do not try to enforce too much. We will review your pull requests and comment if necessary.
 However, here a few hints in order that your pull request is merged quickly.
-1. Make sure the compiler does not generate warnings.
+1. Make sure shellcheck does not generate warnings.
 2. Try to write code in a similar style as the existing 
    (We suggest you copy something existing and modify it).
 3. Write readable code and express comments with code rather than comments.

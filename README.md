@@ -844,6 +844,10 @@ You are more than welcome to contribute as well:
   the [help wanted issues](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
   if you would like to code.
 
+Please have a look at
+[CONTRIBUTING.md](https://github.com/tegonal/gt/tree/main/.github/CONTRIBUTING.md)
+for further suggestions and guidelines.
+
 # License
 
 gt is licensed under  [EUPL 1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12).
