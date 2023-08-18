@@ -134,8 +134,8 @@ function readPulledTsv() {
 		return 0
 	fi
 
-	# start from line 2, i.e. skip the header in pulled.tsv
-	eval "tail -n +2 \"$pulledTsv\" >&$fileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+	# start from line 3, i.e. skip the header in pulled.tsv
+	eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || die "could not tail %s" "$pulledTsv"
 	while read -u "$fileDescriptorIn" -r entry; do
 		local entryTag entryFile entryRelativePath
 		setEntryVariables "$entry"
