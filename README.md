@@ -31,8 +31,8 @@ Maybe you even made them public so that others can use them as well
 (as we have done with [Tegonal scripts](https://github.com/tegonal/scripts)).
 This tool provides an easy way to pull them into your project.
 
-Likewise, you can use gt to pull config files, templates etc. which you use in multiple projects but want to maintain
-at a single place.
+Likewise, you can use gt to pull other kind of scripts (not only bash scripts, e.g. gradle scripts), config files, 
+templates etc. which you use in multiple projects but want to maintain at a single place.
 
 </details>
 
