@@ -289,10 +289,9 @@ gt remote remove -r tegonal-scripts
 
 Following the output of running `gt remote add --help`:
 
-<gt-remote-add-help>
+<gt_remote_add-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
-
 ```text
 Parameters:
 -r|--remote              name to refer to this the remote repository
@@ -320,23 +319,23 @@ gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecur
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v0.2.0-SNAPSHOT
+v0.13.0-SNAPSHOT
 ```
 
-</gt-remote-add-help>
+</gt_remote_add-help>
 
 ### remove
 
 Following the output of running `gt remote remove --help`:
 
-<gt-remote-remove-help>
+<gt_remote_remove-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
-
 ```text
 Parameters:
 -r|--remote              define the name of the remote which shall be removed
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
+--delete-pulled-files    (optional) if set, then all files defined in the remote's pulled.tsv are deleted as well
 
 --help     prints this help
 --version  prints the version of this script
@@ -349,38 +348,23 @@ gt remote remove -r tegonal-scripts
 gt remote remove -r tegonal-scripts -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v0.2.0-SNAPSHOT
+v0.13.0-SNAPSHOT
 ```
 
-</gt-remote-remove-help>
+</gt_remote_remove-help>
 
 ### list
 
 Following the output of running `gt remote list --help`:
 
-<gt-remote-list-help>
+<gt_remote_list-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
-
 ```text
-Parameters:
--w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# lists all defined remotes in .gt
-gt remote list
-
-# uses a custom working directory
-gt remote list -w .github/.gt
-
-INFO: Version of gt-remote.sh is:
-v0.2.0-SNAPSHOT
 ```
 
-</gt-remote-list-help>
+</gt_remote_list-help>
 
 ## pull
 
