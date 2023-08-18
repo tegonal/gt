@@ -220,7 +220,7 @@ function gt_pull() {
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
 	if grep "$tagToPull" <<<"$tags" >/dev/null; then
-		logInfo "tag %s already exists locally, skipping fetching from remote" "$tagToPull"
+		logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToPull" "$remote"
 	else
 		local remoteTags
 		remoteTags=$(remoteTagsSorted "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
@@ -244,7 +244,7 @@ function gt_pull() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
 			if ! git checkout "tags/$tagToPull" -- "$path.$sigExtension"; then
-				logErrorWithoutNewline "no signature file found for %s, aborting pull" "$path"
+				logErrorWithoutNewline "no signature file found for \033[0;36m%s\033[0m, aborting pull from remote %s" "$path" "$remote"
 				gt_pull_mentionUnsecure >&2
 				return 1
 			fi
@@ -336,11 +336,11 @@ function gt_pull() {
 	local file
 	while read -r -d $'\0' file; do
 		if [[ $doVerification == true && -f "$file.$sigExtension" ]]; then
-			printf "verifying \033[0;36m%s\033[0m\n" "$file"
+			printf "verifying \033[0;36m%s\033[0m from remote %s\n" "$file" "$remote"
 			if [[ -d "$pullDirAbsolute/$file" ]]; then
 				die "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
 			fi
-			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m" "$file" || return $?
+			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m from remote %s" "$file" "$remote" || return $?
 			# or true as we will try to cleanup the repo on exit
 			rm "$file.$sigExtension" || true
 
@@ -351,7 +351,7 @@ function gt_pull() {
 			gt_pull_moveFile "$file" || return $?
 
 		elif [[ $doVerification == true ]]; then
-			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
+			logWarningWithoutNewline "there was no corresponding *.%s file for %s in remote %s, skipping it" "$sigExtension" "$file" "$remote"
 			gt_pull_mentionUnsecure
 			# or true as we will try to cleanup the repo on exit
 			rm "$file" || true
