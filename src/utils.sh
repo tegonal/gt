@@ -51,8 +51,7 @@ function noAscInDir() {
 	local -r dir=$1
 	shift 1 || die "could not shift by 1"
 	local numberOfAsc
-	# we are aware of that set -e is disabled for findAscInDir
-	#shellcheck disable=SC2310
+	#shellcheck disable=SC2310			# we are aware of that set -e is disabled for findAscInDir
 	numberOfAsc=$(findAscInDir "$dir" | wc -l) || die "could not determine the number of *.asc files in dir %s, see errors above (use \`gt reset\` to re-import the remote's GPG keys)" "$dir"
 	((numberOfAsc == 0))
 }
@@ -72,8 +71,7 @@ function checkWorkingDirExists() {
 }
 
 function exitIfWorkingDirDoesNotExist() {
-	# we are aware of that || will disable set -e for checkWorkingDirExists
-	# shellcheck disable=SC2310
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkWorkingDirExists
 	checkWorkingDirExists "$@" || exit $?
 }
 

@@ -102,8 +102,7 @@ function checkArgIsArray() {
 }
 
 function exitIfArgIsNotArray() {
-	# we are aware of that || will disable set -e for checkArgIsArray
-	# shellcheck disable=SC2310
+	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsArray
 	checkArgIsArray "$@" || exit $?
 }
 
@@ -183,8 +182,7 @@ function checkArgIsArrayWithTuples() {
 }
 
 function exitIfArgIsNotArrayWithTuples() {
-	# we are aware of that || will disable set -e for checkArgIsArrayWithTuples
-	# shellcheck disable=SC2310
+	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsArrayWithTuples
 	checkArgIsArrayWithTuples "$@" || exit $?
 }
 
@@ -207,8 +205,7 @@ function checkArgIsFunction() {
 }
 
 function exitIfArgIsNotFunction() {
-	# we are aware of that || will disable set -e for checkArgIsFunction
-	# shellcheck disable=SC2310
+	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsFunction
 	checkArgIsFunction "$@" || exit $?
 }
 
@@ -225,8 +222,7 @@ function checkCommandExists() {
 }
 
 function exitIfCommandDoesNotExist() {
-	# we are aware of that || will disable set -e for checkCommandExists
-	# shellcheck disable=SC2310
+	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkCommandExists
 	checkCommandExists "$@" || exit $?
 }
 

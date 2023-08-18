@@ -103,7 +103,6 @@ function gt_re_pull() {
 		shift 2 || die "could not shift by 2"
 		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
-		return 1
 	}
 
   # shellcheck disable=SC2317   # called by name
@@ -113,14 +112,13 @@ function gt_re_pull() {
 
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile _entryRelativePath entryAbsolutePath
-			# params is required for parseFnArgs thus:
+
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 
-			# we know that set -e is disabled for gt_re_pull_incrementError due to ||
-			#shellcheck disable=SC2310
-			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return $?
+			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_re_pull_incrementError due to ||
+			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
 				if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$entryTag" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 					((++pulled))
