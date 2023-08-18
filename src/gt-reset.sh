@@ -151,7 +151,7 @@ function gt_reset() {
 			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
 		fi
 		cd "$currentDir"
-		logSuccess "re-established trust with remote \033[0;36m%s\033[0m" "$remote"
+		logSuccess "re-established trust in remote \033[0;36m%s\033[0m" "$remote"
 	}
 
 	function gt_reset_allRemotes() {
