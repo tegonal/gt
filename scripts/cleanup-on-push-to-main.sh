@@ -54,8 +54,7 @@ function cleanupOnPushToMain() {
 		gt_remote_list "src/gt-remote.sh" "list --help"
 	)
 	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
-		# we actually want word splitting for additionalHelp[i+2] thus OK
-		# shellcheck disable=SC2086
+		# shellcheck disable=SC2086   # we actually want word splitting for additionalHelp[i+2] thus OK
 		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md ${additionalHelp[i + 2]}
 	done || die "replacing help snippets failed, see above"
 
