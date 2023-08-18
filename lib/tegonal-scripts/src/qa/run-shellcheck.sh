@@ -23,7 +23,7 @@
 #
 #    source "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
 #
-#    # shellcheck disable=SC2034   # is passed to runShellcheck by name
+#    # shellcheck disable=SC2034   # is passed by name to runShellcheck
 #    declare -a dirs=(
 #    	"$dir_of_tegonal_scripts"
 #    	"$dir_of_tegonal_scripts/../scripts"

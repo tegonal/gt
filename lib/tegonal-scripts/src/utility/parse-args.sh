@@ -33,7 +33,7 @@
 #    # parameter definitions where each parameter definition consists of three values (separated via space)
 #    # VARIABLE_NAME PATTERN HELP_TEXT
 #    # where the HELP_TEXT is optional in the sense of that you can use an empty string
-#    # shellcheck disable=SC2034   # is passed to parseArguments by name
+#    # shellcheck disable=SC2034   # is passed by name to parseArguments
 #    declare params=(
 #    	pattern '-p|--pattern' ''
 #    	version '-v' 'the version'
@@ -194,7 +194,7 @@ function parse_args_printHelp {
 
 	local arrLength="${#parse_args_printHelp_paramArr[@]}"
 
-	# shellcheck disable=SC2034   # is passed to arrStringEntryMaxLength by name
+	# shellcheck disable=SC2034   # is passed by name to arrStringEntryMaxLength
 	local -a patterns=()
 	arrTakeEveryX parse_args_printHelp_paramArr patterns 3 1
 	local -i maxLength=$(($(arrStringEntryMaxLength patterns) + 2))

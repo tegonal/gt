@@ -48,7 +48,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function trustGpgKey() {
 	local gpgDir keyId
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(gpgDir keyId)
 	parseFnArgs params "$@"
 	echo -e "5\ny\n" | gpg --homedir "$gpgDir" --no-tty --command-fd 0 --edit-key "$keyId" trust
@@ -56,7 +56,7 @@ function trustGpgKey() {
 
 function importGpgKey() {
 	local gpgDir file withConfirmation
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(gpgDir file withConfirmation)
 	parseFnArgs params "$@"
 

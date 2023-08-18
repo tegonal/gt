@@ -70,7 +70,7 @@ function gt_reset() {
 	local -r currentDir
 
 	local remote workingDir
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"

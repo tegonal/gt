@@ -18,7 +18,7 @@ if ! [[ -v dir_of_gt_gitlab ]]; then
 fi
 source "$dir_of_gt_gitlab/utils.sh"
 
-# shellcheck disable=SC2034   # is passed to exitIfEnvVarNotSet by name
+# shellcheck disable=SC2034   # is passed by name to exitIfEnvVarNotSet
 declare -a envVars=(
 	GT_UPDATE_API_TOKEN
 	CI_API_V4_URL
@@ -67,7 +67,7 @@ echo "Going to create a merge request for the changes"
 
 curlOutputFile=$(mktemp -t "curl-output-XXXXXXXXXX")
 
-# shellcheck disable=SC2034   # is passed to cleanupTmp by name
+# shellcheck disable=SC2034   # is passed by name to cleanupTmp
 readonly -a tmpPaths=(curlOutputFile)
 trap 'cleanupTmp tmpPaths' EXIT
 

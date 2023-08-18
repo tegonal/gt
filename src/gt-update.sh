@@ -54,7 +54,7 @@ function gt_update() {
 	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir autoTrust tag
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ar params=(
 		remote "$remotePattern" '(optional) if set, only the files of this remote are updated, otherwise all'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
@@ -119,7 +119,7 @@ function gt_update() {
 
 		function gt_update_rePullInternal_callback() {
 			local _entryTag entryFile _entryRelativePath entryAbsolutePath
-			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 			local -ra params=(_entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 

@@ -31,7 +31,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function exitBecauseNoGpgKeysImported() {
 	local remote publicKeysDir gpgDir unsecurePattern
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(remote publicKeysDir gpgDir unsecurePattern)
 	parseFnArgs params "$@"
 
@@ -79,7 +79,7 @@ function exitIfWorkingDirDoesNotExist() {
 
 function exitIfRemoteDirDoesNotExist() {
 	local workingDirAbsolute remote
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote)
 	parseFnArgs params "$@"
 
@@ -117,7 +117,7 @@ function gitDiffChars() {
 
 function initialiseGitDir() {
 	local workingDirAbsolute remote
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote)
 	parseFnArgs params "$@"
 
@@ -135,7 +135,7 @@ function reInitialiseGitDir() {
 
 function askToDeleteAndReInitialiseGitDirIfRemoteIsBroken() {
 	local workingDirAbsolute remote
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote)
 	parseFnArgs params "$@"
 
@@ -161,7 +161,7 @@ function askToDeleteAndReInitialiseGitDirIfRemoteIsBroken() {
 
 function reInitialiseGitDirIfDotGitNotPresent() {
 	local workingDirAbsolute remote
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote)
 	parseFnArgs params "$@"
 
@@ -187,7 +187,7 @@ function initialiseGpgDir() {
 
 function latestRemoteTagIncludingChecks() {
 	local workingDirAbsolute remote
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote)
 	parseFnArgs params "$@"
 
@@ -212,7 +212,7 @@ function latestRemoteTagIncludingChecks() {
 
 function validateGpgKeysAndImport() {
 	local sourceDir gpgDir publicKeysDir validateGpgKeysAndImport_callback autoTrust
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(sourceDir gpgDir publicKeysDir validateGpgKeysAndImport_callback autoTrust)
 	parseFnArgs params "$@"
 
@@ -277,7 +277,7 @@ function validateGpgKeysAndImport() {
 
 function importRemotesPulledPublicKeys() {
 	local workingDirAbsolute remote importRemotesPulledPublicKeys_callback
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote importRemotesPulledPublicKeys_callback)
 	parseFnArgs params "$@"
 
@@ -322,7 +322,7 @@ function checkoutGtDir() {
 
 function exitIfRepoBrokenAndReInitIfAbsent() {
 	local workingDirAbsolute remote
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote)
 	parseFnArgs params "$@"
 

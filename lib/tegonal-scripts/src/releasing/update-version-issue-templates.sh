@@ -42,7 +42,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function updateVersionIssueTemplates() {
 	local version directory additionalPattern
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		version '-v' 'the version which shall be used'
 		directory '-d|--directory' '(optional) the working directory in which *.y(a)ml are searched (also in subdirectories) / you can also specify a file -- default: ./.github/ISSUE_TEMPLATE'

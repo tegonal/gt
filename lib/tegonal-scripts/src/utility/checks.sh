@@ -24,7 +24,7 @@
 #    sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 #
 #    function foo() {
-#    	# shellcheck disable=SC2034   # is passed to checkArgIsArray by name
+#    	# shellcheck disable=SC2034   # is passed by name to checkArgIsArray
 #    	local -rn arr=$1
 #    	local -r fn=$2
 #
@@ -32,7 +32,7 @@
 #    	checkArgIsArray arr 1        # same as exitIfArgIsNotArray if set -e has an effect on this line
 #    	checkArgIsFunction "$fn" 2   # same as exitIfArgIsNotFunction if set -e has an effect on this line
 #
-#    	# shellcheck disable=SC2317   # is passed to checkArgIsArrayWithTuples by name
+#    	# shellcheck disable=SC2317   # is passed by name to checkArgIsArrayWithTuples
 #    	function describeTriple() {
 #    		echo >&2 "array contains 3-tuples with names where the first value is the first-, the second the middle- and the third the lastname"
 #    	}
@@ -42,7 +42,7 @@
 #    	exitIfArgIsNotArray arr 1
 #    	exitIfArgIsNotFunction "$fn" 2
 #
-#    	# shellcheck disable=SC2317   # is passed to exitIfArgIsNotArrayWithTuples by name
+#    	# shellcheck disable=SC2317   # is passed by name to exitIfArgIsNotArrayWithTuples
 #    	function describePair() {
 #    		echo >&2 "array contains 2-tuples with names where the first value is the first-, and the second the lastname"
 #    	}
@@ -190,7 +190,7 @@ function exitIfArgIsNotArrayWithTuples() {
 
 function checkArgIsFunction() {
 	local name argNumber
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(name argNumber)
 	parseFnArgs params "$@"
 

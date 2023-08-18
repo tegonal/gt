@@ -77,7 +77,7 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function releaseFiles() {
 	local version key findForSigning projectsRootDir additionalPattern nextVersion prepareOnly
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		version '-v' "The version to release in the format vX.Y.Z(-RC...)"
 		key '-k|--key' 'The GPG private key which shall be used to sign the files'

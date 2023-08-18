@@ -71,7 +71,7 @@ function gt_remote_add() {
 	local -r currentDir
 
 	local remote url pullDir unsecure workingDir
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remotePattern" 'name to refer to this the remote repository'
 		url '-u|--url' 'url of the remote repository'
@@ -200,7 +200,7 @@ function gt_remote_list_raw() {
 	source "$dir_of_gt/shared-patterns.source.sh"
 
 	local workingDir
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
 	)
@@ -254,7 +254,7 @@ function gt_remote_remove() {
 	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
 
 	local remote workingDir
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remotePattern" 'define the name of the remote which shall be removed'
 		workingDir "$workingDirPattern" "$workingDirParamDocu"
@@ -306,7 +306,7 @@ function gt_remote_remove() {
 
 		function gt_remote_remove_readCallback() {
 			local _entryTag _entryFile _entryRelativePath entryAbsolutePath
-			# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 			rm "$entryAbsolutePath"
@@ -339,7 +339,7 @@ function gt_remote_source() {
 }
 
 function gt_remote() {
-	# shellcheck disable=SC2034   # is passed to parseCommands by name
+	# shellcheck disable=SC2034   # is passed by name to parseCommands
 	local -ra commands=(
 		add 'add a remote'
 		remove 'remove a remote'

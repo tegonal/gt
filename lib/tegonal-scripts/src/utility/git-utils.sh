@@ -94,7 +94,7 @@ function exitIfGitHasChanges() {
 
 function countCommits() {
 	local from to
-	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(from to)
 	parseFnArgs params "$@"
 	git rev-list --count "$from..$to" || die "could not count commits for $from..$to, see above"

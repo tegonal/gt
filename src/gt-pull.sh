@@ -67,7 +67,7 @@ function gt_pull() {
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remotePattern" 'name of the remote repository'
 		tag "$tagPattern" 'git tag used to pull the file/directory'

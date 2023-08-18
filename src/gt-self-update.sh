@@ -45,7 +45,7 @@ function gt_self_update() {
 	local -r forcePattern='--force'
 
 	local forceInstall
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		forceInstall "$forcePattern" "if set to true, then install.sh will be called even if gt is already on latest tag"
 	)

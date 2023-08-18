@@ -121,15 +121,15 @@ function arrTakeEveryX() {
 		printStackTrace
 		exit 9
 	fi
-	# shellcheck disable=SC2034   # is passed to arrFilter by name
+	# shellcheck disable=SC2034   # is passed by name to arrFilter
 	local -rn arrFilterMod_arrIn=$1
-	# shellcheck disable=SC2034   # is passed to arrFilter by name
+	# shellcheck disable=SC2034   # is passed by name to arrFilter
 	local -rn arrFilterMod_arrOut=$2
 	local -ri modulo=$3
 	local -ri offset=$4
 	shift 4 || die "could not shift by 4"
 
-  # shellcheck disable=SC2317   # is passed to arrFilter by name
+  # shellcheck disable=SC2317   # is passed by name to arrFilter
 	function arrFilterMod_fn() {
 		local -r index=$2
 		(((index - offset) % modulo == 0))

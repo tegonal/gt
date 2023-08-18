@@ -63,7 +63,7 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function prepareFilesNextDevCycle() {
 	local version projectsRootDir additionalPattern
-	# shellcheck disable=SC2034   # is passed to parseArguments by name
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		version '-v' 'the version for which we prepare the dev cycle'
 		projectsRootDir '--project-dir' '(optional) The projects directory -- default: .'
