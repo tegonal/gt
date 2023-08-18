@@ -1,7 +1,7 @@
 <!-- for main -->
 
 [![Download](https://img.shields.io/badge/Download-v0.12.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.12.0)
-[![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
+[![EUPL](https://img.shields.io/badge/%E2%9A%96-EUPL%201.2-%230b45a6)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12 "License")
 [![Code Quality](https://github.com/tegonal/gt/workflows/Code%20Quality/badge.svg?event=push&branch=main)](https://github.com/tegonal/gt/actions/workflows/code-quality.yml?query=branch%3Amain)
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
 
@@ -862,4 +862,7 @@ You are more than welcome to contribute as well:
 
 # License
 
-gt is licensed under [Apache 2.0](http://opensource.org/licenses/Apache2.0).
+gt is licensed under  [EUPL 1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12).
+
+gt is using:
+- [tegonal scripts](https://github.com/tegonal/scripts) licensed under [Apache 2.0](https://opensource.org/licenses/Apache2.0)
