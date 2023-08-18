@@ -123,8 +123,7 @@ function gt_update() {
 			local -ra params=(_entryTag entryFile _entryRelativePath entryAbsolutePath)
 			parseFnArgs params "$@"
 
-			# we know that set -e is disabled for gt_update_incrementError due to ||
-			#shellcheck disable=SC2310
+			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
 			parentDir=$(dirname "$entryAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return $?
 			if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 				((++pulled))
