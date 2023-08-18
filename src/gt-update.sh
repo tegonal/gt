@@ -101,7 +101,6 @@ function gt_update() {
 		shift 2 || die "could not shift by 2"
 		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
-		return 1
 	}
 
 	# shellcheck disable=SC2317   # called by name
@@ -124,7 +123,7 @@ function gt_update() {
 			parseFnArgs params "$@"
 
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
-			parentDir=$(dirname "$entryAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return $?
+			parentDir=$(dirname "$entryAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
 			if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 				((++pulled))
 			else
@@ -167,7 +166,7 @@ function gt_update() {
 	if ((errors == 0)); then
 		logSuccess "%s files updated in %s seconds" "$pulled" "$elapsed"
 	else
-		logWarning "%s files re-pulled in %s seconds, %s errors occurred, see above" "$pulled" "$elapsed" "$errors"
+		logWarning "%s files updated in %s seconds, %s errors occurred, see above" "$pulled" "$elapsed" "$errors"
 		return 1
 	fi
 }

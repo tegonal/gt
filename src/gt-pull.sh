@@ -343,15 +343,23 @@ function gt_pull() {
 			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m" "$file" || return $?
 			# or true as we will try to cleanup the repo on exit
 			rm "$file.$sigExtension" || true
-			# shellcheck disable=SC2310		# we are aware of that || will disable set -e for gt_pull_moveFile
+
+			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
+			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
+			# the function
+			# shellcheck disable=SC2310
 			gt_pull_moveFile "$file" || return $?
+
 		elif [[ $doVerification == true ]]; then
 			logWarningWithoutNewline "there was no corresponding *.%s file for %s, skipping it" "$sigExtension" "$file"
 			gt_pull_mentionUnsecure
 			# or true as we will try to cleanup the repo on exit
 			rm "$file" || true
 		else
-			# shellcheck disable=SC2310		# we are aware of that || will disable set -e for gt_pull_moveFile
+			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
+			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
+			# the function
+			# shellcheck disable=SC2310
 			gt_pull_moveFile "$file" || return $?
 		fi
 	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0 ||
