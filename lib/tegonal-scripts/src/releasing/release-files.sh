@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.0
 #
 #######  Description  #############
 #
@@ -60,7 +60,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v1.1.0'
+export TEGONAL_SCRIPTS_VERSION='v1.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -171,8 +171,7 @@ function releaseFiles() {
 	done
 
 	local -r projectsScriptsDir="$projectsRootDir/scripts"
-
-	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for sourceOnce
 	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
 
 	# make sure everything is up-to-date and works as it should
@@ -186,8 +185,8 @@ function releaseFiles() {
 	local -r additionalSteps="$projectsScriptsDir/additional-release-files-preparations.sh"
 	if [[ -f $additionalSteps ]]; then
 		logInfo "found $additionalSteps going to source it"
-		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
-		sourceOnce "$additionalSteps" || die "could not source %s" "$additionalSteps"
+		# shellcheck disable=SC2310				# we are aware of that || will disable set -e for sourceOnce
+		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
 	fi
 
 	# run again since we made changes
@@ -218,7 +217,7 @@ function releaseFiles() {
 		git commit -m "$version" || return $?
 		git tag "$version" || return $?
 
-		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
+		# shellcheck disable=SC2310				# we are aware of that || will disable set -e for sourceOnce
 		sourceOnce "$projectsScriptsDir/prepare-next-dev-cycle.sh" || die "could not source prepare-next-dev-cycle.sh"
 		prepareNextDevCycle -v "$nextVersion" -p "$additionalPattern" || die "could not prepare next dev cycle for version %s" "$nextVersion"
 

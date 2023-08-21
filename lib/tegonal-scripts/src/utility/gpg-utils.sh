@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.0
 #
 #######  Description  #############
 #
@@ -31,8 +31,8 @@
 #    # import public-key.asc into gpg store located at .gt/.gpg and trust automatically
 #    importGpgKey .gt/.gpg ./public-key.asc --confirmation=false
 #
-#    # trust key which is identified via info.com in gpg store located at ~/.gpg
-#    trustGpgKey ~/.gpg info.com
+#    # trust key which is identified via info@tegonal.com in gpg store located at ~/.gpg
+#    trustGpgKey ~/.gpg info@tegonal.com
 #
 ###################################
 set -euo pipefail

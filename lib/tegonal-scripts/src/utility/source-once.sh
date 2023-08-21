@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.0
 #
 #######  Description  #############
 #
@@ -88,6 +88,7 @@ function sourceOnce() {
 
 		# shellcheck disable=SC2034   # is used in the sourced file
 		declare __SOURCED__=true
+		# we know that shellcheck cannot follow the non-constant source we don't know the source and thus cannot help out
 		# shellcheck disable=SC1090
 		source "$sourceOnce_file" "$@" || die "there was an error sourcing %s, see above" "$sourceOnce_file"
 		unset __SOURCED__

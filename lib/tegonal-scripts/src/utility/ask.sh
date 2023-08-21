@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.0
 #
 #######  Description  #############
 #
@@ -48,8 +48,7 @@ function askYesOrNo() {
 	local -r question=$1
 	shift || die "could not shift by 1"
 
-	# the question itself can have %s thus we use it in the format string
-	# shellcheck disable=SC2059
+	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string
 	printf "\n\033[0;36m$question\033[0m y/[N]:" "$@"
 	local answer='n'
 	local -r timeout=20
@@ -61,5 +60,12 @@ function askYesOrNo() {
 		printf "\n"
 		logInfo "no user interaction after %s seconds, going to interpret that as a 'no'." "$timeout"
 	fi
-	[[ $answer == y ]] || [[ $answer == Y ]]
+	if [[ $answer == y ]] || [[ $answer == Y ]]; then
+		return 0
+	elif [[ $answer == n ]] || [[ $answer == N ]]; then
+		return 1
+	else
+		logWarning "got \033[0;36m%s\033[0m as answer (instead of y for yes or n for no), interpreting it as a n, i.e. as a no" "$answer"
+		return 1
+	fi
 }

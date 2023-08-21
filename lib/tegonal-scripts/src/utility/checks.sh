@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.0
 #
 #######  Description  #############
 #
@@ -182,7 +182,7 @@ function checkArgIsArrayWithTuples() {
 }
 
 function exitIfArgIsNotArrayWithTuples() {
-	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsArrayWithTuples
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsArrayWithTuples
 	checkArgIsArrayWithTuples "$@" || exit $?
 }
 
@@ -205,7 +205,7 @@ function checkArgIsFunction() {
 }
 
 function exitIfArgIsNotFunction() {
-	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsFunction
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsFunction
 	checkArgIsFunction "$@" || exit $?
 }
 
@@ -222,7 +222,7 @@ function checkCommandExists() {
 }
 
 function exitIfCommandDoesNotExist() {
-	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkCommandExists
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkCommandExists
 	checkCommandExists "$@" || exit $?
 }
 
