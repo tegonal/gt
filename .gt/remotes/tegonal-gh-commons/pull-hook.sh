@@ -19,7 +19,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 
 if ! [[ -v dir_of_github_commons ]]; then
-	dir_of_github_commons="$dir_of_tegonal_scripts/../../../.gt/remotes/tegonal-gh-commons/lib/src"
+	dir_of_github_commons="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/lib/src"
 	readonly dir_of_github_commons
 fi
 
@@ -33,11 +33,11 @@ function gt_pullHook_tegonal_gh_commons_before() {
 	parseFnArgs params "$@"
 
 	if [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
-		replacePlaceholdersContributorsAgreement "$source" "gt"
+		replacePlaceholdersContributorsAgreement_Tegonal "$source" "gt"
 	elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
 		# same as in additional-release-files-preparations.sh
 		local -r githubUrl="https://github.com/tegonal/gt"
-		replacePlaceholderPullRequestTemplate "$source" "$githubUrl" "$GT_LATEST_VERSION"
+		replacePlaceholdersPullRequestTemplate "$source" "$githubUrl" "$GT_LATEST_VERSION"
 	fi
 }
 
