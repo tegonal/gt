@@ -91,7 +91,7 @@ and of course execute the install.sh as such.
 
 <install>
 
-<!-- auto-generated, do not modify here but in install.sh -->
+<!-- auto-generated, do not modify here but in install.sh.doc -->
 ```bash
 currentDir=$(pwd) && \
 tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
@@ -269,7 +269,7 @@ Some examples (see documentation of each sub command in subsection for more deta
 
 <gt-remote>
 
-<!-- auto-generated, do not modify here but in src/gt-remote.sh -->
+<!-- auto-generated, do not modify here but in src/gt-remote.sh.doc -->
 ```bash
 #!/usr/bin/env bash
 
@@ -414,7 +414,7 @@ Full usage example:
 
 <gt-pull>
 
-<!-- auto-generated, do not modify here but in src/gt-pull.sh -->
+<!-- auto-generated, do not modify here but in src/gt-pull.sh.doc -->
 ```bash
 #!/usr/bin/env bash
 
@@ -515,7 +515,7 @@ Full usage example:
 
 <gt-re-pull>
 
-<!-- auto-generated, do not modify here but in src/gt-re-pull.sh -->
+<!-- auto-generated, do not modify here but in src/gt-re-pull.sh.doc -->
 ```bash
 #!/usr/bin/env bash
 
@@ -574,7 +574,7 @@ Full usage example:
 
 <gt-reset>
 
-<!-- auto-generated, do not modify here but in src/gt-reset.sh -->
+<!-- auto-generated, do not modify here but in src/gt-reset.sh.doc -->
 ```bash
 #!/usr/bin/env bash
 
@@ -634,7 +634,7 @@ Full usage example:
 
 <gt-update>
 
-<!-- auto-generated, do not modify here but in src/gt-update.sh -->
+<!-- auto-generated, do not modify here but in src/gt-update.sh.doc -->
 ```bash
 #!/usr/bin/env bash
 

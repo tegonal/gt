@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.1
 #
 #
 #######  Description  #############
@@ -58,13 +58,14 @@ function updateBashDocumentation() {
 	pathWithoutExtension=${script::-3} || die "could not determine path without extension for script %s and %id" "$script" "$id"
 	snippet=$(cat "${pathWithoutExtension}.doc.sh") || die "could not cat %s" "${pathWithoutExtension}.doc.sh"
 
-	local quotedSnippet markdownSnippet
-	quotedSnippet=$(perl -0777 -pe 's/(\/|\$|\\)/\\$1/g;' <<<"$snippet" | sed 's/^/#    /' | sed 's/^#    $/#/') || die "was not able to quote the snippet for script %s and id %s" "$script" "$id"
+	local bashDocumentation markdownSnippet
+	# shellcheck disable=SC2001		# we want to add something to each new line and need two replacements, don't think this is possible with substitution
+	bashDocumentation=$(sed 's/^/#    /' <<<"$snippet" | sed 's/^#    $/#/') || die "was not able to quote the snippet for script %s and id %s" "$script" "$id"
 	markdownSnippet=$(printf "\`\`\`bash\n%s\n\`\`\`" "$snippet") || die "could not create the markdownSnippet for script %s and id %s" "$script" "$id"
 
-	perl -0777 -i \
-		-pe "s/(###+\s+Usage\s+###+\n#\n)[\S\s]+?(\n#\n###+)/\$1${quotedSnippet}\$2/g;" \
+	SNIPPET="$bashDocumentation" perl -0777 -i \
+		-pe 's/(###+\s+Usage\s+###+\n#\n)[\S\s]+?(\n#\n###+)/$1$ENV{SNIPPET}$2/g;' \
 		"$script" || die "could not replace the Usage section for %s" "$script"
 
-	replaceSnippet "$script" "$id" "$dir" "$pattern" "$markdownSnippet"
+	replaceSnippet "$script.doc" "$id" "$dir" "$pattern" "$markdownSnippet"
 }

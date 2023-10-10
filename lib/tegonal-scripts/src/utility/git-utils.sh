@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please remotert bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.1
 #
 #######  Description  #############
 #
@@ -96,7 +96,7 @@ function countCommits() {
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(from to)
 	parseFnArgs params "$@"
-	git rev-list --count "$from..$to" || die "could not count commits for %s..%s, see above" "$from" "$to"
+	git rev-list --count "$from..$to" || die "could not count commits for $from..$to, see above"
 }
 
 function localGitIsAhead() {
@@ -106,8 +106,8 @@ function localGitIsAhead() {
 	local -r branch=$1
 	local -r remote=${2:-"origin"}
 	local -i count
-	# shellcheck disable=SC2310		# we know that set -e is disabled for countCommits
-	count=$(countCommits "$remote/$branch" "$branch") || die "the following command failed (see above): countCommits \"%\" \"%\"" "$remote/$branch" "$branch"
+	# shellcheck disable=SC2310		# we know that set -e is disabled for countCommits, that OK
+	count=$(countCommits "$remote/$branch" "$branch") || die "the following command failed (see above): countCommits \"$remote/$branch\" \"$branch\""
 	! ((count == 0))
 }
 
@@ -118,8 +118,8 @@ function localGitIsBehind() {
 	local -r branch=$1
 	local -r remote=${2:-"origin"}
 	local -i count
-	# shellcheck disable=SC2310		# we know that set -e is disabled for countCommits
-	count=$(countCommits "$branch" "$remote/$branch") || die "the following command failed (see above): countCommits \"%s\" \"%s\"" "$branch" "$remote/$branch"
+	# shellcheck disable=SC2310			# we know that set -e is disabled for countCommits, that OK
+	count=$(countCommits "$branch" "$remote/$branch") || die "the following command failed (see above): countCommits \"$branch\" \"$remote/$branch\""
 	! ((count == 0))
 }
 
@@ -131,7 +131,7 @@ function hasRemoteTag() {
 	local -r remote=${2:-"origin"}
 	shift 1 || die "could not shift by 1"
 	local output
-	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"%s\"" "$remote"
+	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"$remote\""
 	grep "$tag" >/dev/null <<<"$output"
 }
 
@@ -152,7 +152,7 @@ function latestRemoteTag() {
 	fi
 	local -r remote=${1:-"origin"}
 	local tag
-	#shellcheck disable=SC2310		# we are aware of that || will disable set -e for remoteTagsSorted
+	#shellcheck disable=SC2310			# we are aware of that || will disable set -e for remoteTagsSorted
 	tag=$(remoteTagsSorted "$remote" | tail -n 1) || die "could not get remote tags sorted, see above"
 	if [[ -z $tag ]]; then
 		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet." "$remote"
