@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.1
 #
 #######  Description  #############
 #
@@ -50,7 +50,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v1.1.0'
+export TEGONAL_SCRIPTS_VERSION='v1.2.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -94,12 +94,11 @@ function prepareFilesNextDevCycle() {
 	local -r additionalSteps="$projectsScriptsDir/additional-prepare-files-next-dev-cycle-steps.sh"
 	if [[ -f $additionalSteps ]]; then
 		logInfo "found $additionalSteps going to source it"
-		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
-		sourceOnce "$additionalSteps" || die "could not source %s" "$additionalSteps"
+		# shellcheck disable=SC2310			# we are aware of that || will disable set -e for sourceOnce
+		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
 	fi
 
-
-	# shellcheck disable=SC2310	# we are aware of that || will disable set -e for sourceOnce
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for sourceOnce
 	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
 
 	# check if we accidentally have broken something, run formatting or whatever is done in beforePr

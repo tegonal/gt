@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v1.1.0
+#                                         Version: v1.2.1
 #
 #######  Description  #############
 #
@@ -75,15 +75,14 @@ function replaceHelpSnippet() {
 		varargs=("--help")
 	fi
 
-	# we want array expansion in string
-	# shellcheck disable=SC2145
+	# shellcheck disable=SC2145		# we want array expansion in string
 	echo "capturing output of calling: $script ${varargs[@]}"
 
-	local snippet quotedSnippet markdownSnippet
+	local snippet cleanedUpSnippet markdownSnippet
 	snippet=$("$script" "${varargs[@]}") || true
 	# remove ansi colour codes form snippet
-	quotedSnippet=$(perl -0777 -pe "s/\033\[([01];\d{2}|0)m//g" <<<"$snippet") || die "could not quote snippet for %s" "$script"
-	markdownSnippet=$(printf "\`\`\`text\n%s\n\`\`\`" "$quotedSnippet") || die "could not create markdownSnippet for %s" "$script"
+	cleanedUpSnippet=$(perl -0777 -pe "s/\033\[([01];\d{2}|0)m//g" <<<"$snippet") || die "could not quote snippet for %s" "$script"
+	markdownSnippet=$(printf "\`\`\`text\n%s\n\`\`\`" "$cleanedUpSnippet") || die "could not create markdownSnippet for %s" "$script"
 
 	replaceSnippet "$script" "$id" "$dir" "$pattern" "$markdownSnippet"
 }
