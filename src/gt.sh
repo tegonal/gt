@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under European Union Public License 1.2
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.14.0-SNAPSHOT
+#                                         Version: v0.13.3
 #
 #######  Description  #############
 #
@@ -41,7 +41,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GT_VERSION='v0.14.0-SNAPSHOT'
+export GT_VERSION='v0.13.3'
 
 if ! [[ -v dir_of_gt ]]; then
 	declare intermediateSource=${BASH_SOURCE[0]:-$0}
