@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under European Union Public License 1.2
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v0.13.1
+#                                         Version: v0.13.2
 #
 #######  Description  #############
 #
@@ -21,8 +21,8 @@
 #    echo "public key trusted" && \
 #    mkdir ./gpg && \
 #    gpg --homedir ./gpg --import ./signing-key.public.asc && \
-#    wget "https://raw.githubusercontent.com/tegonal/gt/v0.13.1/install.sh" && \
-#    wget "https://raw.githubusercontent.com/tegonal/gt/v0.13.1/install.sh.sig" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/v0.13.2/install.sh" && \
+#    wget "https://raw.githubusercontent.com/tegonal/gt/v0.13.2/install.sh.sig" && \
 #    gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 #    chmod +x ./install.sh && \
 #    echo "verification successful" || (echo "!! verification failed, don't continue !!"; exit 1) && \
