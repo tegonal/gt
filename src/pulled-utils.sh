@@ -130,6 +130,8 @@ function readPulledTsv() {
 	if ! [[ -f $pulledTsv ]]; then
 		logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
 		return 0
+	else
+		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
 
 	# start from line 3, i.e. skip the header in pulled.tsv
