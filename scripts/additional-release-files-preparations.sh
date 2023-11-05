@@ -66,6 +66,6 @@ function additionalReleasePrepareSteps() {
 
 	perl -0777 -i \
 		-pe "s@(tegonal/gt/)[^/]+(/install.sh)@\${1}$version\${2}@g;" \
-		"$projectDir/install.doc" || returnDying "error during replacing the version in install.doc.sh" || return $?
+		"$projectDir/install.doc.sh" || returnDying "error during replacing the version in install.doc.sh" || return $?
 }
 additionalReleasePrepareSteps
