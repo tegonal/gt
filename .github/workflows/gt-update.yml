@@ -53,7 +53,7 @@ jobs:
       - name: git status
         run: git status
       - name: Create pull request if necessary
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           branch: gt/update
           base: main
