@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cleanup Sources
         run: ./scripts/cleanup-on-push-to-main.sh
       - name: Create Pull Request if necessary
