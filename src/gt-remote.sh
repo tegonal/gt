@@ -98,7 +98,7 @@ function gt_remote_add() {
 		EOM
 	)
 	parseArguments params "$examples" "$GT_VERSION" "$@"
-	if ! [[ -v pullDir ]]; then pullDir="lib/${remote:'remote-not-defined'}"; fi
+	if ! [[ -v pullDir ]]; then pullDir="lib/${remote-'remote-not-defined'}"; fi
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
