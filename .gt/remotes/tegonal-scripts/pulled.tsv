@@ -1,3 +1,4 @@
+#@ Version: 1.0.0
 tag	file	relativeTarget	sha512
 v1.2.1	src/setup.sh	../lib/tegonal-scripts/src/setup.sh	b6a8f4eddfde1499e117609139c714d1fc66aed5f0772d4db8c5b919dc208e679294d45b84a29519e1da1e640aa61f23485fd4473df7c9182bd17ced5ea7b58f
 v1.2.1	src/utility/io.sh	../lib/tegonal-scripts/src/utility/io.sh	7e11b8bca5b46e60a5a2e9a4dac7e540b7d04158cba9f6f8fdba25983060478db477ffa54ce415dac1154481e5c65c5b72527bac14b15efd9e4b9d7703dddebd
