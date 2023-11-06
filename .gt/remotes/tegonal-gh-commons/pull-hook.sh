@@ -34,6 +34,8 @@ function gt_pullHook_tegonal_gh_commons_before() {
 
 	if [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
 		replacePlaceholdersContributorsAgreement_Tegonal "$source" "gt"
+	elif [[ $source =~ .*/\.github/CODE_OF_CONDUCT.md ]]; then
+		replacePlaceholdersCodeOfConduct_Tegonal "$source"
 	elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
 		# same as in additional-release-files-preparations.sh
 		local -r githubUrl="https://github.com/tegonal/gt"
