@@ -661,7 +661,12 @@ It requires you to define a variable named PUBLIC_GPG_KEYS_WE_TRUST which repres
 gpg public keys you trust signing the public keys of remotes, 
 i.e. those are used to verify the public keys of the remotes you added via `gt remote add`.
 
-You can re-use it in your repository. We suggest you fetch it via gt 😉
+You can define to optional secrets in addition which steer the PR creation which is done via the github action
+[peter-evans/create-pull-request](https://github.com/peter-evans/create-pull-request):
+- `AUTO_PR_TOKEN` is used as `token`
+- `AUTO_PR_FORK_NAME` is used as `push-to-fork`
+
+You can re-use the workflow in your repository. We suggest you fetch it via gt 😉
 
 ```bash
 gt remote add -r gt -u https://github.com/tegonal/gt
