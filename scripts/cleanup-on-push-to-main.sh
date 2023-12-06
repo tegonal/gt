@@ -77,11 +77,10 @@ function cleanupOnPushToMain() {
 		local indent
 		indent=$(printf "%-${indentNum}s" "") || return $?
 		local content
-		# cannot use search/replace variable substitution
-		# shellcheck disable=SC2001
-		content=$(sed "s/^/$indent/" <<<"$installScript") || return $?
+		# shellcheck disable=SC2001	# cannot use search/replace variable substitution here
+		content=$(sed "s/^/$indent/g" <<<"$installScript") || return $?
 		perl -0777 -i \
-			-pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@" \
+			-pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@g" \
 			"$file" || return $?
 	done || die "could not replace the install instructions"
 
