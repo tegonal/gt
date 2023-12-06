@@ -14,9 +14,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  Update:
+  determine_remotes:
+    name: Determine Remotes
     runs-on: ubuntu-latest
     if: github.repository_owner == 'tegonal'
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
         run: |
@@ -25,7 +28,6 @@ jobs:
           false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
             || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
           false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
-      - uses: actions/checkout@v4
       - name: Install gt
         run: |
           set -e
@@ -46,20 +48,60 @@ jobs:
           ./install.sh && result=true || (echo "installation failed"; exit 1) && \
           false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
+      - uses: actions/checkout@v4
+      - id: set-matrix
+        run: |
+          (readarray -t REMOTES; IFS=','; echo "matrix={ 'remote': [ ${REMOTES[*]} ] }" >> "$GITHUB_OUTPUT") < <( gt remote list | sed -E "s/(.*)/'\1'/")
+  Update:
+    needs: determine_remotes
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.determine_remotes.outputs.matrix) }}
+    name: 'Update remote ${{ matrix.remote }}'
+    steps:
+      - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: |
+          gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
+      - name: Install gt
+        run: |
+          set -e
+          # see install.doc.sh in https://github.com/tegonal/gt, MODIFY THERE NOT HERE (please report bugs)
+          currentDir=$(pwd) && \
+          tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc.sig" && \
+          gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
+          echo "public key trusted" && \
+          mkdir ./gpg && \
+          gpg --homedir ./gpg --import ./signing-key.public.asc && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/v0.13.3/install.sh" && \
+          wget "https://raw.githubusercontent.com/tegonal/gt/v0.13.3/install.sh.sig" && \
+          gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
+          chmod +x ./install.sh && \
+          echo "verification successful" || (echo "!! verification failed, don't continue !!"; exit 1) && \
+          ./install.sh && result=true || (echo "installation failed"; exit 1) && \
+          false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
+          # end install.doc.sh
+      - uses: actions/checkout@v4
       - name: reset gpg keys
-        run: gt reset --gpg-only true
+        run: gt reset --gpg-only true -r "${{ matrix.remote }}"
       - name: gt update
-        run: gt update
+        run: gt update -r "${{ matrix.remote }}"
       - name: git status
         run: git status
       - name: Create pull request if necessary
         uses: peter-evans/create-pull-request@v5
         with:
-          branch: gt/update
+          branch: 'gt/update/${{ matrix.remote }}'
           base: main
-          title: Changes via gt update
+          title: 'Changes via gt update for remote ${{ matrix.remote }}'
           commit-message: update files pulled via gt
-          body: "following the changes after running `gt update` (among other things)"
+          body: "following the changes after running `gt update -r \"${{ matrix.remote }}\"` (among other things)"
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ secrets.AUTO_PR_FORK_NAME }}
