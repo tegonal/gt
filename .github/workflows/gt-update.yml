@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.determine_remotes.outputs.matrix) }}
-    name: 'Update remote ${{ matrix.remote }}'
+    name: 'Update ${{ matrix.remote }}'
     steps:
       - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
         run: |
