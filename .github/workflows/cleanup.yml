@@ -7,7 +7,7 @@
 #                                         Version: v1.1.0
 #
 ###################################
-name: Cleanup on push to main
+name: Cleanup
 
 on:
   push:
