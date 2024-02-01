@@ -11,7 +11,7 @@ body:
     attributes:
       label: Affected Version
       description: What version of gt are you running?
-      placeholder: "v0.15.0"
+      placeholder: "v0.16.0"
     validations:
       required: true
   - type: textarea

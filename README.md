@@ -1,17 +1,17 @@
 <!-- for main -->
-
-[![Download](https://img.shields.io/badge/Download-v0.15.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.15.0)
+<!--
+[![Download](https://img.shields.io/badge/Download-v0.16.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.16.0)
 [![EUPL](https://img.shields.io/badge/%E2%9A%96-EUPL%201.2-%230b45a6)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12 "License")
 [![Code Quality](https://github.com/tegonal/gt/workflows/Code%20Quality/badge.svg?event=push&branch=main)](https://github.com/tegonal/gt/actions/workflows/code-quality.yml?query=branch%3Amain)
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
-
+-->
 <!-- for main end -->
 <!-- for release -->
-<!--
-[![Download](https://img.shields.io/badge/Download-v0.15.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.15.0)
+
+[![Download](https://img.shields.io/badge/Download-v0.16.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.16.0)
 [![Apache 2.0](https://img.shields.io/badge/%E2%9A%96-Apache%202.0-%230b45a6)](http://opensource.org/licenses/Apache2.0 "License")
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
--->
+
 <!-- for release end -->
 
 # gt
@@ -41,7 +41,7 @@ templates etc. which you use in multiple projects but want to maintain at a sing
 ❗ You are taking a _sneak peek_ at the next version.
 Please have a look at the README of the git tag in case you are looking for the documentation of the corresponding
 version.
-For instance, the [README of v0.15.0](https://github.com/tegonal/gt/tree/v0.15.0/README.md).
+For instance, the [README of v0.16.0](https://github.com/tegonal/gt/tree/v0.16.0/README.md).
 
 ---
 
@@ -101,8 +101,8 @@ gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
 echo "public key trusted" && \
 mkdir ./gpg && \
 gpg --homedir ./gpg --import ./signing-key.public.asc && \
-wget "https://raw.githubusercontent.com/tegonal/gt/v0.15.0/install.sh" && \
-wget "https://raw.githubusercontent.com/tegonal/gt/v0.15.0/install.sh.sig" && \
+wget "https://raw.githubusercontent.com/tegonal/gt/v0.16.0/install.sh" && \
+wget "https://raw.githubusercontent.com/tegonal/gt/v0.16.0/install.sh.sig" && \
 gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 chmod +x ./install.sh && \
 echo "verification successful" || (echo "!! verification failed, don't continue !!"; exit 1) && \
@@ -165,7 +165,7 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ## manually
 
-1. [![Download](https://img.shields.io/badge/Download-v0.15.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.15.0)
+1. [![Download](https://img.shields.io/badge/Download-v0.16.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.16.0)
 2. extract the zip/tar.gz
 3. open a terminal at the corresponding folder and verify the public key of this repo
    against [our public key](https://tegonal.com/gpg/github.asc):
@@ -237,7 +237,7 @@ self-update   update gt to the latest version
 --version  prints the version of this script
 
 INFO: Version of gt.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-help>
@@ -260,7 +260,7 @@ list     list all remotes
 --version  prints the version of this script
 
 INFO: Version of gt-remote.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-remote-help>
@@ -319,7 +319,7 @@ gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecur
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt_remote_add-help>
@@ -348,7 +348,7 @@ gt remote remove -r tegonal-scripts
 gt remote remove -r tegonal-scripts -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt_remote_remove-help>
@@ -405,7 +405,7 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 gt pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
 
 INFO: Version of gt-pull.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-pull-help>
@@ -506,7 +506,7 @@ gt re-pull
 gt re-pull -r tegonal-scripts --only-missing false --auto-trust true
 
 INFO: Version of gt-re-pull.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-re-pull-help>
@@ -565,7 +565,7 @@ gt reset
 gt reset --gpg-only true
 
 INFO: Version of gt-reset.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-reset-help>
@@ -625,7 +625,7 @@ gt update -r tegonal-scripts
 gt update -r tegonal-scripts -t v1.0.0
 
 INFO: Version of gt-update.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-update-help>
@@ -806,7 +806,7 @@ gt self-update
 gt self-update --force
 
 INFO: Version of gt-self-update.sh is:
-v0.16.0-SNAPSHOT
+v0.16.0
 ```
 
 </gt-self-update-help>
