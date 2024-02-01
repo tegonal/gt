@@ -42,10 +42,15 @@ function additionalReleasePrepareSteps() {
 	# we help shellcheck to realise that these variables are initialised
 	local -r version="$version" additionalPattern="$additionalPattern"
 
+
+	local additionalScripts additionalFilesWithVersions
+	source "$scriptsDir/shared-files-to-release.source.sh" || die "could not source shared-files-to-release.source.sh"
+
+	for script in "${additionalScripts[@]}"; do
+		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script"
+	done
+
 	logInfo "going to update version in non-sh files to %s" "$version"
-	local -ra additionalFilesWithVersions=(
-		"$projectDir/.github/workflows/gt-update.yml"
-	)
 	for file in "${additionalFilesWithVersions[@]}"; do
 		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file"
 	done
@@ -55,14 +60,6 @@ function additionalReleasePrepareSteps() {
 	replaceTagInPullRequestTemplate "$projectDir/.github/PULL_REQUEST_TEMPLATE.md" "$githubUrl" "$version" || die "could not fill the placeholders in PULL_REQUEST_TEMPLATE.md"
 
 	updateVersionIssueTemplates -v "$version"
-
-	local -ra additionalScripts=(
-		"$projectDir/install.sh"
-		"$projectDir/.gt/remotes/tegonal-gh-commons/pull-hook.sh"
-	)
-	for script in "${additionalScripts[@]}"; do
-		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script"
-	done
 
 	perl -0777 -i \
 		-pe "s@(tegonal/gt/)[^/]+(/install.sh)@\${1}$version\${2}@g;" \

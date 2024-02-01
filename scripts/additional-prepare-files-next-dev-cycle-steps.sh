@@ -34,9 +34,20 @@ function additionalPrepareNextSteps() {
 	# we help shellcheck to realise that these variables are initialised
 	local -r devVersion="$devVersion" additionalPattern="$additionalPattern"
 
-	# we only update the version in the header but not the GT_LATEST_VERSION on purpose -- i.e. we omit
-	# -p on purpose (compared to additional-release-files-preparations.sh) -- because we don't want to set the SNAPSHOT
-	# version since this would cause that we set the SNAPSHOT version next time we update files via gget
-	updateVersionScripts -v "$devVersion" -d "$projectDir/.gt/remotes/tegonal-gh-commons/pull-hook.sh"
+	local additionalScripts additionalFilesWithVersions
+	source "$scriptsDir/shared-files-to-release.source.sh" || die "could not source shared-files-to-release.source.sh"
+
+	for script in "${additionalScripts[@]}"; do
+		# we only update the version in the header but not the GT_LATEST_VERSION on purpose -- i.e. we omit
+		# -p on purpose (compared to additional-release-files-preparations.sh) -- because we don't want to set the SNAPSHOT
+		# version since this would cause that we set the SNAPSHOT version next time we update files via gt
+		updateVersionScripts -v "$devVersion" -d "$script"
+	done
+
+	logInfo "going to update version in non-sh files to %s" "$devVersion"
+	for file in "${additionalFilesWithVersions[@]}"; do
+		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$devVersion/g;" "$file"
+	done
+
 }
 additionalPrepareNextSteps
