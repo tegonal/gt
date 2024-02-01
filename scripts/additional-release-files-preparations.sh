@@ -35,6 +35,7 @@ sourceOnce "$dir_of_github_commons/gt/pull-hook-functions.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-issue-templates.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 
 function additionalReleasePrepareSteps() {
 	# keep in sync with local -r further below (3 lines at the time of writing)
@@ -64,5 +65,13 @@ function additionalReleasePrepareSteps() {
 	perl -0777 -i \
 		-pe "s@(tegonal/gt/)[^/]+(/install.sh)@\${1}$version\${2}@g;" \
 		"$projectDir/install.doc.sh" || returnDying "error during replacing the version in install.doc.sh" || return $?
+
+	# update workflow which checks self-update, now that we release a new version,
+	# we can add the current latest version (before the release is published) to the workflow
+	declare latestTag
+  latestTag=$(latestRemoteTag)
+	perl -0777 -i \
+		-pe "s@(installOld:[\S\s]+strategy:[\n\s]+matrix:[\n\s]+tag:\s+\[[^\]]+)\]@\${1}, $latestTag\]@g;" \
+		"$projectDir/.github/workflows/installation.yml" || returnDying "error during placing the latest release into installation.yml installOld -> matrix -> tag" || return $?
 }
 additionalReleasePrepareSteps
