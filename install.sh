@@ -155,7 +155,7 @@ function install() {
 		currentBranch=$(git --git-dir="$installDir/.git" rev-parse --abbrev-ref HEAD || echo "<UNKNOWN, most likely manual installation>")
 		echo "Looks like $projectName was already installed in $installDir"
 		printf "Current tag in use is \033[0;36m%s\033[0m\n" "$currentBranch"
-		printf "going to replace the current installation with this one (%s)\n" "$tag"
+		printf "going to replace the current installation with the chosen \033[0;36m%s\033[0m\n" "$tag"
 		# necessary because .git files are sometimes mod 700 and would require sudo to delete
 		deleteDirChmod777 "$installDir"
 		if [[ -n $symbolicLink ]]; then
