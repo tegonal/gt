@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
 #    __                          __
-#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/github-commons
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Creative Commons Zero v1.0 Universal
-#  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
-#         /___/
-#                                         Version: v1.2.1
+#   / /____ ___ ____  ___  ___ _/ /       This file is provided to you by https://github.com/tegonal/github-commons
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
+#         /___/                           Please report bugs and contribute back your improvements
 #
+#                                         Version: v2.0.0
 #######  Description  #############
 #
 #  functions which can be used to update the placeholders in the templates in a gt pull-hook.sh
@@ -32,11 +32,9 @@
 #    declare _tag=$1 source=$2 _target=$3
 #    shift 3 || die "could not shift by 3"
 #
-#    replacePlaceholdersCodeOfConduct "$source" "code-of-conduct@my-company.com"
-#    replacePlaceholdersContributorsAgreement "$source" "my-project-name" "MyCompanyName, Country"
-#    replacePlaceholdersPullRequestTemplate "$source" "https://github.com/tegonal/my-project-name" "$MY_PROJECT_LATEST_VERSION"
-#
-#    # also have a look at https://github.com/tegonal/gt/blob/main/.gt/remotes/tegonal-scripts/pull-hook.sh
+#    # replaces placeholders in all files github-commons provides with placeholders
+#    replaceTegonalGhCommonsPlaceholders "$source" "my-project-name" "$MY_PROJECT_LATEST_VERSION" \
+#    	"MyCompanyName, Country"  "code-of-conduct@my-company.com" "my-companies-github-name"
 #
 ###################################
 set -euo pipefail
@@ -52,6 +50,37 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$dir_of_github_commons/../tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
+
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+
+function replaceTegonalGhCommonsPlaceholders(){
+	local source projectName version owner ownerEmail ownerGithubName
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	local -ra params=(source projectName version owner ownerEmail ownerGithubName)
+	parseFnArgs params "$@"
+
+	if [[ $source =~ .*/\.github/CODE_OF_CONDUCT.md ]]; then
+  			replacePlaceholdersCodeOfConduct "$source" "$ownerEmail"
+	elif [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
+		replacePlaceholdersContributorsAgreement "$source" "$projectName" "$owner"
+	elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
+		local -r githubUrl="https://github.com/$ownerGithubName/$projectName"
+		replacePlaceholdersPullRequestTemplate "$source" "$githubUrl" "$version"
+	fi
+}
+
+function replaceTegonalGhCommonsPlaceholders_Tegonal(){
+	local source projectName version
+	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
+	local -ra params=(source projectName version)
+	parseFnArgs params "$@"
+
+
+	local tegonalFullName tegonalEmail tegonalGithubName
+	source "$dir_of_github_commons/gt/tegonal.data.source.sh" || die "could not source tegonal.data.source.sh"
+
+	replaceTegonalGhCommonsPlaceholders "$source" "$projectName" "$version" "$tegonalFullName" "$tegonalEmail" "$tegonalGithubName"
+}
 
 function replacePlaceholdersContributorsAgreement() {
 	if ! (($# == 3)); then
@@ -70,20 +99,6 @@ function replacePlaceholdersContributorsAgreement() {
 		-pe 's/<PROJECT_NAME>/$ENV{PROJECT_NAME}/g;' \
 		-pe 's/<OWNER>/$ENV{OWNER}/g;' \
 		"$file"
-}
-
-function replacePlaceholdersContributorsAgreement_Tegonal() {
-	if ! (($# == 2)); then
-		logError "you need to pass two arguments to replacePlaceholdersContributorsAgreement_Tegonal"
-		echo "1: file         represents the 'Contributor Agreement.txt'"
-		echo "2: projectName  the name of the project"
-		printStackTrace
-		exit 9
-	fi
-	local -r file=$1
-	local -r projectName=$2
-	shift 2 || die "could not shift by 2"
-	replacePlaceholdersContributorsAgreement "$file" "$projectName" "Tegonal Genossenschaft, Switzerland"
 }
 
 function replacePlaceholdersPullRequestTemplate() {
@@ -119,18 +134,6 @@ function replacePlaceholdersCodeOfConduct(){
 	EMAIL="$ownerEmail" perl -0777 -i \
 		-pe 's/<OWNER_EMAIL>/$ENV{EMAIL}/g;' \
 		"$file"
-}
-
-function replacePlaceholdersCodeOfConduct_Tegonal(){
-	if ! (($# == 1)); then
-		logError "you need to pass one arguments to replacePlaceholdersCodeOfConductTemplate"
-		echo "1: file         represents the 'CODE_OF_CONDUCT.md'"
-		printStackTrace
-		exit 9
-	fi
-	local -r file=$1
-	shift 1 || die "could not shift by 1"
-	replacePlaceholdersCodeOfConduct "$file" "info@tegonal.com"
 }
 
 function replaceTagInPullRequestTemplate() {
