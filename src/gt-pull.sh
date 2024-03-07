@@ -144,7 +144,7 @@ function gt_pull() {
 	exitIfWorkingDirDoesNotExist "$workingDirAbsolute"
 	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
-	local publicKeysDir repo gpgDir pulledTsv pullHookFile gitconfig
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile
 	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
