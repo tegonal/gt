@@ -10,7 +10,7 @@ body:
     id: version
     attributes:
       label: Affected Version
-      description: What version of gt are you running?
+      description: What version of gt are you using?
       placeholder: "v0.16.0"
     validations:
       required: true
