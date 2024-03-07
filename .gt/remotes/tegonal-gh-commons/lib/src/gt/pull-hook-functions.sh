@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.0.0
+#                                         Version: v2.1.1
 #######  Description  #############
 #
 #  functions which can be used to update the placeholders in the templates in a gt pull-hook.sh
@@ -34,7 +34,7 @@
 #
 #    # replaces placeholders in all files github-commons provides with placeholders
 #    replaceTegonalGhCommonsPlaceholders "$source" "my-project-name" "$MY_PROJECT_LATEST_VERSION" \
-#    	"MyCompanyName, Country"  "code-of-conduct@my-company.com" "my-companies-github-name"
+#    	"MyCompanyName, Country"  "code-of-conduct@my-company.com" "my-companies-github-name" "my-project-github-name"
 #
 ###################################
 set -euo pipefail
@@ -54,9 +54,9 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function replaceTegonalGhCommonsPlaceholders(){
-	local source projectName version owner ownerEmail ownerGithubName
+	local source projectName version owner ownerEmail ownerGithubName projectNameGithub
 	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
-	local -ra params=(source projectName version owner ownerEmail ownerGithubName)
+	local -ra params=(source projectName version owner ownerEmail ownerGithubName projectNameGithub)
 	parseFnArgs params "$@"
 
 	if [[ $source =~ .*/\.github/CODE_OF_CONDUCT.md ]]; then
@@ -64,22 +64,22 @@ function replaceTegonalGhCommonsPlaceholders(){
 	elif [[ $source =~ .*/\.github/Contributor[[:space:]]Agreement\.txt ]]; then
 		replacePlaceholdersContributorsAgreement "$source" "$projectName" "$owner"
 	elif [[ $source =~ .*/\.github/PULL_REQUEST_TEMPLATE.md ]]; then
-		local -r githubUrl="https://github.com/$ownerGithubName/$projectName"
+		local -r githubUrl="https://github.com/$ownerGithubName/$projectNameGithub"
 		replacePlaceholdersPullRequestTemplate "$source" "$githubUrl" "$version"
 	fi
 }
 
 function replaceTegonalGhCommonsPlaceholders_Tegonal(){
-	local source projectName version
+	local source projectName version projectNameGithub
 	# shellcheck disable=SC2034   # is passed to parseFnArgs by name
-	local -ra params=(source projectName version)
+	local -ra params=(source projectName version projectNameGithub)
 	parseFnArgs params "$@"
 
 
 	local tegonalFullName tegonalEmail tegonalGithubName
 	source "$dir_of_github_commons/gt/tegonal.data.source.sh" || die "could not source tegonal.data.source.sh"
 
-	replaceTegonalGhCommonsPlaceholders "$source" "$projectName" "$version" "$tegonalFullName" "$tegonalEmail" "$tegonalGithubName"
+	replaceTegonalGhCommonsPlaceholders "$source" "$projectName" "$version" "$tegonalFullName" "$tegonalEmail" "$tegonalGithubName" "$projectNameGithub"
 }
 
 function replacePlaceholdersContributorsAgreement() {
