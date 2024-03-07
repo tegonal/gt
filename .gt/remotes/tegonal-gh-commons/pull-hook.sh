@@ -31,7 +31,7 @@ function gt_pullHook_tegonal_gh_commons_before() {
 	local -ra params=(_tag source _target)
 	parseFnArgs params "$@"
 
-	replaceTegonalGhCommonsPlaceholders_Tegonal "$source" "gt" "$GT_LATEST_VERSION"
+	replaceTegonalGhCommonsPlaceholders_Tegonal "$source" "gt" "$GT_LATEST_VERSION" "gt"
 }
 
 function gt_pullHook_tegonal_gh_commons_after() {
