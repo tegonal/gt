@@ -855,7 +855,7 @@ for further suggestions and guidelines.
 
 # License
 
-gt is licensed under  [EUPL 1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12).
+gt is licensed under [European Union Public Licence v. 1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12).
 
 gt is using:
 - [tegonal scripts](https://github.com/tegonal/scripts) licensed under [Apache 2.0](https://opensource.org/licenses/Apache2.0)
