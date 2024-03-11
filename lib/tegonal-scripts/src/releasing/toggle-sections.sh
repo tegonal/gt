@@ -2,11 +2,11 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
-#  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
-#         /___/
-#                                         Version: v1.2.1
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
+#         /___/                           Please report bugs and contribute back your improvements
 #
+#                                         Version: v2.0.0
 #######  Description  #############
 #
 #  Searches for <!-- for main --> ... <!-- for main end --> as well as for
@@ -36,7 +36,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v1.2.1'
+export TEGONAL_SCRIPTS_VERSION='v2.0.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."

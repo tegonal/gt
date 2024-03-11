@@ -2,11 +2,11 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
-#  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
-#         /___/
-#                                         Version: v1.2.1
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
+#         /___/                           Please report bugs and contribute back your improvements
 #
+#                                         Version: v2.0.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments of a script which uses commands and delegates accordingly.
@@ -45,7 +45,14 @@
 #    	sourceOnce "my-lib-$command.sh"
 #    }
 #
-#    parseCommands commands "$MY_LIB_VERSION" sourceCommand my_lib_ "$@"
+#    # pass:
+#    # 1. supported commands
+#    # 2. version which shall be shown in --version and --help
+#    # 3. source command, responsible to load the files
+#    # 4. the prefix used for the commands. e.g. command show with prefix my_lib_ results in calling a
+#    #    function my_lib_show if the users wants to execute command show
+#    # 5. arguments passed to the corresponding function
+#    parseCommands commands "$MY_LIB_VERSION" sourceCommand "my_lib_" "$@"
 #
 #######	Limitations	#############
 #
@@ -113,9 +120,8 @@ function parseCommands {
 	shift 4 || die "could not shift by 4"
 
 	if (($# < 1 )); then
-		logError "no command passed to %s, following the output of --help" "$(basename "${BASH_SOURCE[1]}")"
-		echo ""
-		parse_commands_printHelp parseCommands_paramArr "$version"
+		logError "no command passed to %s, following the output of --help\n" "$(basename "${BASH_SOURCE[1]}")"
+		>&2 parse_commands_printHelp parseCommands_paramArr "$version"
 		exit 9
 	fi
 
@@ -128,7 +134,7 @@ function parseCommands {
 	arrTakeEveryX parseCommands_paramArr commandNames 2 0
 	local tmpRegex regex
 	tmpRegex=$(joinByChar "|" "${commandNames[@]}")
-	regex="^$tmpRegex\$"
+	regex="^($tmpRegex)\$"
 	local -r tmpRegex regex
 
 	if [[ "$command" =~ $regex ]]; then
@@ -139,9 +145,8 @@ function parseCommands {
 	elif [[ "$command" == "--version" ]]; then
 		printVersion "$version"
 	else
-		logError "unknown command \033[0;36m%s\033[0m, following the output of --help" "$command"
-		echo ""
-		parse_commands_printHelp parseCommands_paramArr "$version"
+		logError "unknown command \033[0;36m%s\033[0m, following the output of --help\n" "$command"
+		>&2 parse_commands_printHelp parseCommands_paramArr "$version"
 		return 1
 	fi
 }
