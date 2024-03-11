@@ -3,11 +3,11 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
-#  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
-#         /___/
-#                                         Version: v1.2.1
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
+#         /___/                           Please report bugs and contribute back your improvements
 #
+#                                         Version: v2.0.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -40,6 +40,7 @@
 #    	checkArgIsArrayWithTuples arr 3 "names" 1 describeTriple
 #
 #    	exitIfArgIsNotArray arr 1
+#    	exitIfArgIsNotArrayOrIsEmpty arr 1
 #    	exitIfArgIsNotFunction "$fn" 2
 #
 #    	# shellcheck disable=SC2317   # is passed by name to exitIfArgIsNotArrayWithTuples
@@ -104,6 +105,16 @@ function checkArgIsArray() {
 function exitIfArgIsNotArray() {
 	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsArray
 	checkArgIsArray "$@" || exit $?
+}
+
+function exitIfArgIsNotArrayOrIsEmpty() {
+	exitIfArgIsNotArray "$@"
+		local -rn exitIfArgIsNotArrayOrIsEmpty_arr=$1
+		local -r argNumber=$2
+		shift 2 || die "could not shift by 2"
+		if [[ ${#exitIfArgIsNotArrayOrIsEmpty_arr[@]} -lt 1 ]]; then
+			die "the passed argument \033[0;36m%s\033[0m is an empty array" "${!checkArgIsArray_arr}"
+		fi
 }
 
 function checkArgIsArrayWithTuples() {

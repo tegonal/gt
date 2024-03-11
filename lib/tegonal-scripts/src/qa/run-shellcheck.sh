@@ -2,11 +2,11 @@
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
-#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
-#  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
-#         /___/
-#                                         Version: v1.2.1
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
+#         /___/                           Please report bugs and contribute back your improvements
 #
+#                                         Version: v2.0.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -43,6 +43,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/array-utils.sh"
 
 function runShellcheck() {
 	exitIfCommandDoesNotExist "shellcheck" "see https://github.com/koalaman/shellcheck#installing"
@@ -59,7 +60,7 @@ function runShellcheck() {
 	local -r sourcePath=$2
 	shift 2 || die "could not shift by 2"
 
-	exitIfArgIsNotArray runShellcheck_paths 1
+	exitIfArgIsNotArrayOrIsEmpty runShellcheck_paths 1
 
 	local path
 	for path in "${runShellcheck_paths[@]}"; do
@@ -104,8 +105,10 @@ function runShellcheck() {
 	if ((fileWithIssuesCounter > 0)); then
 		die "found shellcheck issues in %s files (%s symlinks skipped)" "$fileWithIssuesCounter" "$skipped"
 	elif ((fileCounter == 0)); then
-		die "looks suspicious, no files where analysed, watch out for errors above"
+		die "looks suspicious, no files where analysed (%s symlinks skipped), watch out for errors above" "$skipped"
 	else
-		logSuccess "no shellcheck issues found, analysed %s files (%s symlinks skipped)" "$fileCounter" "$skipped"
+    local runShellcheck_paths_as_string
+		runShellcheck_paths_as_string=$(joinByChar $'\n' "${runShellcheck_paths[@]}")
+		logSuccess "no shellcheck issues found, analysed %s files (%s symlinks skipped) in paths:\n%s" "$fileCounter" "$skipped" "$runShellcheck_paths_as_string"
 	fi
 }
