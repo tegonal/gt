@@ -6,7 +6,7 @@ which was based in turn on the Harmony contributor agreements harmonyagreements.
 Thank you for your interest in contributing to
   gt
 currently developed on the platform
-  https://github.com/<OWNER_GITHUB>/<PROJECT_NAME_GITHUB>
+  https://github.com/tegonal/gt
 and owned by
   Tegonal Genossenschaft, Switzerland (the “Project Owner”, hereafter "We" or "Us").
 
