@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.0.0
+#                                         Version: v3.0.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -27,10 +27,12 @@
 #    	# shellcheck disable=SC2034   # is passed by name to checkArgIsArray
 #    	local -rn arr=$1
 #    	local -r fn=$2
+#    	local -r bool=$3
 #
 #    	# resolves arr recursively via recursiveDeclareP and check that is a non-associative array
 #    	checkArgIsArray arr 1        # same as exitIfArgIsNotArray if set -e has an effect on this line
 #    	checkArgIsFunction "$fn" 2   # same as exitIfArgIsNotFunction if set -e has an effect on this line
+#    	checkArgIsBoolean "$bool" 3   # same as exitIfArgIsNotBoolean if set -e has an effect on this line
 #
 #    	# shellcheck disable=SC2317   # is passed by name to checkArgIsArrayWithTuples
 #    	function describeTriple() {
@@ -42,6 +44,7 @@
 #    	exitIfArgIsNotArray arr 1
 #    	exitIfArgIsNotArrayOrIsEmpty arr 1
 #    	exitIfArgIsNotFunction "$fn" 2
+#    	exitIfArgIsNotBoolean "$bool" 2
 #
 #    	# shellcheck disable=SC2317   # is passed by name to exitIfArgIsNotArrayWithTuples
 #    	function describePair() {
@@ -78,14 +81,14 @@ sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function checkArgIsArray() {
 	if ! (($# == 2)); then
-		logError "Two arguments needs to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
-		echo >&2 '1: array      name of the array to check'
-		echo >&2 '2: argNumber  what argument do we check (used in error message)'
+		logError "Two arguments 			needs to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
+		echo >&2 '1: array      		  name of the array to check'
+		echo >&2 '2: argNumberOrName  what argument do we check (used in error message)'
 		printStackTrace
 		exit 9
 	fi
 	local -rn checkArgIsArray_arr=$1
-	local -r argNumber=$2
+	local -r argNumberOrName=$2
 	shift 2 || die "could not shift by 2"
 
 	reg='^declare -a.*'
@@ -98,7 +101,7 @@ function checkArgIsArray() {
 			funcName=${FUNCNAME[2]}
 		fi
 		traceAndReturnDying "the passed array \033[0;36m%s\033[0m is broken.\nThe %s argument to %s needs to be a non-associative array, given:\n%s" \
-			"${!checkArgIsArray_arr}" "$argNumber" "$funcName" "$arrayDefinition"
+			"${!checkArgIsArray_arr}" "$argNumberOrName" "$funcName" "$arrayDefinition"
 	fi
 }
 
@@ -110,7 +113,7 @@ function exitIfArgIsNotArray() {
 function exitIfArgIsNotArrayOrIsEmpty() {
 	exitIfArgIsNotArray "$@"
 		local -rn exitIfArgIsNotArrayOrIsEmpty_arr=$1
-		local -r argNumber=$2
+		local -r argNumberOrName=$2
 		shift 2 || die "could not shift by 2"
 		if [[ ${#exitIfArgIsNotArrayOrIsEmpty_arr[@]} -lt 1 ]]; then
 			die "the passed argument \033[0;36m%s\033[0m is an empty array" "${!checkArgIsArray_arr}"
@@ -123,7 +126,7 @@ function checkArgIsArrayWithTuples() {
 		echo >&2 '1: array            name of the array to check'
 		echo >&2 '2: tupleNum         the number of values of each tuple'
 		echo >&2 '3: tupleRepresents  what does the tuple represent (used in error message)'
-		echo >&2 '4: argNumber        what argument do we check (used in error message)'
+		echo >&2 '4: argNumberOrName  what argument do we check (used in error message)'
 		echo >&2 '5: describeTupleFn  function which describes how the tuples are built up'
 		printStackTrace
 		exit 9
@@ -132,13 +135,13 @@ function checkArgIsArrayWithTuples() {
 	local -rn checkArgIsArrayWithTuples_paramArr=$1
 	local -r tupleNum=$2
 	local -r tupleRepresents=$3
-	local -r argNumber=$4
+	local -r argNumberOrName=$4
 	local -r describeTupleFn=$5
 	shift 5 || die "could not shift by 5"
 
 	local -r arrLength=${#checkArgIsArrayWithTuples_paramArr[@]}
 
-	exitIfArgIsNotFunction "$describeTupleFn" "$argNumber"
+	exitIfArgIsNotFunction "$describeTupleFn" "$argNumberOrName"
 
 	local funcName=${FUNCNAME[1]}
 	if [[ $funcName == "exitIfArgIsNotArrayWithTuples" ]]; then
@@ -150,7 +153,7 @@ function checkArgIsArrayWithTuples() {
 	reg='declare -a.*'
 	if ! [[ "$arrayDefinition" =~ $reg ]]; then
 		logError "the passed array \033[0;36m%s\033[0m is broken" "${!checkArgIsArrayWithTuples_paramArr}"
-		printf >&2 "The %s argument to %s needs to be a non-associative array containing %s, given:\n" "$argNumber" "$funcName" "$tupleRepresents"
+		printf >&2 "The %s argument to %s needs to be a non-associative array containing %s, given:\n" "$argNumberOrName" "$funcName" "$tupleRepresents"
 		echo >&2 "$arrayDefinition"
 		echo >&2 ""
 		"$describeTupleFn"
@@ -160,7 +163,7 @@ function checkArgIsArrayWithTuples() {
 
 	if ((arrLength == 0)); then
 		logError "the passed array \033[0;36m%s\033[0m is broken, length was 0\033[0m" "${!checkArgIsArrayWithTuples_paramArr}"
-		printf >&2 "The %s argument to %s needs to be a non-empty array containing %s, given:\n" "$argNumber" "$funcName" "$tupleRepresents"
+		printf >&2 "The %s argument to %s needs to be a non-empty array containing %s, given:\n" "$argNumberOrName" "$funcName" "$tupleRepresents"
 		"$describeTupleFn"
 		printStackTrace
 		exit 9
@@ -168,7 +171,7 @@ function checkArgIsArrayWithTuples() {
 
 	if ! ((arrLength % tupleNum == 0)); then
 		logError "the passed array \033[0;36m%s\033[0m is broken" "${!checkArgIsArrayWithTuples_paramArr}"
-		printf >&2 "The %s argument to %s needs to be an array with %s-tuples containing %s, given:\n" "$argNumber" "$funcName" "$tupleNum" "$tupleRepresents"
+		printf >&2 "The %s argument to %s needs to be an array with %s-tuples containing %s, given:\n" "$argNumberOrName" "$funcName" "$tupleNum" "$tupleRepresents"
 		"$describeTupleFn"
 		echo >&2 ""
 		echo >&2 "given:"
@@ -198,9 +201,9 @@ function exitIfArgIsNotArrayWithTuples() {
 }
 
 function checkArgIsFunction() {
-	local name argNumber
+	local name argNumberOrName
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(name argNumber)
+	local -ra params=(name argNumberOrName)
 	parseFnArgs params "$@"
 
 	if ! declare -F "$name" >/dev/null; then
@@ -211,7 +214,7 @@ function checkArgIsFunction() {
 			funcName=${FUNCNAME[2]}
 		fi
 		traceAndReturnDying "the %s argument to %s needs to be a function/command, %s isn't one\nMaybe it is a variable storing the name of a function?\nFollowing the output of: declare -p %s\n%s" \
-			"$argNumber" "$funcName" "$name" "$name" "$declareP"
+			"$argNumberOrName" "$funcName" "$name" "$name" "$declareP"
 	fi
 }
 
@@ -220,6 +223,26 @@ function exitIfArgIsNotFunction() {
 	checkArgIsFunction "$@" || exit $?
 }
 
+function checkArgIsBoolean() {
+	local value argNumberOrName
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(value argNumberOrName)
+	parseFnArgs params "$@"
+
+	if ! [[ $value =~ ^(true|false)$ ]]; then
+		local funcName=${FUNCNAME[1]}
+		if [[ $funcName == "exitIfArgIsNotBoolean" ]]; then
+			funcName=${FUNCNAME[2]}
+		fi
+		traceAndReturnDying "the %s argument to %s needs to be a boolean (either true or false), %s isn't one" \
+			"$argNumberOrName" "$funcName" "$value"
+	fi
+}
+
+function exitIfArgIsNotBoolean() {
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsBoolean
+	checkArgIsBoolean "$@" || exit $?
+}
 function checkCommandExists() {
 	if ! (($# == 1 || $# == 2)); then
 		traceAndDie "you need to pass the name of the command to check to checkCommandExists and optionally an additional hint (e.g. install via...)"
