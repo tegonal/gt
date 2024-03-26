@@ -128,7 +128,7 @@ function gt_pull() {
 
 	# if remote does not exist then pull.args does not and most likely pullDir is thus not defined, in this case we want
 	# to show the error about the non existing remote before other missing arguments
-	if ! [[ -v pullDir && -v workingDir && -n $workingDir && -v remote && -n $remote ]]; then
+	if ! [[ -v pullDir && -v workingDir && -n $workingDir ]] && [[ -v remote && -n $remote ]]; then
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
