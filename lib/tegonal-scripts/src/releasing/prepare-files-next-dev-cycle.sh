@@ -6,16 +6,12 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.0.0
+#                                         Version: v3.0.0
 #######  Description  #############
 #
-#  prepare the next dev cycle for files based on conventions:
+#  Prepare the next dev cycle for files based on conventions:
 #  - expects a version in format vX.Y.Z(-RC...)
-#  - main is your default branch
-#  - requires you to have a /scripts folder in your project root which contains:
-#    - before-pr.sh which provides function beforePr and updateDocu and can be sourced (add ${__SOURCED__:+return} before executing beforePr)
-#
-#  You can define a /scripts/additional-prepare-files-next-dev-cycle-steps.sh which is sourced (via sourceOnce) if it exists
+#  - main is your default branch (or you specify --branch)
 #
 #######  Usage  ###################
 #
@@ -26,15 +22,26 @@
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    # prepare dev cycle for version v0.2.0
+#    scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+#    sourceOnce "$scriptsDir/before-pr.sh"
+#
+#    # prepare dev cycle for version v0.2.0, assumes a function beforePr is in scope which we sourced above
 #    "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh" -v v0.2.0
+#
+#    function specialBeforePr(){
+#    	beforePr && echo "imagine some additional work"
+#    }
+#    # make the function visible to release-files.sh / not necessary if you source prepare-files-next-dev-cycle.sh, see further below
+#    declare -fx specialBeforePr
 #
 #    # prepare dev cycle for version v0.2.0 and
 #    # searches for additional occurrences where the version should be replaced via the specified pattern in:
 #    # - script files in ./src and ./scripts
 #    # - ./README.md
+#    # uses specialBeforePr instead of beforePr
 #    "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh" -v v0.2.0 \
-#    	-p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])"
+#    	-p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])" \
+#    	--before-pr-fn specialBeforePr
 #
 #    # in case you want to provide your own release.sh and only want to do some pre-configuration
 #    # then you might want to source it instead
@@ -46,65 +53,69 @@
 #    # put "$@" first, if you don't want that a user can override your pre-configuration
 #    prepareNextDevCycle -p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])" "$@"
 #
+#    # call the function define --before-pr-fn, don't allow to override via command line arguments
+#    prepareNextDevCycle "$@" --before-pr-fn specialBeforePr
+#
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v2.0.0'
+export TEGONAL_SCRIPTS_VERSION='v3.0.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/releasing/sneak-peek-banner.sh"
-sourceOnce "$dir_of_tegonal_scripts/releasing/toggle-sections.sh"
-sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-README.sh"
-sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/execute-if-defined.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-next-dev-cycle-template.sh"
 
 function prepareFilesNextDevCycle() {
-	local version projectsRootDir additionalPattern
+	local versionParamPatternLong projectsRootDirParamPatternLong
+	local additionalPatternParamPatternLong beforePrFnParamPatternLong afterVersionUpdateHookParamPatternLong
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+
+	local version afterVersionUpdateHook projectsRootDir additionalPattern beforePrFn afterVersionUpdateHook
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
-		version '-v' 'the version for which we prepare the dev cycle'
-		projectsRootDir '--project-dir' '(optional) The projects directory -- default: .'
-		additionalPattern '-p|--pattern' '(optional) pattern which is used in a perl command (separator /) to search & replace additional occurrences. It should define two match groups and the replace operation looks as follows: '"\\\${1}\$version\\\${2}"
+		version "$versionParamPattern" 'the version for which we prepare the dev cycle'
+		projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
+		additionalPattern "$additionalPatternParamPattern" "$additionalPatternParamDocu"
+		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
+		afterVersionUpdateHook "$afterVersionUpdateHookParamPattern" "$afterVersionUpdateHookParamDocu"
 	)
 	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
 	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath ".") || die "could not determine realpath of ."; fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
+	if ! [[ -v beforePrFn ]]; then beforePrFn="beforePr"; fi
+	if ! [[ -v afterVersionUpdateHook ]]; then afterVersionUpdateHook=''; fi
 	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 
-	if ! [[ "$version" =~ ^(v[0-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$ ]]; then
-		die "version should match vX.Y.Z(-RC...), was %s" "$version"
-	fi
+	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
 
-	exitIfGitHasChanges
+	# those variables are used in local functions further below which will be called from releaseTemplate.
+	# The problem: in case releaseTemplate defines a variable with the same name, then we would use those
+	# variables instead of the one we define here, hence we prefix them to avoid this problem
+	local prepare_files_next_dev_afterVersionUpdateHook="$afterVersionUpdateHook"
 
-	logInfo "prepare next dev cycle for version $version"
+	function prepareFilesNextDevCycle_afterVersionHook() {
+		local version projectsRootDir additionalPattern
+		parseArguments afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION" "$@"
 
-	local -r projectsScriptsDir="$projectsRootDir/scripts"
+		updateVersionScripts \
+			"$versionParamPatternLong" "$version" \
+			"$additionalPatternParamPatternLong" "$additionalPattern" \
+			-d "$projectsRootDir/src" || return $?
 
-	local -r devVersion="$version-SNAPSHOT"
+		executeIfFunctionNameDefined "$prepare_files_next_dev_afterVersionUpdateHook" "$afterVersionUpdateHookParamPatternLong" \
+			"$versionParamPatternLong" "$version" \
+			"$projectsRootDirParamPatternLong" "$projectsRootDir" \
+			"$additionalPatternParamPatternLong" "$additionalPattern"
+	}
 
-	sneakPeekBanner -c show || return $?
-	toggleSections -c main || return $?
-	updateVersionScripts -v "$devVersion" -p "$additionalPattern" || return $?
-	updateVersionScripts -v "$devVersion" -p "$additionalPattern" -d "$projectsScriptsDir" || return $?
-
-	local -r additionalSteps="$projectsScriptsDir/additional-prepare-files-next-dev-cycle-steps.sh"
-	if [[ -f $additionalSteps ]]; then
-		logInfo "found $additionalSteps going to source it"
-		# shellcheck disable=SC2310			# we are aware of that || will disable set -e for sourceOnce
-		sourceOnce "$additionalSteps" || die "could not source $additionalSteps"
-	fi
-
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for sourceOnce
-	sourceOnce "$projectsScriptsDir/before-pr.sh" || die "could not source before-pr.sh"
-
-	# check if we accidentally have broken something, run formatting or whatever is done in beforePr
-	beforePr || return $?
-
-	git commit -a -m "prepare next dev cycle for $version"
+	prepareNextDevCycleTemplate \
+		"$@" \
+		"$afterVersionUpdateHookParamPatternLong" prepareFilesNextDevCycle_afterVersionHook
 }
 
 ${__SOURCED__:+return}
