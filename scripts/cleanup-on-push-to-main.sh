@@ -49,9 +49,9 @@ function cleanupOnPushToMain() {
 	updateBashDocumentation "$projectDir/install.sh" "install" . README.md || die "could not update install documentation"
 
 	local -ra additionalHelp=(
-		gt_remote_add "src/gt-remote.sh" "add --help"
-		gt_remote_remove "src/gt-remote.sh" "remove --help"
-		gt_remote_list "src/gt-remote.sh" "list --help"
+		gt-remote-add "src/gt-remote.sh" "add --help"
+		gt-remote-remove "src/gt-remote.sh" "remove --help"
+		gt-remote-list "src/gt-remote.sh" "list --help"
 	)
 	for ((i = 0; i < ${#additionalHelp[@]}; i += 3)); do
 		# shellcheck disable=SC2086   # we actually want word splitting for additionalHelp[i+2] thus OK

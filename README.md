@@ -289,7 +289,7 @@ gt remote remove -r tegonal-scripts
 
 Following the output of running `gt remote add --help`:
 
-<gt_remote_add-help>
+<gt-remote-add-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
 ```text
@@ -322,13 +322,13 @@ INFO: Version of gt-remote.sh is:
 v0.18.0-SNAPSHOT
 ```
 
-</gt_remote_add-help>
+</gt-remote-add-help>
 
 ### remove
 
 Following the output of running `gt remote remove --help`:
 
-<gt_remote_remove-help>
+<gt-remote-remove-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
 ```text
@@ -351,20 +351,20 @@ INFO: Version of gt-remote.sh is:
 v0.18.0-SNAPSHOT
 ```
 
-</gt_remote_remove-help>
+</gt-remote-remove-help>
 
 ### list
 
 Following the output of running `gt remote list --help`:
 
-<gt_remote_list-help>
+<gt-remote-list-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
 ```text
 
 ```
 
-</gt_remote_list-help>
+</gt-remote-list-help>
 
 ## pull
 
