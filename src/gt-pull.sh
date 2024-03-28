@@ -109,11 +109,9 @@ function gt_pull() {
 		# cannot be readonly as we override it in paths.source.sh as well, should be the same though
 		local pullArgsFile="$workingDir/remotes/$remote/pull.args"
 		if [[ -f $pullArgsFile ]]; then
-			local defaultArguments
-			defaultArguments=$(cat "$pullArgsFile") || die "could not read %s, you might not execute what you want without it, aborting" "$pullArgsFile"
-			eval 'for arg in '"$defaultArguments"'; do
-					args+=("$arg");
-			done'
+			while read -r line; do
+				eval 'args+=('"$line"');'
+			done < "$pullArgsFile" || die "could not read %s, you might not execute what you want without it, aborting" "$pullArgsFile"
 		fi
 	fi
 	args+=("$@")
