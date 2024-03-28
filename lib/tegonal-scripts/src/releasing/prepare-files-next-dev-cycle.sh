@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.0.0
+#                                         Version: v3.0.1
 #######  Description  #############
 #
 #  Prepare the next dev cycle for files based on conventions:
@@ -60,7 +60,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v3.0.0'
+export TEGONAL_SCRIPTS_VERSION='v3.0.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -103,7 +103,7 @@ function prepareFilesNextDevCycle() {
 		parseArguments afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION" "$@"
 
 		updateVersionScripts \
-			"$versionParamPatternLong" "$version" \
+			"$versionParamPatternLong" "$version-SNAPSHOT" \
 			"$additionalPatternParamPatternLong" "$additionalPattern" \
 			-d "$projectsRootDir/src" || return $?
 
