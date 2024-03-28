@@ -241,7 +241,7 @@ function gt_pull() {
 	function gt_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
-			if ! git checkout "tags/$tagToPull" -- "$path.$sigExtension"; then
+			if ! git checkout "tags/$tagToPull" -- "$path.$sigExtension" && [[ $unsecure == false ]]; then
 				logErrorWithoutNewline "no signature file found for \033[0;36m%s\033[0m, aborting pull from remote %s" "$path" "$remote"
 				gt_pull_mentionUnsecure >&2
 				return 1
