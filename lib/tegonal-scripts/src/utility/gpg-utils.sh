@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.0.0
+#                                         Version: v3.0.0
 #######  Description  #############
 #
 #  utility functions for dealing with gpg

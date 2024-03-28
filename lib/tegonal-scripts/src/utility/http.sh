@@ -9,7 +9,7 @@
 #                                         Version: v3.0.0
 #######  Description  #############
 #
-#  Shows or hides the sneak peek banner
+#  utility function dealing with fetching files via http
 #
 #######  Usage  ###################
 #
@@ -20,13 +20,10 @@
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    "$dir_of_tegonal_scripts/releasing/sneak-peek-banner.sh" -c hide
+#    sourceOnce "$dir_of_tegonal_scripts/utility/http.sh"
 #
-#    # if you use it in combination with other files, then you might want to source it instead
-#    sourceOnce "$dir_of_tegonal_scripts/releasing/sneak-peek-banner.sh"
-#
-#    # and then call the function
-#    sneakPeekBanner -c show
+#    # downloads https://.../signing-key.public.asc and https://.../signing-key.public.asc.sig and verifies it with gpg
+#    wgetAndVerify "https://github.com/tegonal/gt/.gt/signing-key.public.asc"
 #
 ###################################
 set -euo pipefail
@@ -38,40 +35,39 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function sneakPeekBanner() {
-	local command file
+function wgetAndVerify() {
+	exitIfCommandDoesNotExist "wget"
+
+	local url gpgDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
-	local -ra params=(
-		command '-c|--command' "either 'show' or 'hide'"
-		file '-f|--file' '(optional) the file where search & replace shall be done -- default: ./README.md'
+	local -ar params=(
+		url "-u|--url" "the url which shall be fetched"
+		gpgDir "--gpg-homedir" "(optional) can be used to specify a different home directory for gpg -- default: \$HOME/.gnupg"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312		# cat shouldn't fail for a constant string hence fine to ignore exit code
 		cat <<-EOM
-			# hide the sneak peek banner in ./README.md
-			sneak-peek-banner.sh -c hide
-
-			# show the sneak peek banner in ./docs/index.md
-			sneak-peek-banner.sh -c show -f ./docs/index.md
+			# downloads https://.../signing-key.public.asc and https://.../signing-key.public.asc.sig and verifies it with gpg
+      wgetAndVerify "https://github.com/tegonal/gt/.gt/signing-key.public.asc"
 		EOM
 	)
-
 	parseArguments params "$examples" "$TEGONAL_SCRIPTS_VERSION" "$@"
-	if ! [[ -v file ]]; then file="./README.md"; fi
+	if ! [[ -v gpgDir ]]; then gpgDir="$HOME/.gnupg"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
 
-	if [[ $command == show ]]; then
-		echo "show sneak peek banner in $file"
-		perl -0777 -i -pe 's/<!(---\n❗ You are taking[\S\s]+?---)>/$1/;' "$file"
-	elif [[ $command == hide ]]; then
-		echo "hide sneak peek banner in $file"
-		perl -0777 -i -pe 's/((?<!<!)---\n❗ You are taking[\S\s]+?---)/<!$1>/;' "$file"
-	else
-		echo >&2 "only 'show' and 'hide' are supported as command. Following the output of calling --help"
-		parse_args_printHelp params "$examples" "$TEGONAL_SCRIPTS_VERSION" --help
-	fi
+	local fileName
+	fileName=$(basename "$url")
+	local currentDir
+	currentDir=$(pwd)
+
+	for name in "$fileName" "$fileName.sig"; do
+	if [[ -f $name ]]; then
+  		logInfo "there is already a file named %s in %s, going to override" "$name" "$currentDir"
+  	fi
+	done
+
+	wget -O "$url" || die "could not download %s" "$url"
+	wget -O "$url.sig" || die "could not download %s" "$url.sig"
+	gpg --homedir "$gpgDir" --verify "./$fileName.sig" "./$fileName"
 }
-${__SOURCED__:+return}
-sneakPeekBanner "$@"

@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.0.0
+#                                         Version: v3.0.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
@@ -95,7 +95,7 @@ function parse_args_describeParameterTriple() {
 
 function parse_args_exitIfParameterDefinitionIsNotTriple() {
 	if ! (($# == 1)); then
-		logError "One parameter needs to be passed to parse_args_exitIfParameterDefinitionIsNotTriple, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		logError "One argument needs to be passed to parse_args_exitIfParameterDefinitionIsNotTriple, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: params   the name of an array which contains the parameter definitions'
 		printStackTrace
 		exit 9
@@ -181,11 +181,14 @@ function parseArgumentsInternal {
 		done
 
 		if [[ $parseArguments_unknownBehaviour = 'error' ]] && ((parseArguments_expectedName == 0)); then
+			parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version"
 			if [[ $parseArguments_argName =~ ^- ]] && (($# > 1)); then
-				die "unknown argument \033[1;36m%s\033[0m (and value %s)" "$parseArguments_argName" "$2"
+				logError "unknown argument \033[1;36m%s\033[0m (and value %s)" "$parseArguments_argName" "$2"
 			else
-				die "unknown argument \033[1;36m%s\033[0m" "$parseArguments_argName"
+				logError "unknown argument \033[1;36m%s\033[0m" "$parseArguments_argName"
 			fi
+			echo >&2 "consult the output of --help shown further above for valid names"
+			exit 9
 		fi
 		shift || die "could not shift by 1"
 	done

@@ -11,6 +11,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
+GT_VERSION="v0.18.0-SNAPSHOT"
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
@@ -22,32 +23,41 @@ if ! [[ -v projectDir ]]; then
 	readonly projectDir
 fi
 
+if ! [[ -v dir_of_github_commons ]]; then
+	dir_of_github_commons="$projectDir/.gt/remotes/tegonal-gh-commons/lib/src"
+	readonly dir_of_github_commons
+fi
+
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$projectDir/lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
+sourceOnce "$dir_of_github_commons/gt/pull-hook-functions.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function additionalPrepareNextSteps() {
-	# keep in sync with local -r further below (3 lines at the time of writing)
-	exitIfVarsNotAlreadySetBySource devVersion additionalPattern
-	# we help shellcheck to realise that these variables are initialised
-	local -r devVersion="$devVersion" additionalPattern="$additionalPattern"
+function updateVersionInNonShFiles() {
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	local version projectsRootDir additionalPattern
+	parseArguments afterVersionHookParams "" "$GT_VERSION" "$@"
 
-	local additionalScripts additionalFilesWithVersions
-	source "$scriptsDir/shared-files-to-release.source.sh" || die "could not source shared-files-to-release.source.sh"
+	local -ra additionalScripts=(
+		"$projectsRootDir/install.sh"
+	)
 
 	for script in "${additionalScripts[@]}"; do
-		# we only update the version in the header but not the GT_LATEST_VERSION on purpose -- i.e. we omit
-		# -p on purpose (compared to additional-release-files-preparations.sh) -- because we don't want to set the SNAPSHOT
-		# version since this would cause that we set the SNAPSHOT version next time we update files via gt
-		updateVersionScripts -v "$devVersion" -d "$script"
+		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script"
 	done
 
-	logInfo "going to update version in non-sh files to %s" "$devVersion"
+	local -ra additionalFilesWithVersions=(
+		"$projectDir/.github/workflows/gt-update.yml"
+	)
+
+	logInfo "going to update version in non-sh files to %s" "$version"
 	for file in "${additionalFilesWithVersions[@]}"; do
-		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$devVersion/g;" "$file"
+		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file"
 	done
-
 }
-additionalPrepareNextSteps
+
+${__SOURCED__:+return}
+updateVersionInNonShFiles "$@"

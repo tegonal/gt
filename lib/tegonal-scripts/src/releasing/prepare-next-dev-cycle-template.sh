@@ -9,9 +9,15 @@
 #                                         Version: v3.0.0
 #######  Description  #############
 #
-#  Prepare the next dev cycle for files based on conventions:
+#  Prepares the next dev cycle based on conventions:
 #  - expects a version in format vX.Y.Z(-RC...)
 #  - main is your default branch (or you specify --branch)
+#
+#  It then executes the following steps:
+#  - update-version-common-steps.sh (see corresponding file for more information)
+#  - afterVersionUpateHook if defined
+#  - beforePrFn to see if everything is still OK
+#  - commits the changes
 #
 #######  Usage  ###################
 #
@@ -22,39 +28,34 @@
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #
-#    scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
-#    sourceOnce "$scriptsDir/before-pr.sh"
 #
-#    # prepare dev cycle for version v0.2.0, assumes a function beforePr is in scope which we sourced above
-#    "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh" -v v0.2.0
-#
-#    function specialBeforePr(){
-#    	beforePr && echo "imagine some additional work"
+#    function prepareNextAfterVersionUpdateHook() {
+#    	# some additional version bumps e.g. using perl
+#    	perl -0777 -i #...
 #    }
-#    # make the function visible to release-files.sh / not necessary if you source prepare-files-next-dev-cycle.sh, see further below
-#    declare -fx specialBeforePr
+#    # make the function visible to release-templates.sh / not necessary if you source release-templates.sh, see further below
+#    declare -fx releaseScalaLib
 #
-#    # prepare dev cycle for version v0.2.0 and
+#    # releases version v0.1.0 using releaseScalaLib as hook
+#    "$dir_of_tegonal_scripts/releasing/release-template.sh" \
+#    	-v v0.1.0 -k "0x945FE615904E5C85" --release-hook releaseScalaLib
+#
+#    # releases version v0.1.0 using releaseScalaLib as hook and
 #    # searches for additional occurrences where the version should be replaced via the specified pattern in:
 #    # - script files in ./src and ./scripts
 #    # - ./README.md
-#    # uses specialBeforePr instead of beforePr
-#    "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh" -v v0.2.0 \
-#    	-p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])" \
-#    	--before-pr-fn specialBeforePr
+#    "$dir_of_tegonal_scripts/releasing/release-files.sh" \
+#    	-v v0.1.0 -k "0x945FE615904E5C85" --release-hook releaseScalaLib \
+#    	-p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])"
 #
 #    # in case you want to provide your own release.sh and only want to do some pre-configuration
-#    # then you might want to source it instead
-#    sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh"
+#    # (such as specify the release-hook) then you might want to source it instead
+#    sourceOnce "$dir_of_tegonal_scripts/releasing/release-template.sh"
 #
 #    # and then call the function with your pre-configuration settings:
-#    # here we define the pattern which shall be used to replace further version occurrences
-#    # since "$@" follows afterwards, one could still override it via command line arguments.
-#    # put "$@" first, if you don't want that a user can override your pre-configuration
-#    prepareNextDevCycle -p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])" "$@"
-#
-#    # call the function define --before-pr-fn, don't allow to override via command line arguments
-#    prepareNextDevCycle "$@" --before-pr-fn specialBeforePr
+#    # here we define the function which shall be used as release-hook after "$@" this way one cannot override it.
+#    # put --release-hook before "$@" if you want to define only a default
+#    releaseTemplates "$@" --release-hook releaseScalaLib
 #
 ###################################
 set -euo pipefail
@@ -67,15 +68,17 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/execute-if-defined.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
-sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-next-dev-cycle-template.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-common-steps.sh"
 
-function prepareFilesNextDevCycle() {
-	local versionParamPatternLong projectsRootDirParamPatternLong
+function prepareNextDevCycleTemplate() {
+	local versionRegex versionParamPatternLong projectsRootDirParamPatternLong
 	local additionalPatternParamPatternLong beforePrFnParamPatternLong afterVersionUpdateHookParamPatternLong
+	local forReleaseParamPatternLong
 	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
-	local version afterVersionUpdateHook projectsRootDir additionalPattern beforePrFn afterVersionUpdateHook
+	local version projectsRootDir additionalPattern beforePrFn afterVersionUpdateHook
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		version "$versionParamPattern" 'the version for which we prepare the dev cycle'
@@ -84,39 +87,40 @@ function prepareFilesNextDevCycle() {
 		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
 		afterVersionUpdateHook "$afterVersionUpdateHookParamPattern" "$afterVersionUpdateHookParamDocu"
 	)
-	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
+	parseArgumentsIgnoreUnknown params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
 	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath ".") || die "could not determine realpath of ."; fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
 	if ! [[ -v beforePrFn ]]; then beforePrFn="beforePr"; fi
 	if ! [[ -v afterVersionUpdateHook ]]; then afterVersionUpdateHook=''; fi
 	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 
+	if ! [[ "$version" =~ $versionRegex ]]; then
+		die "version should match vX.Y.Z(-RC...), was %s" "$version"
+	fi
 	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
 
-	# those variables are used in local functions further below which will be called from releaseTemplate.
-	# The problem: in case releaseTemplate defines a variable with the same name, then we would use those
-	# variables instead of the one we define here, hence we prefix them to avoid this problem
-	local prepare_files_next_dev_afterVersionUpdateHook="$afterVersionUpdateHook"
+	exitIfGitHasChanges
 
-	function prepareFilesNextDevCycle_afterVersionHook() {
-		local version projectsRootDir additionalPattern
-		parseArguments afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION" "$@"
+	logInfo "prepare next dev cycle for version $version"
 
-		updateVersionScripts \
-			"$versionParamPatternLong" "$version" \
-			"$additionalPatternParamPatternLong" "$additionalPattern" \
-			-d "$projectsRootDir/src" || return $?
+	local -r devVersion="$version-SNAPSHOT"
 
-		executeIfFunctionNameDefined "$prepare_files_next_dev_afterVersionUpdateHook" "$afterVersionUpdateHookParamPatternLong" \
-			"$versionParamPatternLong" "$version" \
-			"$projectsRootDirParamPatternLong" "$projectsRootDir" \
-			"$additionalPatternParamPatternLong" "$additionalPattern"
-	}
+	updateVersionCommonSteps \
+		"$forReleaseParamPatternLong" false \
+		"$versionParamPatternLong" "$devVersion" \
+		"$projectsRootDirParamPatternLong" "$projectsRootDir" \
+		"$additionalPatternParamPatternLong" "$additionalPattern"
 
-	prepareNextDevCycleTemplate \
-		"$@" \
-		"$afterVersionUpdateHookParamPatternLong" prepareFilesNextDevCycle_afterVersionHook
+	executeIfFunctionNameDefined "$afterVersionUpdateHook" "$afterVersionUpdateHookParamPatternLong" \
+		"$versionParamPatternLong" "$version" \
+		"$projectsRootDirParamPatternLong" "$projectsRootDir" \
+		"$additionalPatternParamPatternLong" "$additionalPattern"
+
+	# check if we accidentally have broken something, run formatting or whatever is done in beforePr
+	"$beforePrFn" || return $?
+
+	git commit -a -m "prepare next dev cycle for $version"
 }
 
 ${__SOURCED__:+return}
-prepareFilesNextDevCycle "$@"
+prepareNextDevCycleTemplate "$@"
