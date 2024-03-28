@@ -63,7 +63,7 @@ function gt_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification

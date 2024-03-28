@@ -61,7 +61,7 @@ function checkWorkingDirExists() {
 	shift 1 || die "could not shift by 1"
 
 	local workingDirPattern
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	if ! [[ -d $workingDirAbsolute ]]; then
 		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDirAbsolute"
@@ -197,7 +197,7 @@ function latestRemoteTagIncludingChecks() {
 	local -r currentDir
 
 	local tagPattern
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
 	cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
@@ -217,7 +217,7 @@ function validateGpgKeysAndImport() {
 	exitIfArgIsNotFunction "$validateGpgKeysAndImport_callback" 4
 
 	local autoTrustPattern
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local -r sigExtension="sig"
 

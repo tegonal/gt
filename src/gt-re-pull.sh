@@ -54,7 +54,7 @@ function gt_re_pull() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
 

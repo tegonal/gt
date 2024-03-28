@@ -64,7 +64,7 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 }
 
 function gt_remote_add() {
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -197,7 +197,7 @@ function gt_remote_add() {
 }
 
 function gt_remote_list_raw() {
-	source "$dir_of_gt/shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh"
 
 	local workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
@@ -251,7 +251,7 @@ function gt_remote_list() {
 }
 
 function gt_remote_remove() {
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments

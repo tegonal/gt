@@ -51,7 +51,7 @@ function gt_update() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local remote workingDir autoTrust tag
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs

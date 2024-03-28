@@ -63,7 +63,7 @@ function gt_reset_backToCurrentDir() {
 
 function gt_reset() {
 	local defaultWorkingDir unsecurePattern
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
