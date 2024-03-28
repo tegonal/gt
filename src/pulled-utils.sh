@@ -30,9 +30,6 @@ fi
 
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
-function pulledTsvHeader() {
-	printf "tag\tfile\trelativeTarget\tsha512\n"
-}
 function pulledTsvEntry() {
 	local tag file relativeTarget sha512
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
@@ -43,6 +40,8 @@ function pulledTsvEntry() {
 }
 
 function migratePulledTsvFormat() {
+	local pulledTsvLatestVersionPragma
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 	local -r pulledTsv=$1
 	local -r fromVersion=$2
 	local -r toVersion=$3
@@ -51,7 +50,7 @@ function migratePulledTsvFormat() {
 	if [[ $fromVersion == "unspecified" ]]; then
 		# pulled.tsv without version pragma, convert to current
 		logInfo "Format migration available, going to rewrite %s automatically from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m" "$pulledTsv" "$fromVersion" "$toVersion"
-		echo "$expectedVersionPragma" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to \033[0;36m%s\033[0m -- please do it manually" "$expectedVersionPragma" "$pulledTsv"
+		echo "$pulledTsvLatestVersionPragma" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to \033[0;36m%s\033[0m -- please do it manually" "$pulledTsvLatestVersionPragma" "$pulledTsv"
 		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able append the current %s to \033[0;36m%s\033[0m" "$pulledTsv" "$pulledTsv.new"
 		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override \033[0;36m%s\033[0m with the new content from %s" "$pulledTsv" "$pulledTsv.new"
 	else
@@ -63,11 +62,12 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 	local -r pulledTsv=$1
 	shift 1 || die "could not shift by 1"
 
-	local -r expectedVersion="1.0.0"
-	local -r expectedVersionPragma="#@ Version: $expectedVersion"
-	local currentVersionPragma currentHeader expectedHeader
+	local pulledTsvLatestVersion pulledTsvLatestVersionPragma pulledTsvHeader
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+
+	local currentVersionPragma currentHeader
 	currentVersionPragma="$(head -n 1 "$pulledTsv")" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
-	if [[ $currentVersionPragma != "$expectedVersionPragma" ]]; then
+	if [[ $currentVersionPragma != "$pulledTsvLatestVersionPragma" ]]; then
 		local -r versionRegex="#@ Version: ([0-9]\.[0-9]\.[0-9])"
 		local currentVersion
 		if [[ "$currentVersionPragma" =~ $versionRegex ]]; then
@@ -75,16 +75,14 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 		else
 			currentVersion="unspecified"
 		fi
-		logInfo "Format of \033[0;36m%s\033[0m changed\nLatest format version is: %s\nCurrent format version is: %s" "$pulledTsv" "$expectedVersion" "$currentVersion"
-		migratePulledTsvFormat "$pulledTsv" "$currentVersion" "$expectedVersion"
+		logInfo "Format of \033[0;36m%s\033[0m changed\nLatest format version is: %s\nCurrent format version is: %s" "$pulledTsv" "$pulledTsvLatestVersion" "$currentVersion"
+		migratePulledTsvFormat "$pulledTsv" "$currentVersion" "$pulledTsvLatestVersion"
 	fi
 
 	currentHeader="$(head -n 2 "$pulledTsv" | tail -n 1)" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
-	# shellcheck disable=SC2310		# we are aware of that the || disables set -e for pulledTsvHeader
-	expectedHeader=$(pulledTsvHeader) || die "looks like we discovered a bug, was not able to create the pulledTsvHeader"
-	if [[ $currentHeader != "$expectedHeader" ]]; then
+	if [[ $currentHeader != "$pulledTsvHeader" ]]; then
 		logError "looks like the format of \033[0;36m%s\033[0m changed:" "$pulledTsv"
-		cat -A >&2 <<<"Expected Header (after Version pragma): $expectedHeader"
+		cat -A >&2 <<<"Expected Header (after Version pragma): $pulledTsvHeader"
 		cat -A >&2 <<<"Current  Header (after Version pragma): $currentHeader"
 		echo >&2 ""
 		echo >&2 "In case you updated gt, then check the release notes for migration hints:"
