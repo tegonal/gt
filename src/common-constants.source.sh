@@ -30,5 +30,6 @@ local -r tagParamPattern='-t|--tag'
 # in case you should add alternatives, then you need to modify error messages and the like, search for unsecureParamPattern
 local -r unsecureParamPattern='--unsecure'
 
-
-
+local -r pulledTsvLatestVersion="1.0.0"
+local -r pulledTsvLatestVersionPragma="#@ Version: $pulledTsvLatestVersion"
+local -r pulledTsvHeader=$'tag\tfile\trelativeTarget\tsha512'

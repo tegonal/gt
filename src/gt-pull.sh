@@ -63,6 +63,7 @@ function gt_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
+	local pulledTsvLatestVersionPragma pulledTsvHeader
 	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
@@ -151,7 +152,7 @@ function gt_pull() {
 	fi
 
 	if ! [[ -f $pulledTsv ]]; then
-		pulledTsvHeader >"$pulledTsv" || die "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
+		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader"$'\n' >"$pulledTsv" || die "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
 	else
 		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
