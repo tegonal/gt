@@ -30,12 +30,12 @@ sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function exitBecauseNoGpgKeysImported() {
-	local remote publicKeysDir gpgDir unsecurePattern
+	local remote publicKeysDir gpgDir unsecureParamPattern
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(remote publicKeysDir gpgDir unsecurePattern)
+	local -ra params=(remote publicKeysDir gpgDir unsecureParamPattern)
 	parseFnArgs params "$@"
 
-	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecurePattern"
+	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecureParamPattern"
 	printf >&2 "Alternatively, you can:\n- place public keys in %s or\n- setup a gpg store yourself at %s\n" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
 	exit 1
@@ -60,12 +60,12 @@ function checkWorkingDirExists() {
 	local workingDirAbsolute=$1
 	shift 1 || die "could not shift by 1"
 
-	local workingDirPattern
+	local workingDirParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	if ! [[ -d $workingDirAbsolute ]]; then
 		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDirAbsolute"
-		echo >&2 "Check for typos and/or use $workingDirPattern to specify another"
+		echo >&2 "Check for typos and/or use $workingDirParamPattern to specify another"
 		return 9
 	fi
 }
@@ -196,13 +196,13 @@ function latestRemoteTagIncludingChecks() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local tagPattern
+	local tagParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
-	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagPattern"
+	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagParamPattern"
 	cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
 	local tag
-	tag=$(latestRemoteTag "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagPattern"
+	tag=$(latestRemoteTag "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagParamPattern"
 	cd "$currentDir"
 	logInfo >&2 "latest is \033[0;36m%s\033[0m" "$tag"
 	echo "$tag"
@@ -216,7 +216,7 @@ function validateGpgKeysAndImport() {
 
 	exitIfArgIsNotFunction "$validateGpgKeysAndImport_callback" 4
 
-	local autoTrustPattern
+	local autoTrustParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local -r sigExtension="sig"
@@ -251,7 +251,7 @@ function validateGpgKeysAndImport() {
 
 			if [[ $importIt != true ]]; then
 				if [[ $autoTrust == true ]]; then
-					logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustPattern"
+					logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustParamPattern"
 					importIt=true
 				elif askYesOrNo "You can still import it via manual consent, do you want to proceed and take a look at the public key?"; then
 					importIt=true

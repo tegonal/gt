@@ -61,9 +61,9 @@ function gt_re_pull() {
 	local remote workingDir autoTrust onlyMissing
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
-		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
+		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
+		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		onlyMissing "$onlyMissingPattern" "(optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true"
 	)
 	local -r examples=$(

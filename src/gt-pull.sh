@@ -69,15 +69,15 @@ function gt_pull() {
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
-		remote "$remotePattern" 'name of the remote repository'
-		tag "$tagPattern" 'git tag used to pull the file/directory'
+		remote "$remoteParamPattern" 'name of the remote repository'
+		tag "$tagParamPattern" 'git tag used to pull the file/directory'
 		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
-		pullDir "$pullDirPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
+		pullDir "$pullDirParamPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		chopPath "--chop-path" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
-		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
-		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecurePattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
+		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
+		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecureParamPattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 	)
 
 	local -r examples=$(
@@ -179,7 +179,7 @@ function gt_pull() {
 
 			if noAscInDir "$publicKeysDir"; then
 				if [[ $unsecure == true ]]; then
-					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecurePattern"
+					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPattern"
 					doVerification=false
 				else
 					die "no public keys for remote \033[0;36m%s\033[0m defined in %s" "$remote" "$publicKeysDir"
@@ -195,16 +195,16 @@ function gt_pull() {
 
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
-						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecurePattern"
+						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPattern"
 						doVerification=false
 					else
-						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
 					fi
 				fi
 			fi
 		fi
 		if [[ $unsecure == true && $doVerification == true ]]; then
-			logInfo "gpg key found going to perform verification even though '%s true' was specified" "$unsecurePattern"
+			logInfo "gpg key found going to perform verification even though '%s true' was specified" "$unsecureParamPattern"
 		fi
 	fi
 
@@ -230,7 +230,7 @@ function gt_pull() {
 
 	function gt_pull_mentionUnsecure() {
 		if [[ $unsecure != true ]]; then
-			printf " -- you can disable this check via: %s true\n" "$unsecurePattern"
+			printf " -- you can disable this check via: %s true\n" "$unsecureParamPattern"
 		else
 			printf " -- you can disable this check via: %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
 		fi
