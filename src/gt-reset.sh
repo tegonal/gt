@@ -62,8 +62,8 @@ function gt_reset_backToCurrentDir() {
 }
 
 function gt_reset() {
-	local defaultWorkingDir unsecurePattern
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	local defaultWorkingDir unsecureParamPattern
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -72,8 +72,8 @@ function gt_reset() {
 	local remote workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
-		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 		gpgOnly "--gpg-only" '(optional) if set, then only the gpg keys are reset but the files are not re-pulled -- default: false'
 	)
 	local -r examples=$(
@@ -137,7 +137,7 @@ function gt_reset() {
 
 		if noAscInDir "$repo/.gt"; then
 			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it" "$remote"
-			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
 		fi
 
 		local -i numberOfImportedKeys=0
@@ -148,7 +148,7 @@ function gt_reset() {
 		importRemotesPulledPublicKeys "$workingDirAbsolute" "$remote" gt_reset_importKeyCallback
 
 		if ((numberOfImportedKeys == 0)); then
-			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
 		fi
 		cd "$currentDir"
 		logSuccess "re-established trust in remote \033[0;36m%s\033[0m" "$remote"

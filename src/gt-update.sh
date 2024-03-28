@@ -51,15 +51,15 @@ function gt_update() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local remote workingDir autoTrust tag
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ar params=(
-		remote "$remotePattern" '(optional) if set, only the files of this remote are updated, otherwise all'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
-		tag "$tagPattern" "(optional) define from which tag files shall be pulled, only valid if remote via $remotePattern is specified"
+		remote "$remoteParamPattern" '(optional) if set, only the files of this remote are updated, otherwise all'
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
+		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
+		tag "$tagParamPattern" "(optional) define from which tag files shall be pulled, only valid if remote via $remoteParamPattern is specified"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -85,7 +85,7 @@ function gt_update() {
 	exitIfWorkingDirDoesNotExist "$workingDir"
 
 	if [[ -n $tag && -z $remote ]]; then
-		die "tag can only be defined if a remote is specified via %s" "$remotePattern"
+		die "tag can only be defined if a remote is specified via %s" "$remoteParamPattern"
 	fi
 
 	local workingDirAbsolute

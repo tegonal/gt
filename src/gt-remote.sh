@@ -64,7 +64,7 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 }
 
 function gt_remote_add() {
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -73,11 +73,11 @@ function gt_remote_add() {
 	local remote url pullDir unsecure workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
-		remote "$remotePattern" 'name to refer to this the remote repository'
+		remote "$remoteParamPattern" 'name to refer to this the remote repository'
 		url '-u|--url' 'url of the remote repository'
-		pullDir "$pullDirPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
-		unsecure "$unsecurePattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		pullDir "$pullDirParamPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
+		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -155,22 +155,22 @@ function gt_remote_add() {
 
 	if ! checkoutGtDir "$remote" "$defaultBranch"; then
 		if [[ $unsecure == true ]]; then
-			logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$pullArgsFile" || logWarning "was not able to write '%s true' into %s, please do it manually" "$unsecurePattern" "$pullArgsFile"
+			logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecureParamPattern"
+			echo "$unsecureParamPattern true" >>"$pullArgsFile" || logWarning "was not able to write '%s true' into %s, please do it manually" "$unsecureParamPattern" "$pullArgsFile"
 			return 0
 		else
-			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gt\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecurePattern"
+			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gt\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecureParamPattern"
 			return 1
 		fi
 	fi
 
 	if noAscInDir "$repo/.gt"; then
 		if [[ $unsecure == true ]]; then
-			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecurePattern"
-			echo "$unsecurePattern true" >>"$workingDirAbsolute/pull.args"
+			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecureParamPattern"
+			echo "$unsecureParamPattern true" >>"$workingDirAbsolute/pull.args"
 			return 0
 		else
-			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecurePattern"
+			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecureParamPattern"
 			return 1
 		fi
 	fi
@@ -185,10 +185,10 @@ function gt_remote_add() {
 
 	if ((numberOfImportedKeys == 0)); then
 		if [[ $unsecure == true ]]; then
-			logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecurePattern"
+			logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecureParamPattern"
 			return 0
 		else
-			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecurePattern"
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
 		fi
 	fi
 
@@ -197,12 +197,12 @@ function gt_remote_add() {
 }
 
 function gt_remote_list_raw() {
-	source "$dir_of_gt/shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh"
 
 	local workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -251,13 +251,13 @@ function gt_remote_list() {
 }
 
 function gt_remote_remove() {
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
-		remote "$remotePattern" 'define the name of the remote which shall be removed'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
+		remote "$remoteParamPattern" 'define the name of the remote which shall be removed'
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well"
 	)
 	local -r examples=$(

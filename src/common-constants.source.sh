@@ -14,15 +14,21 @@
 #
 ###################################
 
-local -r remotePattern='-r|--remote'
-local -r workingDirPattern='-w|--working-directory'
-local -r pullDirPattern='-d|--directory'
-local -r autoTrustPattern='--auto-trust'
-local -r tagPattern='-t|--tag'
+local -r remoteParamPattern='-r|--remote'
 
-# in case you should add alternatives, then you need to modify error messages and the like, search for unsecurePattern
-local -r unsecurePattern='--unsecure'
-
+local -r workingDirParamPattern='-w|--working-directory'
 local -r defaultWorkingDir='.gt'
 local -r workingDirParamDocu="(optional) path which gt shall use as working directory -- default: $defaultWorkingDir"
+
+local -r pullDirParamPattern='-d|--directory'
+
+local -r autoTrustParamPattern='--auto-trust'
 local -r autoTrustParamDocu="(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false"
+
+local -r tagParamPattern='-t|--tag'
+
+# in case you should add alternatives, then you need to modify error messages and the like, search for unsecureParamPattern
+local -r unsecureParamPattern='--unsecure'
+
+
+

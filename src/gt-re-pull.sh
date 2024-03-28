@@ -54,16 +54,16 @@ function gt_re_pull() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gt/shared-patterns.source.sh" || die "could not source shared-patterns.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
 
 	local remote workingDir autoTrust onlyMissing
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
-		remote "$remotePattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		workingDir "$workingDirPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustPattern" "$autoTrustParamDocu"
+		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
+		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		onlyMissing "$onlyMissingPattern" "(optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true"
 	)
 	local -r examples=$(
