@@ -11,6 +11,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
+GT_VERSION="v0.18.0-SNAPSHOT"
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
@@ -23,15 +24,33 @@ if ! [[ -v projectDir ]]; then
 fi
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
+	dir_of_tegonal_scripts="$projectDir/lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/releasing/prepare-files-next-dev-cycle.sh"
+sourceOnce "$scriptsDir/before-pr.sh"
+sourceOnce "$scriptsDir/update-version-in-non-sh-files.sh"
 
 function prepareNextDevCycle() {
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+
+	function prepare_next_afterVersionHook() {
+		local version projectsRootDir additionalPattern
+		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@"
+
+		updateVersionInNonShFiles -v "$version-SNAPSHOT" --project-dir "$projectsRootDir" --pattern "$additionalPattern"
+	}
+
 	# similar as in release.sh, you might need to update it there as well if you change something here
+	# we only update the version in the header but not the GT_LATEST_VERSION on purpose because we don't want to set the SNAPSHOT
+	# version since this would cause that we set the SNAPSHOT version next time we update files via gt
 	local -r additionalPattern="(GT_VERSION=['\"])[^'\"]+(['\"])"
-	prepareFilesNextDevCycle --project-dir "$projectDir" "$@" -p "$additionalPattern"
+
+	prepareFilesNextDevCycle \
+		--project-dir "$projectDir" \
+		"$@" \
+		--pattern "$additionalPattern" \
+		--after-version-update-hook prepare_next_afterVersionHook
 }
 
 ${__SOURCED__:+return}
