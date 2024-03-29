@@ -24,7 +24,7 @@ if ! [[ -v projectDir ]]; then
 fi
 
 if ! [[ -v dir_of_github_commons ]]; then
-	dir_of_github_commons="$projectDir/.gt/remotes/tegonal-gh-commons/lib/src"
+	dir_of_github_commons="$projectDir/lib/tegonal-gh-commons/src"
 	readonly dir_of_github_commons
 fi
 
