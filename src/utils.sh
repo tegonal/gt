@@ -169,8 +169,8 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 	if ! [[ -d "$repo/.git" ]]; then
 		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
 		reInitialiseGitDir "$workingDirAbsolute" "$remote"
-  else
-  	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
+	else
+		askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
 	fi
 }
 
@@ -228,7 +228,7 @@ function validateGpgKeysAndImport() {
 		local publicKey
 		while read -u 4 -r -d $'\0' publicKey; do
 
-			printf "Verifying if we trust the public key %s\n" "$publicKey"
+			logInfo "Verifying if we trust the public key %s\n" "$publicKey"
 
 			local confirm
 			confirm="--confirm=$(invertBool "$autoTrust")"
@@ -259,7 +259,7 @@ function validateGpgKeysAndImport() {
 					echo "Decision: do not continue! Skipping this public key accordingly"
 				fi
 			else
-				logInfo "trust confirmed"
+				logInfo "trust confirmed (verified via public key, see further above)" "$publicKey"
 			fi
 
 			if [[ $importIt == true ]] && importGpgKey "$gpgDir" "$publicKey" "--confirm=$confirm"; then
