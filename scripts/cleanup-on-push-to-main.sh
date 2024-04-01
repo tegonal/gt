@@ -84,6 +84,19 @@ function cleanupOnPushToMain() {
 			"$file" || return $?
 	done || die "could not replace the install instructions"
 
+	find "$projectDir" \
+  	  -type f \
+  		-name "*.sig" \
+  		-not -path "$projectDir/.gt/signing-key.public.asc.sig" \
+  		-not -path "$projectDir/.gt/remotes/*/public-keys/*.sig" \
+  		-print0 |
+  		while read -r -d $'\0' sigFile; do
+  			if ! [[ -f ${sigFile::${#sigFile}-4} ]]; then
+						logInfo "remove unused signature \033[0;36m%s\033[0m as the corresponding file does no longer exist" "$sigFile"
+						rm "$sigFile"
+				fi
+			done
+
 	logSuccess "Cleanup on push to main completed"
 }
 
