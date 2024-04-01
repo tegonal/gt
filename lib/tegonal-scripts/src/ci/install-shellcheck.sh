@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.0.1
+#                                         Version: v3.1.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -20,7 +20,7 @@
 #
 #    jobs:
 #      steps:
-#        - name: install shellcheck v0.9.0
+#        - name: install shellcheck v0.10.0
 #          run: ./lib/tegonal-scripts/src/ci/install-shellcheck.sh
 #        # and most likely as well
 #        - name: run shellcheck
@@ -35,12 +35,12 @@ declare currentDir
 currentDir=$(pwd)
 tmpDir=$(mktemp -d -t download-shellcheck-XXXXXXXXXX)
 cd "$tmpDir"
-echo "700324c6dd0ebea0117591c6cc9d7350d9c7c5c287acbad7630fa17b1d4d9e2f  ./shellcheck-v0.9.0.linux.x86_64.tar.xz" >shellcheck-v0.9.0.linux.x86_64.tar.xz.sha256
-wget --no-verbose https://github.com/koalaman/shellcheck/releases/download/v0.9.0/shellcheck-v0.9.0.linux.x86_64.tar.xz
-sha256sum -c shellcheck-v0.9.0.linux.x86_64.tar.xz.sha256
-tar -xf ./shellcheck-v0.9.0.linux.x86_64.tar.xz
-chmod +x ./shellcheck-v0.9.0/shellcheck
+echo "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87  ./shellcheck-v0.10.0.linux.x86_64.tar.xz" >shellcheck-v0.10.0.linux.x86_64.tar.xz.sha256
+wget --no-verbose https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.x86_64.tar.xz
+sha256sum -c shellcheck-v0.10.0.linux.x86_64.tar.xz.sha256
+tar -xf ./shellcheck-v0.10.0.linux.x86_64.tar.xz
+chmod +x ./shellcheck-v0.10.0/shellcheck
 mkdir -p "$HOME/.local/bin"
-ln -s "$tmpDir/shellcheck-v0.9.0/shellcheck" "$HOME/.local/bin/shellcheck"
+ln -s "$tmpDir/shellcheck-v0.10.0/shellcheck" "$HOME/.local/bin/shellcheck"
 cd "$currentDir"
 shellcheck --version
