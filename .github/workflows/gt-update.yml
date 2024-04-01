@@ -93,7 +93,7 @@ jobs:
       - name: gt update
         id: gt_update
         run: |
-          gt update -r "${{ matrix.remote }}"
+          gt update -r "${{ matrix.remote }}" && gt update -r "${{ matrix.remote }}"
           echo "remote_version=$(git --git-dir='.gt/remotes/${{ matrix.remote}}/repo/.git' tag | sort --version-sort | tail -n 1)" >> $GITHUB_OUTPUT
       - name: git status
         run: git status
