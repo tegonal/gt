@@ -105,10 +105,13 @@ function gt_re_pull() {
 		((++errors))
 	}
 
-  # shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2317   # called by name
 	function gt_re_pull_rePullInternal() {
 		local -r remote=$1
 		shift 1 || die "could not shift by 1"
+
+		local repo
+		source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile _entryRelativePath entryAbsolutePath
@@ -132,6 +135,7 @@ function gt_re_pull() {
 		}
 
 		readPulledTsv "$workingDirAbsolute" "$remote" gt_re_pull_rePullInternal_callback 5 6
+		gt_pull_cleanupRepo "$repo"
 	}
 
 	function gt_re_pull_rePullRemote() {

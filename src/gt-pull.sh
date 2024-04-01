@@ -215,19 +215,18 @@ function gt_pull() {
 
 	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
 
-	cd "$repo"
 	local tags
-	tags=$(git tag) || die "The following command failed (see above): git tag"
+	tags=$(git -C "$repo" tag) || die "The following command failed (see above): git tag"
 	if grep "$tagToPull" <<<"$tags" >/dev/null; then
 		logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToPull" "$remote"
 	else
 		local remoteTags
-		remoteTags=$(remoteTagsSorted "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
+		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
 		grep "$tagToPull" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToPull" "$remoteTags" || return $?
-		git fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
+		git -C "$repo" fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
 	fi
 
-	git checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
+	git -C "$repo" checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
 
 	function gt_pull_mentionUnsecure() {
 		if [[ $unsecure != true ]]; then
@@ -242,7 +241,7 @@ function gt_pull() {
 	function gt_pull_pullSignatureOfSingleFetchedFile() {
 		# is path a file then fetch also the corresponding signature
 		if [[ $doVerification == true && -f "$repo/$path" ]]; then
-			if ! git checkout "tags/$tagToPull" -- "$path.$sigExtension" && [[ $unsecure == false ]]; then
+			if ! git -C "$repo" checkout "tags/$tagToPull" -- "$path.$sigExtension" && [[ $unsecure == false ]]; then
 				logErrorWithoutNewline "no signature file found for \033[0;36m%s\033[0m, aborting pull from remote %s" "$path" "$remote"
 				gt_pull_mentionUnsecure >&2
 				return 1
@@ -332,16 +331,18 @@ function gt_pull() {
 		((++numberOfPulledFiles))
 	}
 
-	local file
-	while read -r -d $'\0' file; do
-		if [[ $doVerification == true && -f "$file.$sigExtension" ]]; then
+	local absoluteFile
+	while read -r -d $'\0' absoluteFile; do
+		local file
+		file=$(realpath --relative-to="$repo" "$absoluteFile")
+		if [[ $doVerification == true && -f "$absoluteFile.$sigExtension" ]]; then
 			printf "verifying \033[0;36m%s\033[0m from remote %s\n" "$file" "$remote"
 			if [[ -d "$pullDirAbsolute/$file" ]]; then
 				die "there exists a directory with the same name at %s" "$pullDirAbsolute/$file"
 			fi
-			gpg --homedir="$gpgDir" --verify "$file.$sigExtension" "$file" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m from remote %s" "$file" "$remote" || return $?
+			gpg --homedir "$gpgDir" --verify "$absoluteFile.$sigExtension" "$absoluteFile" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m from remote %s" "$file" "$remote" || return $?
 			# or true as we will try to cleanup the repo on exit
-			rm "$file.$sigExtension" || true
+			rm "$absoluteFile.$sigExtension" || true
 
 			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
 			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
@@ -353,7 +354,7 @@ function gt_pull() {
 			logWarningWithoutNewline "there was no corresponding *.%s file for %s in remote %s, skipping it" "$sigExtension" "$file" "$remote"
 			gt_pull_mentionUnsecure
 			# or true as we will try to cleanup the repo on exit
-			rm "$file" || true
+			rm "$absoluteFile" || true
 		else
 			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
 			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
@@ -361,11 +362,9 @@ function gt_pull() {
 			# shellcheck disable=SC2310
 			gt_pull_moveFile "$file" || return $?
 		fi
-	done < <(find "$path" -type f -not -name "*.$sigExtension" -print0 ||
+	done < <(find "$repo/$path" -type f -not -name "*.$sigExtension" -print0 ||
 		# `while read` will fail because there is no \0
 		true)
-
-	cd "$currentDir"
 
 	endTime=$(date +%s.%3N)
 	elapsed=$(bc <<<"scale=3; $endTime - $startTime")

@@ -192,18 +192,12 @@ function latestRemoteTagIncludingChecks() {
 	local repo
 	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
-	local currentDir
-	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
-	local -r currentDir
-
 	local tagParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagParamPattern"
-	cd "$repo" || die "could not cd to the repo to determine the latest tag: %s" "$repo"
 	local tag
-	tag=$(latestRemoteTag "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagParamPattern"
-	cd "$currentDir"
+	tag=$(cd "$repo" && latestRemoteTag "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagParamPattern"
 	logInfo >&2 "latest is \033[0;36m%s\033[0m" "$tag"
 	echo "$tag"
 }
@@ -300,9 +294,15 @@ function importRemotesPulledPublicKeys() {
 }
 
 function determineDefaultBranch() {
-	local -r remote=$1
-	shift 1 || die "could not shift by 1"
-	git remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
+	local workingDirAbsolute remote
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(workingDirAbsolute remote)
+	parseFnArgs params "$@"
+
+	local repo
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+
+	git --git-dir "$repo/.git"  remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
 		(
 			logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" "$remote"
 			echo "main"
@@ -310,12 +310,17 @@ function determineDefaultBranch() {
 }
 
 function checkoutGtDir() {
-	local -r remote=$1
-	local -r branch=$2
-	shift 2 || die "could not shift by 2"
+	local workingDirAbsolute remote branch
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(workingDirAbsolute remote branch)
+	parseFnArgs params "$@"
 
-	git fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36%s\033[0m" "$remote"
-	git checkout "$remote/$branch" -- '.gt' && find ./.gt -maxdepth 1 -type d -not -path ./.gt -exec rm -r {} \;
+	local repo
+	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+
+	git -C "$repo" fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36%s\033[0m" "$remote"
+	# execute as if we are inside repo as we want to checkout there, remove all folders
+	git -C "$repo" checkout "$remote/$branch" -- '.gt' && find "$repo/.gt" -maxdepth 1 -type d -not -path "$repo/.gt" -exec rm -r {} \;
 }
 
 function exitIfRepoBrokenAndReInitIfAbsent() {

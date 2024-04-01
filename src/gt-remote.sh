@@ -58,9 +58,6 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 	if ! ((result == 0)) && [[ -d $remoteDir ]]; then
 		deleteDirChmod777 "$remoteDir"
 	fi
-
-	# revert side effect of cd
-	cd "$currentDir"
 }
 
 function gt_remote_add() {
@@ -138,22 +135,16 @@ function gt_remote_add() {
 	initialiseGpgDir "$gpgDir"
 	initialiseGitDir "$workingDir" "$remote"
 
-	# can be a problematic side effect, leaving as note here in case we run into issues at some point
-	# alternatively we could use `git -C "$repo"` for every git command
-	# we partly undo this cd in gt_remote_cleanupRemoteOnUnexpectedExit. Yet, every script which would depend on
-	# currentDir after this line can be influenced by this cd
-	cd "$repo"
-
-	git remote add "$remote" "$url"
+	git -C "$repo" remote add "$remote" "$url"
 
 	# we need to copy the git config away in order that one can commit it
 	# this file will be used to restore the config for those who have not setup the remote on their machine
 	cp "$repo/.git/config" "$gitconfig"
 
 	local defaultBranch
-	defaultBranch=$(determineDefaultBranch "$remote")
+	defaultBranch=$(determineDefaultBranch "$workingDirAbsolute" "$remote")
 
-	if ! checkoutGtDir "$remote" "$defaultBranch"; then
+	if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch"; then
 		if [[ $unsecure == true ]]; then
 			logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecureParamPattern"
 			echo "$unsecureParamPattern true" >>"$pullArgsFile" || logWarning "was not able to write '%s true' into %s, please do it manually" "$unsecureParamPattern" "$pullArgsFile"
