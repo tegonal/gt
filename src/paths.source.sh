@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v0.18.0-SNAPSHOT
+#                                         Version: v0.17.3
 #######  Description  #############
 #
 #  constants intended to be sourced into a function.
