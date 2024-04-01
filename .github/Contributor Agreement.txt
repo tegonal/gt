@@ -1,4 +1,4 @@
-﻿Tegonal Contributor Agreement v1.1
+﻿Contributor Agreement v1.1
 
 This agreement is based on the ISA contributor agreement
 https://joinup.ec.europa.eu/collection/eupl/solution/isa-contributor-agreement/release/v11
