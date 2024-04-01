@@ -37,7 +37,6 @@ templates etc. which you use in multiple projects but want to maintain at a sing
 </details>
 
 ---
-
 ❗ You are taking a *sneak peek* at the next version. It could be that some features you find on this page are not released yet.  
 Please have a look at the README of the corresponding release/git tag. Latest version: [README of v0.17.2](https://github.com/tegonal/gt/tree/v0.17.2/README.md).
 
