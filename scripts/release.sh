@@ -48,10 +48,9 @@ function release() {
 	)
 	parseArguments params "" "$GT_VERSION" "$@"
 
-# temporarily deactivated
-#	if ! wget -q -O- "https://api.github.com/repos/tegonal/gt/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"' >/dev/null; then
-#		die "installation workflow failed, you should not release ;-)"
-#	fi
+	if ! wget -q -O- "https://api.github.com/repos/tegonal/gt/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"' >/dev/null; then
+		die "installation workflow failed, you should not release ;-)"
+	fi
 
 	function findFilesToRelease() {
 		find "$projectDir/src" \
