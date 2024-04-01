@@ -53,21 +53,9 @@ sourceOnce "$dir_of_gt/gt-re-pull.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function gt_reset_backToCurrentDir() {
-	local -r currentDir=$1
-	shift 1 || die "could not shift by 1"
-
-	# revert side effect of cd
-	cd "$currentDir"
-}
-
 function gt_reset() {
 	local defaultWorkingDir unsecureParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
-
-	local currentDir
-	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
-	local -r currentDir
 
 	local remote workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
@@ -119,17 +107,6 @@ function gt_reset() {
 		mkdir "$publicKeysDir" || die "was not able to create the public keys dir at %s" "$publicKeysDir"
 		initialiseGpgDir "$gpgDir"
 
-		# can be a problematic side effect, leaving as note here in case we run into issues at some point
-		# alternatively we could use `git -C "$repo"` for every git command
-		# we partly undo this cd in gt_reset_backToCurrentDir. Yet, every script which would depend on
-		# currentDir after this line can be influenced by this cd
-		# thus also the reason why we do cd "$currentDir" in gt_reset_allRemotes
-		cd "$repo"
-
-		# we want to expand $currentDir here and not when signal happens (as they might be out of scope)
-		# shellcheck disable=SC2064
-		trap "gt_reset_backToCurrentDir '$currentDir'" EXIT SIGINT
-
 		local unsecureArgs
 		if [[ -f $pullArgsFile ]]; then
 			unsecureArgs=$(grep -E "(--unsecure|--unsecure-no-verification)\strue" "$pullArgsFile")
@@ -138,8 +115,8 @@ function gt_reset() {
 		fi
 
 		local defaultBranch
-		defaultBranch=$(determineDefaultBranch "$remote")
-		if ! checkoutGtDir "$remote" "$defaultBranch"; then
+		defaultBranch=$(determineDefaultBranch "$workingDirAbsolute" "$remote")
+		if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch"; then
 			if [[ -n $unsecureArgs ]]; then
 				logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s was specified in %s" "$remote" "$unsecureArgs" "$pullArgsFile"
 				return 0
@@ -184,8 +161,6 @@ function gt_reset() {
 		local remote
 		while read -u 8 -r remote; do
 			gt_reset_resetRemote "$remote"
-			# revert side effect in gt_reset_resetRemote
-			cd "$currentDir"
 			((++count))
 		done
 		if ((count == 0)); then
@@ -196,15 +171,13 @@ function gt_reset() {
 	if [[ -n $remote ]]; then
 		#shellcheck disable=SC2310		# we know that set -e is disabled for gt_reset_resetRemote due to ||
 		gt_reset_resetRemote "$remote" || die "could not remove gpg directory for remote %s, see above" "$remote"
-		# revert side effect in gt_reset_resetRemote
-		cd "$currentDir"
 		if [[ $gpgOnly != true ]]; then
-			gt_re_pull -w "$workingDir" --only-missing false -r "$remote"
+			gt_re_pull -w "$workingDirAbsolute" --only-missing false -r "$remote"
 		fi
 	else
 		withCustomOutputInput 7 8 gt_reset_allRemotes || die "could not remove gpg directories, see above"
 		if [[ $gpgOnly != true ]]; then
-			gt_re_pull -w "$workingDir" --only-missing false
+			gt_re_pull -w "$workingDirAbsolute" --only-missing false
 		fi
 	fi
 }
