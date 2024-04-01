@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v0.17.2
+#                                         Version: v0.18.0-SNAPSHOT
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
