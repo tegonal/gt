@@ -47,6 +47,8 @@ function release() {
 		prepareOnly "$prepareOnlyParamPattern" "$prepareOnlyParamDocu"
 	)
 	parseArguments params "" "$GT_VERSION" "$@"
+	# we don't check if all args are set (and neither set default values) as we currently don't use
+	# any param in here but just delegate to releaseFiles.
 
 	if ! wget -q -O- "https://api.github.com/repos/tegonal/gt/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"' >/dev/null; then
 		die "installation workflow failed, you should not release ;-)"

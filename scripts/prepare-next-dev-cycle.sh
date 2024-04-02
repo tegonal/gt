@@ -34,6 +34,19 @@ sourceOnce "$scriptsDir/update-version-in-non-sh-files.sh"
 function prepareNextDevCycle() {
 	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
 
+	# shellcheck disable=SC2034   # they seem unused but are necessary in order that parseArguments doesn't create global readonly vars
+	local version projectsRootDir additionalPattern beforePrFn
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
+	local -ra params=(
+		version "$versionParamPattern" 'the version for which we prepare the dev cycle'
+		projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
+		additionalPattern "$additionalPatternParamPattern" "is ignored as additional pattern is specified internally, still here as release-files uses this argument"
+		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
+	)
+	parseArguments params "" "$TEGONAL_GITHUB_COMMONS_VERSION" "$@"
+	# we don't check if all args are set (and neither set default values) as we currently don't use
+	# any param in here but just delegate to prepareFilesNextDevCycle.
+
 	function prepare_next_afterVersionHook() {
 		local version projectsRootDir additionalPattern
 		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@"
