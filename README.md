@@ -661,7 +661,7 @@ i.e. those are used to verify the public keys of the remotes you added via `gt r
 You can define two optional secrets in addition which steer the PR creation which is done via the github action
 [peter-evans/create-pull-request](https://github.com/peter-evans/create-pull-request):
 - `AUTO_PR_TOKEN` is used as `token`
-- `AUTO_PR_FORK_NAME` is used as `push-to-fork`
+- `AUTO_PR_FORK_NAME` is used as `push-to-fork` (we look first for a variable `AUTO_PR_FORK_NAME` and fallback to a secret afterwards)
 
 You can re-use the workflow in your repository. We suggest you fetch it via gt 😉
 
