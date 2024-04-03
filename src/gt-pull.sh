@@ -152,7 +152,7 @@ function gt_pull() {
 	fi
 
 	if ! [[ -f $pulledTsv ]]; then
-		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader"$'\n' >"$pulledTsv" || die "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
+		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader" >"$pulledTsv" || die "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
 	else
 		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
