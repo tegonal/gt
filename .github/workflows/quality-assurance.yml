@@ -1,13 +1,13 @@
-name: "Code Quality"
+name: Quality Assurance
 on: [push, pull_request]
 
 jobs:
-  CodeQuality:
-    name: Code Quality
+  before_pr:
+    name: before-pr.sh
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install shellcheck v0.9.0
+      - name: install shellcheck
         run: ./lib/tegonal-scripts/src/ci/install-shellcheck.sh
       - name: before-pr.sh
         run: ./scripts/before-pr.sh
