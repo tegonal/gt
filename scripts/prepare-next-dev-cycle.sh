@@ -43,7 +43,7 @@ function prepareNextDevCycle() {
 		additionalPattern "$additionalPatternParamPattern" "is ignored as additional pattern is specified internally, still here as release-files uses this argument"
 		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
 	)
-	parseArguments params "" "$TEGONAL_GITHUB_COMMONS_VERSION" "$@"
+	parseArguments params "" "$GT_VERSION" "$@"
 	# we don't check if all args are set (and neither set default values) as we currently don't use
 	# any param in here but just delegate to prepareFilesNextDevCycle.
 
