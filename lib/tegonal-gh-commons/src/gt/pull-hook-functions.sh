@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.3.1
+#                                         Version: v2.4.0
 #######  Description  #############
 #
 #  functions which can be used to update the placeholders in the templates in a gt pull-hook.sh
@@ -18,12 +18,11 @@
 #    shopt -s inherit_errexit
 #    MY_PROJECT_LATEST_VERSION="v1.0.0"
 #
-#    # Assumes tegonal's github-commons was fetched with gt and put into repoRoot/.gt/remotes/tegonal-gh-commons/lib
-#    # - adjust remote name or location accordingly
-#    dir_of_github_commons="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/lib/src"
+#    # Assumes tegonal's github-commons was fetched with gt and put into repoRoot/lib/tegonal-gh-commons/src
+#    dir_of_github_commons="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../../../lib/tegonal-gh-commons/src"
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
-#    	dir_of_tegonal_scripts="$dir_of_github_commons/../tegonal-scripts/src"
+#    	dir_of_tegonal_scripts="$dir_of_github_commons/../../tegonal-scripts/src"
 #    	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 #    fi
 #
