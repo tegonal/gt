@@ -206,7 +206,7 @@ function gt_remote_list_raw() {
 		EOM
 	)
 
-	parseArguments params "$examples" "$GT_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
@@ -228,7 +228,8 @@ function gt_remote_list_raw() {
 
 function gt_remote_list() {
 	local output
-	output=$(gt_remote_list_raw "$@")
+	# shellcheck disable=SC2310 	# we are aware of that || will disable set -e, that's what we want
+	output=$(gt_remote_list_raw "$@") || [[ $? -eq 99 ]] # ignore if user used --help (returns 99), fail otherwise
 	if [[ $output == "" ]]; then
 		logInfo "No remote defined yet."
 		echo ""

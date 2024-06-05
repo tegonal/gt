@@ -358,7 +358,21 @@ Following the output of running `gt remote list --help`:
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
 ```text
+Parameters:
+-w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
+--help     prints this help
+--version  prints the version of this script
+
+Examples:
+# lists all defined remotes in .gt
+gt remote list
+
+# uses a custom working directory
+gt remote list -w .github/.gt
+
+INFO: Version of gt-remote.sh is:
+v0.18.0-SNAPSHOT
 ```
 
 </gt-remote-list-help>
