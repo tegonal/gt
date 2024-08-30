@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.1.0
+#                                         Version: v3.2.0
 #######  Description  #############
 #
 #  Utility functions to ask the user something via input.
@@ -25,6 +25,15 @@
 #    if askYesOrNo "shall I say hello"; then
 #    	echo "hello"
 #    fi
+#
+#    function noAnswerCallback {
+#    	echo "hm... no answer, I am sad :("
+#    }
+#    timeoutInSeconds=30
+#    readArgs='' # i.e. no additional args passed to read
+#    answer='default value used if there is no answer'
+#    askWithTimeout "some question" "$timeoutInSeconds" noAnswerCallback answer "$readArgs"
+#    echo "$answer"
 #
 ###################################
 set -euo pipefail
@@ -48,18 +57,17 @@ function askYesOrNo() {
 	local -r question=$1
 	shift || die "could not shift by 1"
 
-	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string
-	printf "\n\033[0;36m$question\033[0m y/[N]:" "$@"
+	local -r askYesOrNo_timeout=20
 	local answer='n'
-	local -r timeout=20
-	set +e
-	read -t "$timeout" -r answer
-	local lastResult=$?
-	set -e
-	if ((lastResult > 128)); then
+
+	# shellcheck disable=SC2317   # called by name
+	function askYesOrNo_noAnswerCallback() {
 		printf "\n"
-		logInfo "no user interaction after %s seconds, going to interpret that as a 'no'." "$timeout"
-	fi
+		logInfo "no user interaction after %s seconds, going to interpret that as a 'no'." "$askYesOrNo_timeout"
+	}
+
+	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string
+	askWithTimeout "\033[0;36m$question\033[0m y/[n]:" "$askYesOrNo_timeout" askYesOrNo_noAnswerCallback answer "" "$@"
 	if [[ $answer == y ]] || [[ $answer == Y ]]; then
 		return 0
 	elif [[ $answer == n ]] || [[ $answer == N ]]; then
@@ -67,5 +75,51 @@ function askYesOrNo() {
 	else
 		logWarning "got \033[0;36m%s\033[0m as answer (instead of y for yes or n for no), interpreting it as a n, i.e. as a no" "$answer"
 		return 1
+	fi
+}
+
+function askWithTimeout() {
+	if (($# < 5)); then
+		logError "At least five arguments need to be passed to askWithTimeout, given \033[0;36m%s\033[0m\n" "$#"
+		echo >&2 '1: question   	the question which the user should answer'
+		echo >&2 '2: timeout			timeout in seconds after which we will call noAnswerFn'
+		echo >&2 '3: noAnswerFn		callback used in case we did not get an answer from the user'
+		echo >&2 '4: outVarName		name of output variable used to pass back the result'
+		echo >&2 '5: readArgs 		additional args passed to read'
+		echo >&2 '6... args...  	arguments for the question (question is printed with printf)'
+		printStackTrace
+		exit 9
+	fi
+	# prefixing all variables here as plan to write the answer to an variable which is not in scope of this function
+	# i.e. if we don't prefix and one using the same name for outVarName as a variable local to this function, then we
+	# would just assign a value to the local function instead of the variable defined outside this function. The prefix
+	# prevents such a clash in most likely all cases -- otherwise the user is to blame ;)
+	local -r askWithTimeout_question=$1
+	local -r askWithTimeout_timeout=$2
+	local -r askWithTimeout_noAnswerFn=$3
+	local -r askWithTimeout_outVarName=$4
+	local -r askWithTimeout_readArgs=$5
+	shift 5 || die "could not shift by 5"
+
+	exitIfArgIsNotFunction "$askWithTimeout_noAnswerFn" 3
+	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string
+	printf "\n$askWithTimeout_question " "$@"
+	local askWithTimeout_answer=''
+	set +e
+	if [[ -n $askWithTimeout_readArgs ]]; then
+		read -t "$askWithTimeout_timeout" "${askWithTimeout_readArgs?}" -r askWithTimeout_answer
+	else
+		read -t "$askWithTimeout_timeout" -r askWithTimeout_answer
+	fi
+
+	local askWithTimeout_lastResult=$?
+	set -e
+	if ((askWithTimeout_lastResult > 128)); then
+		"$askWithTimeout_noAnswerFn"
+	elif [[ $askWithTimeout_lastResult -eq 0 ]]; then
+		# that's where the black magic happens, we are assigning to a global (not local to this function) variable here
+		printf -v "$askWithTimeout_outVarName" "%s" "$askWithTimeout_answer" || die "could not assign value to $askWithTimeout_outVarName"
+	else
+		return "$askWithTimeout_lastResult"
 	fi
 }

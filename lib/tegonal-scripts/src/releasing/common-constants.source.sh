@@ -6,7 +6,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License 1.2
 #         /___/                           Please report bugs and contribute back your improvements
-#                                         Version: v3.1.0
+#                                         Version: v3.2.0
 #######  Description  #############
 #
 #  constants intended to be sourced into a function

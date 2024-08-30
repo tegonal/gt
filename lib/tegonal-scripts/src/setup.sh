@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.1.0
+#                                         Version: v3.2.0
 #######  Description  #############
 #
 #  script which should be sourced and sets up variables and functions for the scripts
