@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.1.0
+#                                         Version: v3.2.0
 #######  Description  #############
 #
 # Checks that releasing a certain version (creating a corresponding git tag) makes sense: We check:
@@ -34,7 +34,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v3.1.0'
+export TEGONAL_SCRIPTS_VERSION='v3.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -56,13 +56,9 @@ function preReleaseCheckGit() {
 	)
 
 	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
-
 	if ! [[ -v branch ]]; then branch="main"; fi
 	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
-
-	if ! [[ "$version" =~ $versionRegex ]]; then
-		die "%s should match vX.Y.Z(-RC...), was %s" "$versionParamPatternLong" "$version"
-	fi
+	exitIfArgIsNotVersion "$version" "$versionParamPatternLong"
 
 	exitIfGitHasChanges
 
