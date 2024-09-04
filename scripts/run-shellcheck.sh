@@ -31,11 +31,11 @@ function customRunShellcheck() {
 	declare sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
 	runShellcheck dirs "$sourcePath"
 
-	local -r gh_commons_dir="$scriptsDir/../.gt/remotes/tegonal-gh-commons"
-	logInfo "analysing $gh_commons_dir/pull-hook.sh"
+	local -r gt_remote_dir="$scriptsDir/../.gt/remotes"
+	logInfo "analysing $gt_remote_dir/**/pull-hook.sh"
 
 	# shellcheck disable=SC2034   # is passed by name to runShellcheck
-	local -ra dirs2=("$gh_commons_dir")
+	local -ra dirs2=("$gt_remote_dir")
 	runShellcheck dirs2 "$sourcePath" -name "pull-hook.sh"
 }
 
