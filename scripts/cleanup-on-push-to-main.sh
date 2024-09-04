@@ -27,6 +27,8 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
+sourceOnce "$projectDir/src/install/include-install-doc.sh"
+
 sourceOnce "$dir_of_tegonal_scripts/utility/cleanups.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
@@ -48,6 +50,7 @@ function cleanupOnPushToMain() {
 		done || die "updating bash documentation and help snippets failed, see above"
 
 	updateBashDocumentation "$projectDir/install.sh" "install" . README.md || die "could not update install documentation"
+	updateBashDocumentation "$projectDir/src/install/include-install-doc.sh" "include-install" . README.md || die "could not update include-install documentation"
 
 	local -ra additionalHelp=(
 		gt-remote-add "src/gt-remote.sh" "add --help"
@@ -59,31 +62,13 @@ function cleanupOnPushToMain() {
 		replaceHelpSnippet "$projectDir/${additionalHelp[i + 1]}" "${additionalHelp[i]}-help" . README.md ${additionalHelp[i + 2]}
 	done || die "replacing help snippets failed, see above"
 
-	local installScript
-	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' <"$projectDir/install.doc.sh")
-
+	# shellcheck disable=SC2034   # is passed by name to copyInstallSh
 	local -ra includeInstallSh=(
-		"$projectDir/.github/workflows/gt-update.yml" 10
-		"$projectDir/src/gitlab/install-gt.sh" 0
+		"$projectDir/.github/workflows/gt-update.yml" '          '
+		"$projectDir/src/gitlab/install-gt.sh" ''
 	)
-	local -r arrLength="${#includeInstallSh[@]}"
-	local -i i
-	for ((i = 0; i < arrLength; i += 2)); do
-		local file="${includeInstallSh[i]}"
-		if ! [[ -f $file ]]; then
-			returnDying "file $file does not exist" || return $?
-		fi
-
-		local indentNum="${includeInstallSh[i + 1]}"
-		local indent
-		indent=$(printf "%-${indentNum}s" "") || return $?
-		local content
-		# shellcheck disable=SC2001	# cannot use search/replace variable substitution here
-		content=$(sed "s/^/$indent/g" <<<"$installScript") || return $?
-		perl -0777 -i \
-			-pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@g" \
-			"$file" || return $?
-	done || die "could not replace the install instructions"
+	includeInstallDoc "$projectDir/install.doc.sh" includeInstallSh || die "could not include install.doc.sh"
+	echo "included install.doc.sh"
 
 	removeUnusedSignatures "$projectDir"
 
