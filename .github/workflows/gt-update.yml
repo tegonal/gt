@@ -98,7 +98,7 @@ jobs:
       - name: git status
         run: git status
       - name: Create pull request if necessary
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           branch: 'gt/update/${{ matrix.remote }}'
           base: main
