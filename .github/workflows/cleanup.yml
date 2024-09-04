@@ -22,7 +22,7 @@ jobs:
       - name: Cleanup Sources
         run: ./scripts/cleanup-on-push-to-main.sh
       - name: Create Pull Request if necessary
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           branch: auto-cleanup
           title: Auto Cleanup
