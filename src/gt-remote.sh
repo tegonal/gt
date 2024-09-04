@@ -100,6 +100,11 @@ function gt_remote_add() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	local -r remoteIdentifierRegex="^[a-zA-Z0-9_-]+$"
+	if ! [[ $remote =~ $remoteIdentifierRegex ]]; then
+		die "remote names need to match the regex \033[0;36m%s\033[0m given %s" "$remoteIdentifierRegex" "$remote"
+	fi
+
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute

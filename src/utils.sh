@@ -318,7 +318,7 @@ function checkoutGtDir() {
 	local repo
 	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
 
-	git -C "$repo" fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36%s\033[0m" "$remote"
+	git -C "$repo" fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36m%s\033[0m" "$remote"
 	# execute as if we are inside repo as we want to checkout there, remove all folders
 	git -C "$repo" checkout "$remote/$branch" -- '.gt' && find "$repo/.gt" -maxdepth 1 -type d -not -path "$repo/.gt" -exec rm -r {} \;
 }
