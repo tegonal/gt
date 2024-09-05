@@ -112,6 +112,12 @@ function gt_remote_add() {
 	if ! checkWorkingDirExists "$workingDirAbsolute"; then
 		if askYesOrNo "Shall I create the work directory for you and continue?"; then
 			mkdir -p "$workingDirAbsolute" || die "was not able to create the workingDir %s" "$workingDirAbsolute"
+			local gitIgnore="$currentDir/.gitignore"
+			if [[ -f "$gitIgnore" ]] && ! grep "$workingDir/" "$gitIgnore"; then
+				if askYesOrNo "Shall I add gt specific ignore patterns to %s" "$gitIgnore"; then
+					printf "%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore"
+				fi
+			fi
 		else
 			exit 9
 		fi
@@ -297,7 +303,7 @@ function gt_remote_remove() {
 		fi
 	fi
 
-  # shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2317   # called by name
 	function gt_remote_remove_read() {
 		local -i numberOfDeletedFiles=0
 
