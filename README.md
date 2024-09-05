@@ -191,7 +191,9 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ## additional installation steps
 
-Typically, you add the following to your .gitignore file when fetching files via gt in your repository:
+Once you add your first remote via `gt remote add -r <remote_name> -u <url>` gt will ask you if it shall add the 
+following to your `.gitignore` file (if there is one in the directory where you executed `gt`). 
+Depending on your setup `gt` might not find it or you maybe want to add it in a different place:
 
 ```gitignore
 .gt/**/repo
