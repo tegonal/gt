@@ -293,7 +293,7 @@ Following the output of running `gt remote add --help`:
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
 ```text
 Parameters:
--r|--remote              name to refer to this the remote repository
+-r|--remote              name identifying this remote
 -u|--url                 url of the remote repository
 -d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false
@@ -334,7 +334,7 @@ Following the output of running `gt remote remove --help`:
 Parameters:
 -r|--remote              define the name of the remote which shall be removed
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---delete-pulled-files    (optional) if set, then all files defined in the remote's pulled.tsv are deleted as well
+--delete-pulled-files    (optional) if set, then all files defined in the remote's pulled.tsv are deleted as well -- default: false
 
 --help     prints this help
 --version  prints the version of this script
@@ -397,7 +397,7 @@ Parameters:
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
 -w|--working-directory       (optional) path which gt shall use as working directory -- default: .gt
 --auto-trust                 (optional) if set to true, all public-keys stored in .gt/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false
---unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at .gt/<remote>/*.asc -- default: false
+--unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false
 
 --help     prints this help
@@ -562,7 +562,7 @@ Following the output of running `gt reset --help`:
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---gpg-only               (optional) if set, then only the gpg keys are reset but the files are not re-pulled -- default: false
+--gpg-only               (optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false
 
 --help     prints this help
 --version  prints the version of this script
@@ -806,7 +806,7 @@ Following the output of running `gt self-update --help`:
 <!-- auto-generated, do not modify here but in src/gt-self-update.sh -->
 ```text
 Parameters:
---force   if set to true, then install.sh will be called even if gt is already on latest tag
+--force   if set to true, then install.sh will be called even if gt is already on latest tag -- default false
 
 --help     prints this help
 --version  prints the version of this script
