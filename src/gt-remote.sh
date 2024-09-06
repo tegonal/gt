@@ -70,7 +70,7 @@ function gt_remote_add() {
 	local remote url pullDir unsecure workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
-		remote "$remoteParamPattern" 'name to refer to this the remote repository'
+		remote "$remoteParamPattern" 'name identifying this remote'
 		url '-u|--url' 'url of the remote repository'
 		pullDir "$pullDirParamPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
@@ -261,7 +261,7 @@ function gt_remote_remove() {
 	local -ra params=(
 		remote "$remoteParamPattern" 'define the name of the remote which shall be removed'
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well"
+		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well -- default: false"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
