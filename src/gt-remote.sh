@@ -261,7 +261,7 @@ function gt_remote_remove() {
 	local -ra params=(
 		remote "$remoteParamPattern" 'define the name of the remote which shall be removed'
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well"
+		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well -- default: false"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312

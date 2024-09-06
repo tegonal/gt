@@ -62,7 +62,7 @@ function gt_reset() {
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		gpgOnly "--gpg-only" '(optional) if set, then only the gpg keys are reset but the files are not re-pulled -- default: false'
+		gpgOnly "--gpg-only" '(optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false'
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
