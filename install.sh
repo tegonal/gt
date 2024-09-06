@@ -53,6 +53,13 @@ function logSuccess() {
 	printf "\033[0;32mSUCCESS\033[0m: $msg\n" "$@"
 }
 
+function logInfo() {
+	local msg=$1
+	shift || die "could not shift by 1"
+	# shellcheck disable=SC2059
+	printf "\033[0;34mINFO\033[0m: $msg\n" "$@"
+}
+
 function checkCommandExists() {
 	local -r name=$1
 	local sigFile
@@ -167,23 +174,39 @@ function install() {
 	mkdir -p "$parent"
 	mv "$repoDir" "$installDir"
 
-	echo "moved sources to installation directory $installDir"
+	logInfo "moved sources to installation directory $installDir"
 
 	if [[ -n $symbolicLink ]]; then
-		echo "set up symbolic link $symbolicLink"
+		logInfo "set up symbolic link $symbolicLink"
 		parent=$(dirname "$symbolicLink")
 		mkdir -p "$parent"
 		ln -sf "$installDir/src/$projectName.sh" "$symbolicLink" || sudo ln -sf "$installDir/src/$projectName.sh" "$symbolicLink"
 	else
-		echo "no symbolic link set up, please do manually if required"
+		logInfo "no symbolic link set up, please do manually if required"
 	fi
 	logSuccess "installation completed, %s %s set up in %s" "$projectName" "$tag" "$installDir"
 	if [[ -n $symbolicLink ]]; then
 		echo ""
-		echo "Testing the symbolic link, following the output of calling $projectName --help"
+		logInfo "Testing the symbolic link, following the output of calling $projectName --help"
 		echo ""
 		"$projectName" --help
+		echo ""
+		logSuccess "looks like it worked"
 	fi
+
+	local fpath_output
+	fpath_output=$(zsh -c 'echo $fpath') || echo ""
+	if [[ -n "$fpath_output" ]]; then
+		local vendorPath
+		vendorPath=$(grep -oE "[^ ]+vendor-completions" <<<"$fpath_output")
+		if [[ -n $vendorPath ]]; then
+			logInfo "determined zsh, trying to add it to %s via sudo" "$vendorPath"
+			sudo -k cp "$installDir/src/install/zsh/_gt" "$vendorPath"
+			logSuccess "copied zsh completion into %s" "$vendorPath"
+		fi
+	fi
+
+	logSuccess "thank you for using gt, please report bugs"
 }
 
 function exitIfValueMissing() {
@@ -251,4 +274,7 @@ function main() {
 
 	install "$tag" "$installDir" "$symbolicLink"
 }
+if [[ "$EUID" -eq 0 ]]; then
+	die "don't run the installation as super user"
+fi
 main "$@"
