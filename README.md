@@ -47,6 +47,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 - [Installation](#installation)
 	- [install.sh](#using-installsh)
 	- [manually](#manually)
+    - [additional installation steps](#additional-installation-steps)
 - [Usage](#usage)
 	- [remote](#remote)
 		- [add](#add)
@@ -191,6 +192,8 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ## additional installation steps
 
+### .gitignore
+
 Once you add your first remote via `gt remote add -r <remote_name> -u <url>` gt will ask you if it shall add the 
 following to your `.gitignore` file (if there is one in the directory where you executed `gt`). 
 Depending on your setup `gt` might not find it or you maybe want to add it in a different place:
@@ -215,6 +218,14 @@ gt re-pull
 ```
 
 to fetch all ignored files.
+
+### completions for zsh
+
+if gt detects zsh during the installation and is able to find the vendor-completions directory, then it tries to add
+the completion file into this directory (you need to enter the sudo password, so you should notice it). If for whatever
+reason gt was not able to detect zsh or copy it you can of course copy it manually. Head over to the installation 
+directory of gt (default `$HOME/.local/lib/gt`) and copy the file `src/install/zsh/_gt` into a directory which is your
+`$fpath`.
 
 # Usage
 

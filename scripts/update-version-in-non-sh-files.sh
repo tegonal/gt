@@ -51,6 +51,8 @@ function updateVersionInNonShFiles() {
 
 	local -ra additionalFilesWithVersions=(
 		"$projectDir/.github/workflows/gt-update.yml"
+		"$projectDir/src/install/zsh/_gt"
+		"$projectDir/src/install/zsh/gt.plugin.zsh"
 	)
 
 	logInfo "going to update version in non-sh files to %s" "$version"
