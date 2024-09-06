@@ -77,7 +77,7 @@ function gt_pull() {
 		chopPath "--chop-path" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
-		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg databse or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecureParamPattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 	)
 
