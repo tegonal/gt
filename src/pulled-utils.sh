@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v0.19.0
+#                                         Version: v0.20.0-SNAPSHOT
 #######  Description  #############
 #
 #  internal utility functions for dealing with the pulled file
@@ -16,7 +16,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GT_VERSION='v0.19.0'
+export GT_VERSION='v0.20.0-SNAPSHOT'
 
 if ! [[ -v dir_of_gt ]]; then
 	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
