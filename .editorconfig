@@ -24,4 +24,4 @@ insert_final_newline = false
 trim_trailing_whitespace = false
 
 [*.bat]
-end_of_line = crlf
+end_of_line = crlf# hello
