@@ -108,11 +108,12 @@ jobs:
             git config --local user.email 'tegonal-bot@users.noreply.github.com'
             git commit -am 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt' || true
       - name: cleanup-on-push-to-main
-        if: ${{ steps.has_changes.outputs.has_changes == 1 }}
+        if: ${{ steps.has_changes.outputs.has_changes == 1 && hashFiles('./scripts/cleanup-on-push-to-main.sh') != '' }}
         run: |
-            (./scripts/cleanup-on-push-to-main.sh &&
-                git commit -am 'cleanup after gt pull for remote ${{ matrix.remote }} and version ${{steps.gt_update.outputs.remote_version}}'
-            ) || (printf >&2 "\033[0;31mERROR\033[0m: during cleanup, going to reset changes back to the status after \`gt update\`' && git reset --hard)
+            (
+                ./scripts/cleanup-on-push-to-main.sh || (printf '\033[0;31mERROR\033[0m: during cleanup, see error above\n' && false) &&
+                (git commit -am 'cleanup after gt pull for remote ${{ matrix.remote }} and version ${{steps.gt_update.outputs.remote_version}}' || (printf '\033[0;31mERROR\033[0m: during commit, maybe no changes due to cleanup (which would be fine)?, see above\n'; false ))
+            ) || (printf '\033[0;34mINFO\033[0m: going to reset changes back to the status after `gt update` and continue without cleanup\n' && git reset --hard)
       - name: Create pull request if necessary
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
         uses: peter-evans/create-pull-request@v7
