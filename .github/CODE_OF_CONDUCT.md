@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.7.1
+#                                         Version: v2.8.0
 ###################################
 -->
 # Contributor Covenant Code of Conduct
