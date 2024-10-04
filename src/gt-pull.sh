@@ -182,6 +182,8 @@ function gt_pull() {
 				if [[ $unsecure == true ]]; then
 					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPattern"
 					doVerification=false
+					# we initialiseGpgDir so that we don't try it next time
+					initialiseGpgDir "$gpgDir"
 				else
 					die "no public keys for remote \033[0;36m%s\033[0m defined in %s" "$remote" "$publicKeysDir"
 				fi
@@ -205,7 +207,12 @@ function gt_pull() {
 			fi
 		fi
 		if [[ $unsecure == true && $doVerification == true ]]; then
-			logInfo "gpg key found going to perform verification even though '%s true' was specified" "$unsecureParamPattern"
+			local trustDb="$gpgDir/trustdb.gpg"
+			if [[ -f $trustDb ]]; then
+				logInfo "gpg seems to be initialised (found %s), going to perform verification even though '%s true' was specified" "$unsecureParamPattern" "$trustDb"
+			else
+				doVerification=false
+			fi
 		fi
 	fi
 
