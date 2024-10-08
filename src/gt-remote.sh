@@ -131,7 +131,7 @@ function gt_remote_add() {
 	if [[ -f $remoteDir ]]; then
 		die "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
 	elif [[ -d $remoteDir ]]; then
-		returnDying "remote \033[0;36m%s\033[0m already exists, remove with: gt remote remove %s" "$remote" "$remote" || return $?
+		returnDying "remote \033[0;36m%s\033[0m already exists, remove with: gt remote remove -r %s" "$remote" "$remote" || return $?
 	fi
 
 	mkdir "$remoteDir" || die "failed to create remote directory %s" "$remoteDir"
