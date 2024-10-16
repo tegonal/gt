@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.2.0
+#                                         Version: v3.3.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -51,7 +51,7 @@
 #
 #    	# shellcheck disable=SC2317   # is passed by name to exitIfArgIsNotArrayWithTuples
 #    	function describePair() {
-#    		echo >&2 "array contains 2-tuples with names where the first value is the first-, and the second the lastname"
+#    		echo >&2 "array contains 2-tuples with names where the first value is the first-, and the second the last name"
 #    	}
 #    	# check array with 2-tuples
 #    	exitIfArgIsNotArrayWithTuples arr 2 "names" 1 describePair
