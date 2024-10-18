@@ -53,7 +53,7 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 
 	local -r remoteDir=$1
 	local -r currentDir=$2
-	shift 2 || die "could not shift by 2"
+	shift 2 || traceAndDie "could not shift by 2"
 
 	if ! ((result == 0)) && [[ -d $remoteDir ]]; then
 		deleteDirChmod777 "$remoteDir"
@@ -61,7 +61,7 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 }
 
 function gt_remote_add() {
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -126,7 +126,7 @@ function gt_remote_add() {
 	mkdir -p "$workingDirAbsolute/remotes" || die "was not able to create directory %s" "$workingDirAbsolute/remotes"
 
 	local remoteDir publicKeysDir repo gpgDir pullArgsFile gitconfig
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
 		die "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
@@ -229,7 +229,7 @@ function gt_remote_list_raw() {
 
 	local remotesDir
 	local -r remote="not really a remote but paths.source.sh requires it, hence we set it here but don't use it afterwards"
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	local cutLength
 	cutLength=$((${#remotesDir} + 2))
@@ -254,7 +254,7 @@ function gt_remote_list() {
 }
 
 function gt_remote_remove() {
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
@@ -286,7 +286,7 @@ function gt_remote_remove() {
 	local -r workingDirAbsolute
 
 	local remoteDir pulledTsv pullHookFile
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
 		logError "cannot delete remote \033[0;36m%s\033[0m, looks like it is broken there is a file at this location: %s" "$remote" "$remoteDir"

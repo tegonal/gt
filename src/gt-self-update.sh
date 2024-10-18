@@ -87,7 +87,7 @@ function gt_self_update() {
 				printf ", but '%s true' was specified, going to re-install it\n" "$forcePattern"
 			fi
 		fi
-		cd "$currentDir" || die "could not cd back to the current dir"
+		cd "$currentDir" || die "could not cd back to the current dir %s" "$currentDir"
 	else
 		logInfo "looks like you did not install gt via install.sh (%s does not exist)" "$installDir/.git"
 		if ! askYesOrNo "Do you want to run the following command to replace the current installation with the latest version:\ninstall.sh --directory \"%s\"" "$installDir"; then
@@ -99,7 +99,7 @@ function gt_self_update() {
 	local tmpDir
 	tmpDir=$(mktemp -d -t gt-install-XXXXXXXXXX)
 	cp -r "$installDir" "$tmpDir/gt"
-	cd "$tmpDir/gt" || die "could not cd to the tmpDir, see above"
+	cd "$tmpDir/gt" || die "could not cd to the tmpDir %s, see above" "$tmpDir/gt"
 	./install.sh --directory "$installDir"
 }
 

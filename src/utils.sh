@@ -43,13 +43,13 @@ function exitBecauseNoGpgKeysImported() {
 
 function findAscInDir() {
 	local -r dir=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	find "$dir" -maxdepth 1 -type f -name "*.asc" "$@"
 }
 
 function noAscInDir() {
 	local -r dir=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	local numberOfAsc
 	#shellcheck disable=SC2310			# we are aware of that set -e is disabled for findAscInDir
 	numberOfAsc=$(findAscInDir "$dir" | wc -l) || die "could not determine the number of *.asc files in dir %s, see errors above (use \`gt reset\` to re-import the remote's GPG keys)" "$dir"
@@ -58,10 +58,10 @@ function noAscInDir() {
 
 function checkWorkingDirExists() {
 	local workingDirAbsolute=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 
 	local workingDirParamPattern
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	if ! [[ -d $workingDirAbsolute ]]; then
 		logError "working directory \033[0;36m%s\033[0m does not exist" "$workingDirAbsolute"
@@ -82,7 +82,7 @@ function exitIfRemoteDirDoesNotExist() {
 	parseFnArgs params "$@"
 
 	local remoteDir
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d $remoteDir ]]; then
 		logError "remote \033[0;36m%s\033[0m does not exist, check for typos.\nFollowing the remotes which exist:" "$remote"
@@ -94,7 +94,7 @@ function exitIfRemoteDirDoesNotExist() {
 
 function invertBool() {
 	local b=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	if [[ $b == true ]]; then
 		echo "false"
 	else
@@ -104,9 +104,9 @@ function invertBool() {
 
 function gitDiffChars() {
 	local hash1 hash2
-	hash1=$(git hash-object -w --stdin <<<"$1") || die "cannot calculate hash for string: %" "$1"
-	hash2=$(git hash-object -w --stdin <<<"$2") || die "cannot calculate hash for string: %" "$2"
-	shift 2 || die "could not shift by 2"
+	hash1=$(git hash-object -w --stdin <<<"$1") || traceAndDie "cannot calculate hash for string: %" "$1"
+	hash2=$(git hash-object -w --stdin <<<"$2") || traceAndDie "cannot calculate hash for string: %" "$2"
+	shift 2 || traceAndDie "could not shift by 2"
 
 	git --no-pager diff "$hash1" "$hash2" \
 		--word-diff=color --word-diff-regex . --ws-error-highlight=all |
@@ -120,7 +120,7 @@ function initialiseGitDir() {
 	parseFnArgs params "$@"
 
 	local repo gitconfig
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	mkdir -p "$repo" || die "could not create the repo at %s" "$repo"
 	git --git-dir="$repo/.git" init || die "could not git init the repo at %s" "$repo"
@@ -138,7 +138,7 @@ function askToDeleteAndReInitialiseGitDirIfRemoteIsBroken() {
 	parseFnArgs params "$@"
 
 	local repo gitconfig
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! git --git-dir="$repo/.git" remote | grep "$remote" >/dev/null; then
 		logError "looks like the .git directory of remote \033[0;36m%s\033[0m is broken. There is no remote %s set up in its gitconfig. Following the remotes:" "$remote" "$remote"
@@ -164,7 +164,7 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 	parseFnArgs params "$@"
 
 	local repo
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d "$repo/.git" ]]; then
 		logInfo "repo directory (or its .git directory) does not exist for remote \033[0;36m%s\033[0m. We are going to re-initialise it based on the stored gitconfig" "$remote"
@@ -176,7 +176,7 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 
 function initialiseGpgDir() {
 	local -r gpgDir=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	mkdir "$gpgDir" || die "could not create the gpg directory at %s" "$gpgDir"
 	# it's OK if we are not able to set the rights as we only use it temporary. This will cause warnings by gpg
 	# so the user could be aware of that something went wrong
@@ -190,10 +190,10 @@ function latestRemoteTagIncludingChecks() {
 	parseFnArgs params "$@"
 
 	local repo
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	local tagParamPattern
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagParamPattern"
 	local tag
@@ -211,7 +211,7 @@ function validateGpgKeysAndImport() {
 	exitIfArgIsNotFunction "$validateGpgKeysAndImport_callback" 4
 
 	local autoTrustParamPattern
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r sigExtension="sig"
 
@@ -276,16 +276,16 @@ function importRemotesPulledPublicKeys() {
 	exitIfArgIsNotFunction "$importRemotesPulledPublicKeys_callback" 3
 
 	local gpgDir publicKeysDir repo
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	# shellcheck disable=SC2317   # called by name
 	function importRemotesPublicKeys_importKeyCallback() {
 		local -r publicKey=$1
 		local -r sig=$2
-		shift 2 || die "could not shift by 2"
+		shift 2 || traceAndDie "could not shift by 2"
 
-		mv "$publicKey" "$publicKeysDir/" || die "unable to move public key %s into public keys directory %s" "$publicKey" "$publicKeysDir"
-		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature %s into public keys directory %s" "$sig" "$publicKeysDir"
+		mv "$publicKey" "$publicKeysDir/" || die "unable to move public key \033[0;36m%s\033[0m into public keys directory %s" "$publicKey" "$publicKeysDir"
+		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature \033[0;36m%s\033[0m into public keys directory %s" "$sig" "$publicKeysDir"
 		"$importRemotesPulledPublicKeys_callback" "$publicKey" "$sig"
 	}
 	validateGpgKeysAndImport "$repo/.gt" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
@@ -300,7 +300,7 @@ function determineDefaultBranch() {
 	parseFnArgs params "$@"
 
 	local repo
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	git --git-dir "$repo/.git"  remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
 		(
@@ -316,7 +316,7 @@ function checkoutGtDir() {
 	parseFnArgs params "$@"
 
 	local repo
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	git -C "$repo" fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36m%s\033[0m" "$remote"
 	# execute as if we are inside repo as we want to checkout there, remove all folders
@@ -330,7 +330,7 @@ function exitIfRepoBrokenAndReInitIfAbsent() {
 	parseFnArgs params "$@"
 
 	local remoteDir repo
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if [[ -f $repo ]]; then
 		die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the repo's location: %s" "$remote" "$remoteDir"
