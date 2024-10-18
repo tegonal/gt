@@ -51,7 +51,7 @@ function gt_update() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir autoTrust tag
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
@@ -98,7 +98,7 @@ function gt_update() {
 	function gt_update_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
-		shift 2 || die "could not shift by 2"
+		shift 2 || traceAndDie "could not shift by 2"
 		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
 	}
@@ -106,7 +106,7 @@ function gt_update() {
 	# shellcheck disable=SC2317   # called by name
 	function gt_update_rePullInternal() {
 		local -r remote=$1
-		shift 1 || die "could not shift by 1"
+		shift 1 || traceAndDie "could not shift by 1"
 
 		local tagToPull
 		if [[ -n $tag ]]; then
@@ -135,7 +135,7 @@ function gt_update() {
 
 	function gt_update_rePullRemote() {
 		local -r remote=$1
-		shift 1 || die "could not shift by 1"
+		shift 1 || traceAndDie "could not shift by 1"
 
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 

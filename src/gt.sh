@@ -65,7 +65,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-commands.sh"
 
 function gt_source() {
 	local -r command=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	sourceOnce "$dir_of_gt/gt-$command.sh"
 }
 

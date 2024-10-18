@@ -33,7 +33,7 @@ sourceOnce "$scriptsDir/prepare-next-dev-cycle.sh"
 sourceOnce "$scriptsDir/update-version-in-non-sh-files.sh"
 
 function release() {
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local version
 	# shellcheck disable=SC2034   # they seem unused but are necessary in order that parseArguments doesn't create global readonly vars

@@ -55,7 +55,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_reset() {
 	local defaultWorkingDir unsecureParamPattern
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
@@ -97,7 +97,7 @@ function gt_reset() {
 		exitIfRepoBrokenAndReInitIfAbsent "$workingDirAbsolute" "$remote"
 
 		local publicKeysDir gpgDir repo pullArgsFile
-		source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 		if [[ -d $publicKeysDir ]]; then
 			logInfo "Going to re-establish gpg trust in remote \033[0;36m%s\033[0m, removing %s" "$remote" "$publicKeysDir"
 			deleteDirChmod777 "$publicKeysDir" || die "could not delete the public keys dir of remote \033[0;36m%s\033[0m" "$remote"
@@ -170,7 +170,7 @@ function gt_reset() {
 
 	if [[ -n $remote ]]; then
 		#shellcheck disable=SC2310		# we know that set -e is disabled for gt_reset_resetRemote due to ||
-		gt_reset_resetRemote "$remote" || die "could not remove gpg directory for remote %s, see above" "$remote"
+		gt_reset_resetRemote "$remote" || die "could not remove gpg directory for remote \033[0;36m%s\033[0m, see above" "$remote"
 		if [[ $gpgOnly != true ]]; then
 			gt_re_pull -w "$workingDirAbsolute" --only-missing false -r "$remote"
 		fi

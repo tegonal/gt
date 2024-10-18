@@ -67,7 +67,7 @@ function includeInstallDoc() {
 	# using unconventional naming in order to avoid name clashes with the variables we will initialise further below
 	local -r installDocSh=$1
 	local -rn includeInstallDoc_files=$2
-	shift 2 || die "could not shift by 2"
+	shift 2 || traceAndDie "could not shift by 2"
 
 	if ! [[ -f "$installDocSh" ]]; then
 		returnDying "%s does not exist" "$installDocSh"
@@ -98,7 +98,7 @@ function includeInstallDoc() {
 		perl -0777 -i \
 			-pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@g" \
 			"$file" || return $?
-	done || die "could not replace the install instructions"
+	done || traceAndDie "could not replace the install instructions"
 }
 
 ${__SOURCED__:+return}

@@ -64,7 +64,7 @@ function gt_pull() {
 	local -r currentDir
 
 	local pulledTsvLatestVersionPragma pulledTsvHeader
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
@@ -145,14 +145,14 @@ function gt_pull() {
 	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 
 	local publicKeysDir repo gpgDir pulledTsv pullHookFile
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
 		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"
 	fi
 
 	if ! [[ -f $pulledTsv ]]; then
-		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader" >"$pulledTsv" || die "failed to initialise the pulled.tsv file at %s" "$pulledTsv"
+		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader" >"$pulledTsv" || die "failed to initialise the pulled.tsv file at \033[0;36m%s\033[0m" "$pulledTsv"
 	else
 		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
@@ -162,7 +162,7 @@ function gt_pull() {
 	local tagToPull="$tag"
 	# tag was actually omitted, so we use the latest remote tag instead
 	if [[ $tag == "$fakeTag" ]]; then
-		tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag, see above"
+		tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m, see above" "$remote"
 	fi
 	local -r tagToPull
 
@@ -261,7 +261,7 @@ function gt_pull() {
 	local pullHookAfter="gt_pull_noop"
 	if [[ -f $pullHookFile ]]; then
 		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
-		sourceOnce "$pullHookFile" || die "could not source %s" "$pullHookFile"
+		sourceOnce "$pullHookFile" || traceAndDie "could not source %s" "$pullHookFile"
 		pullHookBefore="gt_pullHook_${remote//-/_}_before"
 		pullHookAfter="gt_pullHook_${remote//-/_}_after"
 	fi

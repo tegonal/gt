@@ -36,7 +36,7 @@ unset CDPATH
 
 function logError() {
 	local -r msg=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	# shellcheck disable=SC2059
 	printf >&2 "\033[0;31mERROR\033[0m: $msg\n" "$@"
 }
@@ -48,14 +48,14 @@ function die() {
 
 function logSuccess() {
 	local -r msg=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	# shellcheck disable=SC2059
 	printf "\033[0;32mSUCCESS\033[0m: $msg\n" "$@"
 }
 
 function logInfo() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	# shellcheck disable=SC2059
 	printf "\033[0;34mINFO\033[0m: $msg\n" "$@"
 }
@@ -76,7 +76,7 @@ function exitIfCommandDoesNotExist() {
 
 function deleteDirChmod777() {
 	local -r dir=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	# e.g files in .git will be write-protected and we don't want sudo for this command
 	# yet, if it fails, then we ignore the problem and still try to delete the folder
 	chmod -R 777 "$dir" || true
@@ -103,7 +103,7 @@ function install() {
 	local -r tag=$1
 	local -r installDir=$2
 	local -r symbolicLink=$3
-	shift 3 || die "could not shift by 3"
+	shift 3 || traceAndDie "could not shift by 3"
 
 	local -r versionRegex="^(v[0-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$"
 	if ! grep -Eq "$versionRegex" >/dev/null <<<"$tag"; then

@@ -54,7 +54,7 @@ function gt_re_pull() {
 	startTime=$(date +%s.%3N)
 
 	local defaultWorkingDir
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
 
@@ -100,7 +100,7 @@ function gt_re_pull() {
 	function gt_re_pull_incrementError() {
 		local -r entryFile=$1
 		local -r remote=$2
-		shift 2 || die "could not shift by 2"
+		shift 2 || traceAndDie "could not shift by 2"
 		logError "could not pull \033[0;36m%s\033[0m from remote %s" "$entryFile" "$remote"
 		((++errors))
 	}
@@ -108,10 +108,10 @@ function gt_re_pull() {
 	# shellcheck disable=SC2317   # called by name
 	function gt_re_pull_rePullInternal() {
 		local -r remote=$1
-		shift 1 || die "could not shift by 1"
+		shift 1 || traceAndDie "could not shift by 1"
 
 		local repo
-		source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile _entryRelativePath entryAbsolutePath
@@ -140,7 +140,7 @@ function gt_re_pull() {
 
 	function gt_re_pull_rePullRemote() {
 		local -r remote=$1
-		shift 1 || die "could not shift by 1"
+		shift 1 || traceAndDie "could not shift by 1"
 		withCustomOutputInput 5 6 gt_re_pull_rePullInternal "$remote"
 	}
 

@@ -41,11 +41,11 @@ function pulledTsvEntry() {
 
 function migratePulledTsvFormat() {
 	local pulledTsvLatestVersionPragma
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r pulledTsv=$1
 	local -r fromVersion=$2
 	local -r toVersion=$3
-	shift 3 || die "could not shift by 2"
+	shift 3 || traceAndDie "could not shift by 2"
 
 	if [[ $fromVersion == "unspecified" ]]; then
 		# pulled.tsv without version pragma, convert to current
@@ -60,10 +60,10 @@ function migratePulledTsvFormat() {
 
 function exitIfHeaderOfPulledTsvIsWrong() {
 	local -r pulledTsv=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 
 	local pulledTsvLatestVersion pulledTsvLatestVersionPragma pulledTsvHeader
-	source "$dir_of_gt/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentVersionPragma currentHeader
 	currentVersionPragma="$(head -n 1 "$pulledTsv")" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
@@ -100,7 +100,7 @@ function setEntryVariables() {
 function grepPulledEntryByFile() {
 	local -r pulledTsv=$1
 	local -r file=$2
-	shift 2 || die "could not shift by 2"
+	shift 2 || traceAndDie "could not shift by 2"
 	grep -E "^[^\t]+	$file" "$@" "$pulledTsv"
 }
 
@@ -124,7 +124,7 @@ function readPulledTsv() {
 	exitIfArgIsNotFunction "$readPulledTsv_callback" 3
 
 	local pulledTsv
-	source "$dir_of_gt/paths.source.sh" || die "could not source paths.source.sh"
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 	if ! [[ -f $pulledTsv ]]; then
 		logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
 		return 0
