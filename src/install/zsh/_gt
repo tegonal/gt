@@ -15,166 +15,166 @@
 #
 #######  Usage  ###################
 function _gt() {
-  _tegonal_command_based "gt" true
+	_tegonal_command_based "gt" true
 }
 
 function _gt_pull() {
-  local -a params=(
-    "$(_gt_param_help 'gt pull')"
-    "$(_gt_param_auto_trust)"
-    '--chop-path[(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory]:chopPath:->chopPath'
-    "$(_gt_param_unsecure '(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false')"
-    '--unsecure-no-verification[(optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false]:unsecureNoVerify:->unsecureNoVerify'
-    + '(tag)' {-t,--tag}'[git tag used to pull the file/directory]:tag:->tag'
-    + '(path)' {-p,--path}'[path in remote repository which shall be pulled (file or directory)]:path:'
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  params+=("${(f@)$(_gt_param_remote 'name of the remote repository')}")
-  params+=("${(f@)$(_gt_param_directory '(optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)')}")
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt pull')"
+		"$(_gt_param_auto_trust)"
+		'--chop-path[(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory]:chopPath:->chopPath'
+		"$(_gt_param_unsecure '(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false')"
+		'--unsecure-no-verification[(optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false]:unsecureNoVerify:->unsecureNoVerify'
+		+ '(tag)' {-t,--tag}'[git tag used to pull the file/directory]:tag:->tag'
+		+ '(path)' {-p,--path}'[path in remote repository which shall be pulled (file or directory)]:path:'
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	params+=("${(f@)$(_gt_param_remote 'name of the remote repository')}")
+	params+=("${(f@)$(_gt_param_directory '(optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)')}")
+	_arguments "${params[@]}"
 
-  case $state in
-    (autoTrust)
-      _gt_param_auto_trust_describe
-    (chopPath)
-      _describe 'chopDir' "('true:chop the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'gt.sh') in the target folder' 'false:keep the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'src/gt.sh') in the target folder')"
-      ;;
-    (unsecure)
-      _describe 'unsecure' "('true:can pull from a remote for which no GPG key(s) are defined' 'false:can only pull from a secure remote for which GPG key(s) are defined')"
-      ;;
-    (unsecureNoVerify)
-      _describe 'unsecureNoVerify' "('true:don''t verify files even if GPG is defined' 'false:verify files if GPG key is defined for remote')"
-      ;;
-    (remote)
-      _gt_describe_remotes
-      ;;
-  esac
+	case $state in
+		(autoTrust)
+			_gt_param_auto_trust_describe
+		(chopPath)
+			_describe 'chopDir' "('true:chop the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'gt.sh') in the target folder' 'false:keep the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'src/gt.sh') in the target folder')"
+			;;
+		(unsecure)
+			_describe 'unsecure' "('true:can pull from a remote for which no GPG key(s) are defined' 'false:can only pull from a secure remote for which GPG key(s) are defined')"
+			;;
+		(unsecureNoVerify)
+			_describe 'unsecureNoVerify' "('true:don''t verify files even if GPG is defined' 'false:verify files if GPG key is defined for remote')"
+			;;
+		(remote)
+			_gt_describe_remotes
+			;;
+	esac
 }
 
 function _gt_re_pull() {
-  local -a params=(
-    "$(_gt_param_help 'gt re-pull')"
-    "$(_gt_param_auto_trust)"
-    '--only-missing[(optional) if set to true, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true]:onlyMissing:->onlyMissing'
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  params+=("${(f@)$(_gt_param_remote '(optional) if set, only the remote with this name is reset, otherwise all are reset')}")
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt re-pull')"
+		"$(_gt_param_auto_trust)"
+		'--only-missing[(optional) if set to true, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true]:onlyMissing:->onlyMissing'
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	params+=("${(f@)$(_gt_param_remote '(optional) if set, only the remote with this name is reset, otherwise all are reset')}")
+	_arguments "${params[@]}"
 
-  case $state in
-    (onlyMissing)
-      _describe 'onlyMissing' "('true:only pull files which do not yet exist locally' 'false:override existing files')"
-      ;;
-    (remote)
-      _gt_describe_remotes
-      ;;
-  esac
+	case $state in
+		(onlyMissing)
+			_describe 'onlyMissing' "('true:only pull files which do not yet exist locally' 'false:override existing files')"
+			;;
+		(remote)
+			_gt_describe_remotes
+			;;
+	esac
 }
 
 function _gt_remote() {
-  _tegonal_command_based "gt remote" false
+	_tegonal_command_based "gt remote" false
 }
 
 function _gt_remote_add(){
-  local -a params=(
-    "$(_gt_param_help 'gt remote add')"
-    "$(_gt_param_unsecure '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false')"
-    + '(remote)' {-r,--remote}'[name identifying this remote]:remote'
-    + '(url)' {-u,--url}'[url of the remote repository]:url:->url'
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  params+=("${(f@)$(_gt_param_directory '(optional) directory into which files are pulled -- default: lib/<remote>')}")
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt remote add')"
+		"$(_gt_param_unsecure '(optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false')"
+		+ '(remote)' {-r,--remote}'[name identifying this remote]:remote'
+		+ '(url)' {-u,--url}'[url of the remote repository]:url:->url'
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	params+=("${(f@)$(_gt_param_directory '(optional) directory into which files are pulled -- default: lib/<remote>')}")
+	_arguments "${params[@]}"
 
-  case $state in
-    (url)
-      _values 'urls' "https\://github.com/"
-      ;;
-    (unsecure)
-      _describe 'unsecure' "('true:will not require a GPG key and add --unsecure true to the remotes pull.args so that it doesn't need to be repeated during gt pull' 'false:will fetch the GPG key(s) of the remote defined at .gt/*.asc and verify if we trust them')"
-      ;;
-  esac
+	case $state in
+		(url)
+			_values 'urls' "https\://github.com/"
+			;;
+		(unsecure)
+			_describe 'unsecure' "('true:will not require a GPG key and add --unsecure true to the remotes pull.args so that it doesn't need to be repeated during gt pull' 'false:will fetch the GPG key(s) of the remote defined at .gt/*.asc and verify if we trust them')"
+			;;
+	esac
 }
 
 function _gt_remote_remove() {
-  local -a params=(
-      "$(_gt_param_help 'gt remote remove')"
-      "--delete-pulled-files[(optional) if set to true, then all files defined in the remote's pulled.tsv are deleted as well -- default: false]:deletePulled:->deletePulled"
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  params+=("${(f@)$(_gt_param_remote 'define the name of the remote which shall be removed')}")
-  _arguments "${params[@]}"
+	local -a params=(
+			"$(_gt_param_help 'gt remote remove')"
+			"--delete-pulled-files[(optional) if set to true, then all files defined in the remote's pulled.tsv are deleted as well -- default: false]:deletePulled:->deletePulled"
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	params+=("${(f@)$(_gt_param_remote 'define the name of the remote which shall be removed')}")
+	_arguments "${params[@]}"
 
-  case $state in
-    (deletePulled)
-      _describe 'deletePulled' "('true:will also try to delete all files specified in pulled.tsv of this remote' 'false:will keep the pulled files and only remove the remote')"
-      ;;
-    (remote)
-      _gt_describe_remotes
-      ;;
-  esac
+	case $state in
+		(deletePulled)
+			_describe 'deletePulled' "('true:will also try to delete all files specified in pulled.tsv of this remote' 'false:will keep the pulled files and only remove the remote')"
+			;;
+		(remote)
+			_gt_describe_remotes
+			;;
+	esac
 }
 
 
 function _gt_remote_list(){
-  local -a params=(
-    "$(_gt_param_help 'gt remote list')"
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt remote list')"
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	_arguments "${params[@]}"
 }
 
 function _gt_reset() {
-  local -a params=(
-    "$(_gt_param_help 'gt reset')"
-    '--gpg--only[(optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false]:gpgOnly:->gpgOnly'
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  params+=("${(f@)$(_gt_param_remote '(optional) if set, only the remote with this name is reset, otherwise all are reset')}")
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt reset')"
+		'--gpg--only[(optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false]:gpgOnly:->gpgOnly'
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	params+=("${(f@)$(_gt_param_remote '(optional) if set, only the remote with this name is reset, otherwise all are reset')}")
+	_arguments "${params[@]}"
 
-  case $state in
-    (gpgOnly)
-      _describe 'gpgOnly' "('true:only the gpg key(s) are reset, files are not reset' 'false:gpg key(s) and files are reset (i.e. removed and re-pulled)')"
-      ;;
-    (remote)
-      _gt_describe_remotes
-      ;;
-  esac
+	case $state in
+		(gpgOnly)
+			_describe 'gpgOnly' "('true:only the gpg key(s) are reset, files are not reset' 'false:gpg key(s) and files are reset (i.e. removed and re-pulled)')"
+			;;
+		(remote)
+			_gt_describe_remotes
+			;;
+	esac
 }
 
 function _gt_update() {
-  local -a params=(
-    "$(_gt_param_help 'gt update')"
-    "$(_gt_param_auto_trust)"
-    + '(tag)' {-t,--tag}'[(optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified]:tag'
-  )
-  params+=("${(f@)$(_gt_param_workingDir)}")
-  params+=("${(f@)$(_gt_param_remote '(optional) if set, only the files of this remote are updated, otherwise all')}")
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt update')"
+		"$(_gt_param_auto_trust)"
+		+ '(tag)' {-t,--tag}'[(optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified]:tag'
+	)
+	params+=("${(f@)$(_gt_param_workingDir)}")
+	params+=("${(f@)$(_gt_param_remote '(optional) if set, only the files of this remote are updated, otherwise all')}")
+	_arguments "${params[@]}"
 
-  case $state in
-    (gpgOnly)
-      _describe 'gpgOnly' "('true:only the gpg key(s) are reset, files are not reset' 'false:gpg key(s) and files are reset (i.e. removed and re-pulled)')"
-      ;;
-    (remote)
-      _gt_describe_remotes
-      ;;
-  esac
+	case $state in
+		(gpgOnly)
+			_describe 'gpgOnly' "('true:only the gpg key(s) are reset, files are not reset' 'false:gpg key(s) and files are reset (i.e. removed and re-pulled)')"
+			;;
+		(remote)
+			_gt_describe_remotes
+			;;
+	esac
 }
 
 function _gt_self_update() {
-  local -a params=(
-    "$(_gt_param_help 'gt self-update')"
-    '--force[ if set to true, then install.sh will be called even if gt is already on latest tag]:force:->force'
-  )
-  _arguments "${params[@]}"
+	local -a params=(
+		"$(_gt_param_help 'gt self-update')"
+		'--force[ if set to true, then install.sh will be called even if gt is already on latest tag]:force:->force'
+	)
+	_arguments "${params[@]}"
 
-  case $state in
-    (force)
-      _describe 'force' "('true:re-install gt with latest version in any case' 'false:re-install gt only if not already on latest version')"
-      ;;
-  esac
+	case $state in
+		(force)
+			_describe 'force' "('true:re-install gt with latest version in any case' 'false:re-install gt only if not already on latest version')"
+			;;
+	esac
 }
 
 
@@ -183,92 +183,92 @@ function _gt_self_update() {
 # ----------------------------------------------------------------------------------------------------------------------
 
 function _tegonal_command_based() {
-  local -r command=$1
-  local -r showVersion=$2
-  shift 2
-  local -r suffix="_${command// /_}"
+	local -r command=$1
+	local -r showVersion=$2
+	shift 2
+	local -r suffix="_${command// /_}"
 
-  local -r helpContent="$(eval "$command --help")"
+	local -r helpContent="$(eval "$command --help")"
 
-  set -o rematchpcre # otherwise the non-greedy match doesn't work
-  local -r commandRegex="Commands:.*\n([\S\s]+?)\n.*INFO"
-  if [[ $helpContent =~ $commandRegex ]]; then
-    local subCommands
-    subCommands=("${(f@)$(echo "$match" | grep '^[a-z]' | sed -r "s/([a-zA-Z0-9_-]+)\s*(.*)/\1:\2/")}")
-    subCommands+=(':' "--help:prints the help of $command")
-    if [[ $showVersion == "true" ]]; then
-      subCommands+=("--version:prints the version of $command")
-    fi
-    local -r matchesSubCommandRegex="^($(printf "%s\n" "${subCommands[@]}" | awk -F: '{print $1}' | paste -sd '|'))$"
+	set -o rematchpcre # otherwise the non-greedy match doesn't work
+	local -r commandRegex="Commands:.*\n([\S\s]+?)\n.*INFO"
+	if [[ $helpContent =~ $commandRegex ]]; then
+		local subCommands
+		subCommands=("${(f@)$(echo "$match" | grep '^[a-z]' | sed -r "s/([a-zA-Z0-9_-]+)\s*(.*)/\1:\2/")}")
+		subCommands+=(':' "--help:prints the help of $command")
+		if [[ $showVersion == "true" ]]; then
+			subCommands+=("--version:prints the version of $command")
+		fi
+		local -r matchesSubCommandRegex="^($(printf "%s\n" "${subCommands[@]}" | awk -F: '{print $1}' | paste -sd '|'))$"
 
-    local state line
-    _arguments "1:command:->command" "*::options:->options"
-    case $state in
-      (command)
-          _describe -V1 -t commands "$command subcommands" subCommands
-          ;;
-      (options)
+		local state line
+		_arguments "1:command:->command" "*::options:->options"
+		case $state in
+			(command)
+					_describe -V1 -t commands "$command subcommands" subCommands
+					;;
+			(options)
 
-        if [[ "${line[1]}" =~ $matchesSubCommandRegex  ]]; then
-          "${suffix}_${line[1]//-/_}"
-        fi
-    esac
-  else
-    echo >&2 "could not find commands in the help output, following its output"
-    echo "$helpContent"
-    return 1
-  fi
+				if [[ "${line[1]}" =~ $matchesSubCommandRegex  ]]; then
+					"${suffix}_${line[1]//-/_}"
+				fi
+		esac
+	else
+		echo >&2 "could not find commands in the help output, following its output"
+		echo "$helpContent"
+		return 1
+	fi
 
 }
 
 function _gt_describe_remotes() {
-  local remotes
-  #TODO take a chosen working-directory into account
-  remotes=$(gt remote list 2> /dev/null) || echo ""
-  if [[ -n "$remotes" ]]; then
-    _describe 'remotes' "($remotes)"
-  else
-    local -a notFound=("not-found:.gt directory not found in $(pwd) cannot deduce remotes" \:)
-    _describe 'remotes' notFound
-    return 1
-  fi
+	local remotes
+	#TODO take a chosen working-directory into account
+	remotes=$(gt remote list 2> /dev/null) || echo ""
+	if [[ -n "$remotes" ]]; then
+		_describe 'remotes' "($remotes)"
+	else
+		local -a notFound=("not-found:.gt directory not found in $(pwd) cannot deduce remotes" \:)
+		_describe 'remotes' notFound
+		return 1
+	fi
 }
 
 function _gt_param_auto_trust() {
-  printf "--auto-trust[(optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false]:trust:->autoTrust"
+	printf "--auto-trust[(optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false]:trust:->autoTrust"
 }
 function _gt_param_auto_trust_describe() {
-  _describe 'autoTrust' "('true:if GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent' 'false:if GPG is not set up yet, then importing keys in .gt/remotes/<remote>/public-keys/*.asc requires a manual consent')"
+	_describe 'autoTrust' "('true:if GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent' 'false:if GPG is not set up yet, then importing keys in .gt/remotes/<remote>/public-keys/*.asc requires a manual consent')"
 }
 
 function _gt_param_help() {
-  local -r command=$1
-  shift 1;
-  echo "--help[prints the help for the $command command]"
+	local -r command=$1
+	shift 1;
+	echo "--help[prints the help for the $command command]"
 }
 
 
 function _gt_param_remote() {
-  local -r description=$1
-  shift 1;
-  printf '+\n(remote)\n'
-  printf "%s[$description]:remote:->remote\n" '-r' '--remote'
+	local -r description=$1
+	shift 1;
+	printf '+\n(remote)\n'
+	printf "%s[$description]:remote:->remote\n" '-r' '--remote'
 }
 
 function _gt_param_workingDir() {
-  printf '+\n(workingDir)\n'
-  printf '%s[(optional) path which gt shall use as working directory -- default: .gt]:directory:_files -/\n' '-w' '--working-directory'
+	printf '+\n(workingDir)\n'
+	printf '%s[(optional) path which gt shall use as working directory -- default: .gt]:directory:_files -/\n' '-w' '--working-directory'
 }
 
 function _gt_param_unsecure() {
-  local -r description=$1
-  shift 1;
-  echo "--unsecure[$description]:unsecure:->unsecure"
+	local -r description=$1
+	shift 1;
+	echo "--unsecure[$description]:unsecure:->unsecure"
 }
 
 function _gt_param_directory() {
-  local -r description=$1
-  shift 1;
-  printf '+\n(directory)\n'
-  printf "%s[$description]:directory:_files -\n" '-d' '--directory'
+	local -r description=$1
+	shift 1;
+	printf '+\n(directory)\n'
+	printf "%s[$description]:directory:_files -\n" '-d' '--directory'
 }
