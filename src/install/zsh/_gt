@@ -51,7 +51,7 @@ function _gt_re_pull() {
   local -a params=(
     "$(_gt_param_help 'gt re-pull')"
     "$(_gt_param_auto_trust)"
-    '--only-missing[(optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true]:onlyMissing:->onlyMissing'
+    '--only-missing[(optional) if set to true, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true]:onlyMissing:->onlyMissing'
   )
   params+=("${(f@)$(_gt_param_workingDir)}")
   params+=("${(f@)$(_gt_param_remote '(optional) if set, only the remote with this name is reset, otherwise all are reset')}")
@@ -59,7 +59,7 @@ function _gt_re_pull() {
 
   case $state in
     (onlyMissing)
-      _describe 'onlyMissing' "('true:override existing files' 'false:only pull files which do not yet exist locally')"
+      _describe 'onlyMissing' "('true:only pull files which do not yet exist locally' 'false:override existing files')"
       ;;
     (remote)
       _gt_describe_remotes
@@ -258,7 +258,6 @@ function _gt_param_unsecure() {
   shift 1;
   echo "--unsecure[$description]:unsecure:->unsecure"
 }
-
 
 function _gt_param_directory() {
   local -r description=$1
