@@ -23,7 +23,7 @@ local -r workingDirParamDocu="(optional) path which gt shall use as working dire
 local -r pullDirParamPattern='-d|--directory'
 
 local -r autoTrustParamPattern='--auto-trust'
-local -r autoTrustParamDocu="(optional) if set to true, all public-keys stored in $defaultWorkingDir/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false"
+local -r autoTrustParamDocu="(optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false"
 
 local -r tagParamPattern='-t|--tag'
 
