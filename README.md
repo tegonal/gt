@@ -407,7 +407,7 @@ Parameters:
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
 -w|--working-directory       (optional) path which gt shall use as working directory -- default: .gt
---auto-trust                 (optional) if set to true, all public-keys stored in .gt/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false
+--auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false
 
@@ -513,7 +513,7 @@ Following the output of running `gt re-pull --help`:
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---auto-trust             (optional) if set to true, all public-keys stored in .gt/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false
+--auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --only-missing           (optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true
 
 --help     prints this help
@@ -632,7 +632,7 @@ Following the output of running `gt update --help`:
 Parameters:
 -r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---auto-trust             (optional) if set to true, all public-keys stored in .gt/remotes/<remote>/public-keys/*.asc are imported if GPG verification fails and in such a case without the need of a manual consent -- default: false
+--auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 -t|--tag                 (optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified
 
 --help     prints this help
