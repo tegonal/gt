@@ -9,7 +9,9 @@
 #                                         Version: v0.20.0-SNAPSHOT
 #######  Description  #############
 #
-#  Provides a completion function for zsh
+#  Provides a completion function for zsh.
+#
+#  If you make changes, then either start a new zsh or use `unfunction _gt && autoload -U _gt` to see them immediately.
 #
 #######  Usage  ###################
 function _gt() {
@@ -32,6 +34,8 @@ function _gt_pull() {
   _arguments "${params[@]}"
 
   case $state in
+    (autoTrust)
+      _gt_param_auto_trust_describe
     (chopPath)
       _describe 'chopDir' "('true:chop the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'gt.sh') in the target folder' 'false:keep the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'src/gt.sh') in the target folder')"
       ;;
@@ -231,7 +235,10 @@ function _gt_describe_remotes() {
 }
 
 function _gt_param_auto_trust() {
-  printf "--auto-trust[(optional) if set to true, all keys in.gt/remotes/<remote>/public-keys/*.asc are imported if GPG verification without manual consent -- default: false]:trust:(true false)"
+  printf "--auto-trust[(optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false]:trust:->autoTrust"
+}
+function _gt_param_auto_trust_describe() {
+  _describe 'autoTrust' "('true:if GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent' 'false:if GPG is not set up yet, then importing keys in .gt/remotes/<remote>/public-keys/*.asc requires a manual consent')"
 }
 
 function _gt_param_help() {
