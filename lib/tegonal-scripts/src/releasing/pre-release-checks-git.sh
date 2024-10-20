@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 # Checks that releasing a certain version (creating a corresponding git tag) makes sense: We check:
@@ -34,7 +34,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v3.3.0'
+export TEGONAL_SCRIPTS_VERSION='v3.5.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -46,7 +46,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function preReleaseCheckGit() {
 	local versionRegex versionParamPatternLong
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local version branch
 	# shellcheck disable=SC2034   # is passed by name to parseArguments

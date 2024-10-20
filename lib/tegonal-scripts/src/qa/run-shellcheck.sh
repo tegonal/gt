@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -58,7 +58,7 @@ function runShellcheck() {
 	fi
 	local -rn runShellcheck_paths=$1
 	local -r sourcePath=$2
-	shift 2 || die "could not shift by 2"
+	shift 2 || traceAndDie "could not shift by 2"
 
 	exitIfArgIsNotArrayOrIsEmpty runShellcheck_paths 1
 

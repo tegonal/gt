@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
@@ -31,7 +31,7 @@
 #    function myParseFunction() {
 #    	while (($# > 0)); do
 #    		if [[ $1 == "--version" ]]; then
-#    			shift || die "could not shift by 1"
+#    			shift 1 || traceAndDie "could not shift by 1"
 #    			printVersion "$MY_LIBRARY_VERSION"
 #    		fi
 #    		#...

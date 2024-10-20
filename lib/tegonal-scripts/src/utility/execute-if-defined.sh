@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
@@ -66,7 +66,7 @@ function executeIfFunctionNameDefined() {
 	fi
 	local functionName=$1
 	local argNumberOrName=$2
-	shift 2 || die "could not shift by 2"
+	shift 2 || traceAndDie "could not shift by 2"
 	if [[ -n $functionName ]]; then
 		exitIfArgIsNotFunction "$functionName" "$argNumberOrName"
 		logInfo "arg %s defined (%s), going to call it" "$argNumberOrName" "$functionName"

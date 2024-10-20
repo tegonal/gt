@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
@@ -74,6 +74,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/array-utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-utils.sh"
 
@@ -127,13 +128,18 @@ function parseArgumentsInternal {
 	local -rn parseArguments_paramArr=$2
 	local -r parseArguments_examples=$3
 	local -r parseArguments_version=$4
-	shift 4 || die "could not shift by 4"
+	shift 4 || traceAndDie "could not shift by 4"
 
 	if ! [[ "$parseArguments_unknownBehaviour" =~ ^(ignore|error)$ ]]; then
-		die "unknownBehaviour needs to be one of 'error' or 'ignore' got \033[0;36m%s\033[0m" "$parseArguments_unknownBehaviour"
+		traceAndDie "unknownBehaviour needs to be one of 'error' or 'ignore' got \033[0;36m%s\033[0m" "$parseArguments_unknownBehaviour"
 	fi
 
 	parse_args_exitIfParameterDefinitionIsNotTriple parseArguments_paramArr
+
+	# shellcheck disable=SC2034		# passed by name to exitIfVariablesNotDeclared
+	local -a parseArguments_variableNames
+	arrTakeEveryX parseArguments_paramArr parseArguments_variableNames 3 0
+	exitIfVariablesNotDeclared "${parseArguments_variableNames[@]}"
 
 	local -ri parseArguments_arrLength="${#parseArguments_paramArr[@]}"
 
@@ -173,24 +179,25 @@ function parseArgumentsInternal {
 					exit 9
 				fi
 				# that's where the black magic happens, we are assigning to global (not local to this function) variables here
-				printf -v "$parseArguments_paramName" "%s" "$2" || die "could not assign value to $parseArguments_paramName"
+				printf -v "$parseArguments_paramName" "%s" "$2" || traceAndDie "could not assign value to $parseArguments_paramName"
 				parseArguments_expectedName=1
 				((++parseArguments_numOfArgumentsParsed))
-				shift || die "could not shift by 1"
+				shift 1 || traceAndDie "could not shift by 1"
 			fi
 		done
 
 		if [[ $parseArguments_unknownBehaviour = 'error' ]] && ((parseArguments_expectedName == 0)); then
-			parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version"
 			if [[ $parseArguments_argName =~ ^- ]] && (($# > 1)); then
 				logError "unknown argument \033[1;36m%s\033[0m (and value %s)" "$parseArguments_argName" "$2"
 			else
 				logError "unknown argument \033[1;36m%s\033[0m" "$parseArguments_argName"
 			fi
-			echo >&2 "consult the output of --help shown further above for valid names"
+			if askYesOrNo "Shall I print the help for you?"; then
+				parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version"
+			fi
 			exit 9
 		fi
-		shift || die "could not shift by 1"
+		shift 1 || traceAndDie "could not shift by 1"
 	done
 }
 
@@ -255,7 +262,7 @@ function exitIfNotAllArgumentsSet {
 	local -rn exitIfNotAllArgumentsSet_paramArr=$1
 	local -r exitIfNotAllArgumentsSet_examples=$2
 	local -r exitIfNotAllArgumentsSet_version=$3
-	shift 3 || die "could not shift by 3"
+	shift 3 || traceAndDie "could not shift by 3"
 
 	# it is handy to see the stacktrace if it is not a direct call from command line
 	# where we assume that the script as such has a "main" function, this one calls one function from this file and

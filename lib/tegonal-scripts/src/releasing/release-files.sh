@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Releasing files based on conventions:
@@ -75,7 +75,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v3.3.0'
+export TEGONAL_SCRIPTS_VERSION='v3.5.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -91,7 +91,7 @@ function releaseFiles() {
 	local versionParamPatternLong projectsRootDirParamPatternLong
 	local additionalPatternParamPatternLong afterVersionUpdateHookParamPatternLong releaseHookParamPatternLong
 	local findForSigningParamPatternLong beforePrFnParamPatternLong prepareNextDevCycleFnParamPatternLong
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local version key findForSigning branch projectsRootDir additionalPattern
 	# shellcheck disable=SC2034   # seems unused but is set in deduce-next-version

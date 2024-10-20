@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Defines a release process template where some conventions are defined:
@@ -80,7 +80,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v3.3.0'
+export TEGONAL_SCRIPTS_VERSION='v3.5.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -96,7 +96,7 @@ function releaseTemplate() {
 	local additionalPatternParamPatternLong prepareOnlyParamPatternLong
 	local beforePrFnParamPatternLong prepareNextDevCycleFnParamPatternLong afterVersionUpdateHookParamPatternLong
 	local forReleaseParamPatternLong releaseHookParamPatternLong
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || die "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local version releaseHook branch projectsRootDir additionalPattern nextVersion prepareOnly
 	local beforePrFn prepareNextDevCycleFn afterVersionUpdateHook

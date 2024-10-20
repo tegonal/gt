@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Utility functions to ask the user something via input.
@@ -55,7 +55,7 @@ function askYesOrNo() {
 		exit 9
 	fi
 	local -r question=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 
 	local -r askYesOrNo_timeout=20
 	local answer='n'
@@ -68,9 +68,9 @@ function askYesOrNo() {
 
 	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string
 	askWithTimeout "\033[0;36m$question\033[0m y/[n]:" "$askYesOrNo_timeout" askYesOrNo_noAnswerCallback answer "" "$@"
-	if [[ $answer == y ]] || [[ $answer == Y ]]; then
+	if [[ $answer == y ]] || [[ $answer == Y ]] || [[ $answer == yes ]]; then
 		return 0
-	elif [[ $answer == n ]] || [[ $answer == N ]]; then
+	elif [[ $answer == n ]] || [[ $answer == N ]] || [[ $answer == no ]]; then
 		return 1
 	else
 		logWarning "got \033[0;36m%s\033[0m as answer (instead of y for yes or n for no), interpreting it as a n, i.e. as a no" "$answer"
@@ -99,7 +99,7 @@ function askWithTimeout() {
 	local -r askWithTimeout_noAnswerFn=$3
 	local -r askWithTimeout_outVarName=$4
 	local -r askWithTimeout_readArgs=$5
-	shift 5 || die "could not shift by 5"
+	shift 5 || traceAndDie "could not shift by 5"
 
 	exitIfArgIsNotFunction "$askWithTimeout_noAnswerFn" 3
 	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string

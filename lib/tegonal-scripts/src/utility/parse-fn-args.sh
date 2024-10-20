@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 # Intended to parse positional function parameters including assignment and check if there are enough arguments
@@ -74,7 +74,7 @@ function parseFnArgs() {
 
 	# using unconventional naming in order to avoid name clashes with the variables we will initialise further below
 	local -rn parseFnArgs_paramArr1=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 
 	exitIfArgIsNotArray parseFnArgs_paramArr1 1
 
@@ -127,17 +127,19 @@ function parseFnArgs() {
 		exit 9
 	fi
 
+	exitIfVariablesNotDeclared "${parseFnArgs_paramArr1[@]}"
+
 	for ((parseFnArgs_i = 0; parseFnArgs_i < parseFnArgs_minExpected; ++parseFnArgs_i)); do
 		local parseFnArgs_name=${parseFnArgs_paramArr1[parseFnArgs_i]}
 		# assign arguments to specified variables
-		printf -v "$parseFnArgs_name" "%s" "$1" || die "could not assign value to $parseFnArgs_name"
+		printf -v "$parseFnArgs_name" "%s" "$1" || traceAndDie "could not assign value to $parseFnArgs_name"
 		local -r "$parseFnArgs_name"
-		shift || die "could not shift by 1"
+		shift 1 || traceAndDie "could not shift by 1"
 	done
 
 	# assign rest to varargs if used
 	if [[ $parseFnArgs_withVarArgs == true ]]; then
 		# shellcheck disable=SC2034   # varargs is defined in outer scope and will be used there, thus ok
-		varargs=("$@") || die "could not assign the rest of arguments to varargs"
+		varargs=("$@") || traceAndDie "could not assign the rest of arguments to varargs"
 	fi
 }

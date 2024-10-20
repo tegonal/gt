@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments of a script which uses commands and delegates accordingly.
@@ -117,7 +117,7 @@ function parseCommands {
 	local -r version=$2
 	local -r sourceFn=$3
 	local -r fnPrefix=$4
-	shift 4 || die "could not shift by 4"
+	shift 4 || traceAndDie "could not shift by 4"
 
 	if (($# < 1 )); then
 		logError "no command passed to %s, following the output of --help\n" "$(basename "${BASH_SOURCE[1]}")"
@@ -129,7 +129,7 @@ function parseCommands {
 	exitIfArgIsNotFunction "$sourceFn" 3
 
 	local -r command=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	local -a commandNames=()
 	arrTakeEveryX parseCommands_paramArr commandNames 2 0
 	local tmpRegex regex
@@ -138,7 +138,7 @@ function parseCommands {
 	local -r tmpRegex regex
 
 	if [[ "$command" =~ $regex ]]; then
-		"$sourceFn" "$command" || die "could not source necessary files to bring in function for command %s" "$command"
+		"$sourceFn" "$command" || traceAndDie "could not source necessary files to bring in function for command %s" "$command"
 		"$fnPrefix${command/-/_}" "$@"
 	elif [[ "$command" == "--help" ]]; then
 		parse_commands_printHelp parseCommands_paramArr "$version"
