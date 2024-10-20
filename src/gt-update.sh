@@ -15,13 +15,16 @@
 #
 #    #!/usr/bin/env bash
 #
-#    # updates all pulled files of all remotes to latest tag
+#    # updates all pulled files of all remotes to latest tag according to the tag-filter of the file
 #    gt update
 #
-#    # updates all pulled files of remote tegonal-scripts to latest tag
+#    # updates all pulled files of remote tegonal-scripts to latest tag according to the tag-filter of the file
 #    gt update -r tegonal-scripts
 #
-#    # updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0
+#    # updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0 if the tag-filter of the file matches,
+#    # (i.e. a file with tag-filter v2.* would not be downgraded to v1.0.0).
+#    # Side note, if no filter was specified during `gt pull`, then .* is used per default which includes all tags -- see
+#    # pulled.tsv to see the current tagFilter in use per file
 #    gt update -r tegonal-scripts -t v1.0.0
 #
 ###################################
@@ -93,6 +96,7 @@ function gt_update() {
 	local -r workingDirAbsolute
 
 	local -i pulled=0
+	local -i skipped=0
 	local -i errors=0
 
 	function gt_update_incrementError() {
@@ -108,22 +112,35 @@ function gt_update() {
 		local -r remote=$1
 		shift 1 || traceAndDie "could not shift by 1"
 
-		local tagToPull
-		if [[ -n $tag ]]; then
-			tagToPull="$tag"
-		else
-			reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
-			tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag, see above"
-		fi
+		local previousTagFilter=""
+		local previousLatestTag=""
 
 		function gt_update_rePullInternal_callback() {
-			local _entryTag entryFile _entryRelativePath entryAbsolutePath
+			local _entryTag entryFile _entryRelativePath localAbsolutePath entryTagFilter _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(_entryTag entryFile _entryRelativePath entryAbsolutePath)
+			local -ra params=(_entryTag entryFile _entryRelativePath localAbsolutePath entryTagFilter _entrySha512)
 			parseFnArgs params "$@"
 
+			local tagToPull
+			if [[ -n $tag ]]; then
+				tagToPull="$tag"
+				if ! grep -E "$entryTagFilter" <"$tagToPull"; then
+					# if the given tag does not match the entryTagFilter for the specific file, then we ignore
+					((++skipped))
+					return
+				fi
+			elif [[ "$previousTagFilter" == "$entryTagFilter" ]]; then
+				# no need to determine latest tag again, if the entryTagFilter is the same as for the previous file
+				tagToPull="$previousLatestTag"
+			else
+				reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
+				tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote" "$entryTagFilter") || die "could not determine latest tag for remote %s with filter %s, see above" "$remote" "$entryTagFilter"
+				previousLatestTag="$tagToPull"
+				previousTagFilter="$entryTagFilter"
+			fi
+
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
-			parentDir=$(dirname "$entryAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
+			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
 			if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
 				((++pulled))
 			else
@@ -164,9 +181,9 @@ function gt_update() {
 	endTime=$(date +%s.%3N)
 	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
 	if ((errors == 0)); then
-		logSuccess "%s files updated in %s seconds" "$pulled" "$elapsed"
+		logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsed" "$skipped"
 	else
-		logWarning "%s files updated in %s seconds, %s errors occurred, see above" "$pulled" "$elapsed" "$errors"
+		logWarning "%s files updated in %s seconds (%s skipped), %s errors occurred, see above" "$pulled" "$elapsed" "$skipped" "$errors"
 		return 1
 	fi
 }

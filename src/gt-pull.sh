@@ -17,11 +17,21 @@
 #
 #    # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 #    # in version v0.1.0 (i.e. tag v0.1.0 is used)
+#    # into the default directory of this remote
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 #
 #    # pull the directory src/utility/ from remote tegonal-scripts
 #    # in version v0.1.0 (i.e. tag v0.1.0 is used)
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+#
+#    # pull the file src/utility/ask.sh from remote tegonal-scripts
+#    # from the latest version and put into ./scripts/ instead of the default directory of this remote
+#    # chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/
+#    gt pull -r tegonal-scripts -p src/utility/ask.sh -d ./scripts/ --chop-path true
+#
+#    # pull the file src/utility/checks.sh from remote tegonal-scripts
+#    # from the latest version matching the specified tag-filter (i.e. one starting with v3)
+#    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
 #
 ###################################
 set -euo pipefail
@@ -67,18 +77,19 @@ function gt_pull() {
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
-	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification
+	local remote tag path pullDir chopPath workingDir autoTrust unsecure forceNoVerification tagFilter
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'name of the remote repository'
 		tag "$tagParamPattern" 'git tag used to pull the file/directory'
-		path '-p|--path' 'path in remote repository which shall be pulled (file or directory)'
+		path "$pathParamPattern" 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirParamPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
-		chopPath "--chop-path" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
+		chopPath "$chopPathParamPattern" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at $defaultWorkingDir/<remote>/*.asc -- default: false"
-		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecureParamPattern true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecureParamPatternLong true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 	)
 
 	local -r examples=$(
@@ -112,7 +123,7 @@ function gt_pull() {
 		if [[ -f $pullArgsFile ]]; then
 			while read -r line; do
 				eval 'args+=('"$line"');'
-			done < "$pullArgsFile" || die "could not read %s, you might not execute what you want without it, aborting" "$pullArgsFile"
+			done <"$pullArgsFile" || die "could not read %s, you might not execute what you want without it, aborting" "$pullArgsFile"
 		fi
 	fi
 	args+=("$@")
@@ -125,6 +136,7 @@ function gt_pull() {
 	if ! [[ -v unsecure ]]; then unsecure="$forceNoVerification"; fi
 	local fakeTag="NOT_A_REAL_TAG_JUST_TEMPORARY"
 	if ! [[ -v tag ]]; then tag="$fakeTag"; fi
+	if ! [[ -v tagFilter ]]; then tagFilter=".*"; fi
 
 	# if remote does not exist then pull.args does not and most likely pullDir is thus not defined, in this case we want
 	# to show the error about the non existing remote before other missing arguments
@@ -163,7 +175,7 @@ function gt_pull() {
 	local tagToPull="$tag"
 	# tag was actually omitted, so we use the latest remote tag instead
 	if [[ $tag == "$fakeTag" ]]; then
-		tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m, see above" "$remote"
+		tagToPull=$(latestRemoteTagIncludingChecks "$workingDirAbsolute" "$remote" "$tagFilter") || die "could not determine latest tag of remote \033[0;36m%s\033[0m, see above" "$remote"
 	fi
 	local -r tagToPull
 
@@ -181,7 +193,7 @@ function gt_pull() {
 
 			if noAscInDir "$publicKeysDir"; then
 				if [[ $unsecure == true ]]; then
-					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPattern"
+					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPatternLong"
 					doVerification=false
 					# we initialiseGpgDir so that we don't try it next time
 					initialiseGpgDir "$gpgDir"
@@ -199,10 +211,10 @@ function gt_pull() {
 
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
-						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPattern"
+						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPatternLong"
 						doVerification=false
 					else
-						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
+						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong"
 					fi
 				fi
 			fi
@@ -210,7 +222,7 @@ function gt_pull() {
 		if [[ $unsecure == true && $doVerification == true ]]; then
 			local trustDb="$gpgDir/trustdb.gpg"
 			if [[ -f $trustDb ]]; then
-				logInfo "gpg seems to be initialised (found %s), going to perform verification even though '%s true' was specified" "$unsecureParamPattern" "$trustDb"
+				logInfo "gpg seems to be initialised (found %s), going to perform verification even though '%s true' was specified" "$unsecureParamPatternLong" "$trustDb"
 			else
 				doVerification=false
 			fi
@@ -238,7 +250,7 @@ function gt_pull() {
 
 	function gt_pull_mentionUnsecure() {
 		if [[ $unsecure != true ]]; then
-			printf " -- you can disable this check via: %s true\n" "$unsecureParamPattern"
+			printf " -- you can disable this check via: %s true\n" "$unsecureParamPatternLong"
 		else
 			printf " -- you can disable this check via: %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
 		fi
@@ -294,7 +306,7 @@ function gt_pull() {
 		local relativeTarget sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
 		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
-		entry=$(pulledTsvEntry "$tagToPull" "$file" "$relativeTarget" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tagToPull" "$file" || return $?
+		entry=$(pulledTsvEntry "$tagToPull" "$file" "$relativeTarget" "$tagFilter" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and file \033[0;36m%s\033[0m" "$tagToPull" "$file" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$file" || echo "")
 		local -r relativeTarget sha entry currentEntry

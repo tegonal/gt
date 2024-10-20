@@ -53,7 +53,8 @@ function gt_re_pull() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
-	local defaultWorkingDir
+	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
+	local pullDirParamPatternLong chopPathParamPatternLong autoTrustParamPatternLong tagFilterParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
@@ -114,16 +115,23 @@ function gt_re_pull() {
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 		function gt_re_pull_rePullInternal_callback() {
-			local entryTag entryFile _entryRelativePath entryAbsolutePath
+			local entryTag entryFile _entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
 
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath)
+			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath entryTagFilter _entrySha512)
 			parseFnArgs params "$@"
 
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_re_pull_incrementError due to ||
 			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
-				if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$entryTag" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
+				if gt_pull "$workingDirParamPatternLong" "$workingDirAbsolute" \
+					"$remoteParamPatternLong" "$remote" \
+					"$tagParamPatternLong" "$entryTag" \
+					"$pathParamPatternLong" "$entryFile" \
+					"$pullDirParamPatternLong" "$parentDir" \
+					"$chopPathParamPatternLong" true \
+					"$autoTrustParamPatternLong" "$autoTrust" \
+					"$tagFilterParamPatternLong" "$entryTagFilter"; then
 					((++pulled))
 				else
 					gt_re_pull_incrementError "$entryFile" "$remote"

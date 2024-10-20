@@ -286,6 +286,17 @@ Some examples (see documentation of each sub command in subsection for more deta
 # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
 
+# adds the remote test with url https://github.com/tegonal/test
+# specifying that this repo has most likely no GPG keys setup -- if so,
+# then --unsecure true is added to the pull.args
+gt remote add -r test -u https://github.com/tegonal/test --unsecure true
+
+# adds the remote tegonal-gh-commons with url https://github.com/tegonal/github-commons
+# specifying that only tags matching the given tag-filter shall be considered when
+# determining the latest version (when using `gt pull` or `gt update` without specifying a tag)
+gt remote add -r tegonal-gh-commons -u https://github.com/tegonal/github-commons --tag-filter "^commons-.*" true
+
+
 # lists all existing remotes
 gt remote list
 
@@ -309,6 +320,7 @@ Parameters:
 -d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
+--tag-filter             (optional) define a basic regexp pattern to filter available tags when determining the latest tag
 
 --help     prints this help
 --version  prints the version of this script
@@ -407,9 +419,10 @@ Parameters:
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
 -w|--working-directory       (optional) path which gt shall use as working directory -- default: .gt
---auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+--auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false
+--tag-filter                 (optional) define a basic regexp pattern to filter available tags when determining the latest tag
 
 --help     prints this help
 --version  prints the version of this script
@@ -444,11 +457,21 @@ Full usage example:
 
 # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
+# into the default directory of this remote
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 
 # pull the directory src/utility/ from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+
+# pull the file src/utility/ask.sh from remote tegonal-scripts
+# from the latest version and put into ./scripts/ instead of the default directory of this remote
+# chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/
+gt pull -r tegonal-scripts -p src/utility/ask.sh -d ./scripts/ --chop-path true
+
+# pull the file src/utility/checks.sh from remote tegonal-scripts
+# from the latest version matching the specified tag-filter (i.e. one starting with v3)
+gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
 ```
 
 </gt-pull>
@@ -513,7 +536,7 @@ Following the output of running `gt re-pull --help`:
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+--auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --only-missing           (optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true
 
 --help     prints this help
@@ -632,7 +655,7 @@ Following the output of running `gt update --help`:
 Parameters:
 -r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in.gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+--auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 -t|--tag                 (optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified
 
 --help     prints this help
@@ -662,13 +685,16 @@ Full usage example:
 ```bash
 #!/usr/bin/env bash
 
-# updates all pulled files of all remotes to latest tag
+# updates all pulled files of all remotes to latest tag according to the tag-filter of the file
 gt update
 
-# updates all pulled files of remote tegonal-scripts to latest tag
+# updates all pulled files of remote tegonal-scripts to latest tag according to the tag-filter of the file
 gt update -r tegonal-scripts
 
-# updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0
+# updates/downgrades all pulled files of remote tegonal-scripts to tag v1.0.0 if the tag-filter of the file matches,
+# (i.e. a file with tag-filter v2.* would not be downgraded to v1.0.0).
+# Side note, if no filter was specified during `gt pull`, then .* is used per default which includes all tags -- see
+# pulled.tsv to see the current tagFilter in use per file
 gt update -r tegonal-scripts -t v1.0.0
 ```
 
