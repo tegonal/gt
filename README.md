@@ -342,23 +342,7 @@ Following the output of running `gt remote remove --help`:
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
 ```text
-Parameters:
--r|--remote              define the name of the remote which shall be removed
--w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---delete-pulled-files    (optional) if set, then all files defined in the remote's pulled.tsv are deleted as well -- default: false
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# removes the remote tegonal-scripts
-gt remote remove -r tegonal-scripts
-
-# uses a custom working directory
-gt remote remove -r tegonal-scripts -w .github/.gt
-
-INFO: Version of gt-remote.sh is:
-v0.20.0-SNAPSHOT
 ```
 
 </gt-remote-remove-help>
@@ -570,26 +554,7 @@ Following the output of running `gt reset --help`:
 
 <!-- auto-generated, do not modify here but in src/gt-reset.sh -->
 ```text
-Parameters:
--r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
--w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---gpg-only               (optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false
 
---help     prints this help
---version  prints the version of this script
-
-Examples:
-# reset the remote tegonal-scripts
-gt reset -r tegonal-scripts
-
-# resets all remotes
-gt reset
-
-# resets the gpg keys of all remotes without re-pulling the corresponding files
-gt reset --gpg-only true
-
-INFO: Version of gt-reset.sh is:
-v0.20.0-SNAPSHOT
 ```
 
 </gt-reset-help>
