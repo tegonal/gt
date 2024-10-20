@@ -60,7 +60,7 @@ function gt_self_update() {
 		EOM
 	)
 
-	parseArguments params "$examples" "$GT_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v forceInstall ]]; then forceInstall="false"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 

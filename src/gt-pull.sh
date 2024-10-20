@@ -116,7 +116,8 @@ function gt_pull() {
 		fi
 	fi
 	args+=("$@")
-	parseArguments params "$examples" "$GT_VERSION" "${args[@]}"
+
+	parseArguments params "$examples" "$GT_VERSION" "${args[@]}" || return $?
 
 	if ! [[ -v chopPath ]]; then chopPath=false; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
