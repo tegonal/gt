@@ -94,7 +94,7 @@ function gt_remote_add() {
 			gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/$defaultWorkingDir
 		EOM
 	)
-	parseArguments params "$examples" "$GT_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v pullDir ]]; then pullDir="lib/${remote-'remote-not-defined'}"; fi
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
@@ -256,7 +256,7 @@ function gt_remote_list() {
 function gt_remote_remove() {
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
-	local remote workingDir
+	local remote workingDir deletePulledFiles
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'define the name of the remote which shall be removed'
@@ -274,7 +274,7 @@ function gt_remote_remove() {
 		EOM
 	)
 
-	parseArguments params "$examples" "$GT_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v deletePulledFiles ]]; then deletePulledFiles="false"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"

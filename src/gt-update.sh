@@ -75,7 +75,7 @@ function gt_update() {
 		EOM
 	)
 
-	parseArguments params "$examples" "$GT_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi

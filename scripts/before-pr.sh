@@ -20,13 +20,18 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
+
+sourceOnce "$dir_of_tegonal_scripts/qa/run-shellspec-if-installed.sh"
+
 sourceOnce "$scriptsDir/cleanup-on-push-to-main.sh"
 sourceOnce "$scriptsDir/run-shellcheck.sh"
 
 function beforePr() {
 	# using && because this function is used on the left side of an || in releaseFiles
-	customRunShellcheck && \
-	cleanupOnPushToMain
+	# this way we still have fail fast behaviour and don't mask/hide a non-zero exit code
+	runShellspecIfInstalled &&
+		customRunShellcheck &&
+		cleanupOnPushToMain
 }
 
 ${__SOURCED__:+return}

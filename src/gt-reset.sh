@@ -57,7 +57,7 @@ function gt_reset() {
 	local defaultWorkingDir unsecureParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
-	local remote workingDir
+	local remote workingDir gpgOnly
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
@@ -78,7 +78,7 @@ function gt_reset() {
 		EOM
 	)
 
-	parseArguments params "$examples" "$GT_VERSION" "$@"
+	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v gpgOnly ]]; then gpgOnly=false; fi
