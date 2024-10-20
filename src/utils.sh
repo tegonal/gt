@@ -30,12 +30,12 @@ sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function exitBecauseNoGpgKeysImported() {
-	local remote publicKeysDir gpgDir unsecureParamPattern
+	local remote publicKeysDir gpgDir unsecureParamPatternLong
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(remote publicKeysDir gpgDir unsecureParamPattern)
+	local -ra params=(remote publicKeysDir gpgDir unsecureParamPatternLong)
 	parseFnArgs params "$@"
 
-	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecureParamPattern"
+	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecureParamPatternLong"
 	printf >&2 "Alternatively, you can:\n- place public keys in %s or\n- setup a gpg store yourself at %s\n" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
 	exit 1
@@ -184,9 +184,9 @@ function initialiseGpgDir() {
 }
 
 function latestRemoteTagIncludingChecks() {
-	local workingDirAbsolute remote
+	local workingDirAbsolute remote tagFilter
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(workingDirAbsolute remote)
+	local -ra params=(workingDirAbsolute remote tagFilter)
 	parseFnArgs params "$@"
 
 	local repo
@@ -197,8 +197,9 @@ function latestRemoteTagIncludingChecks() {
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagParamPattern"
 	local tag
-	tag=$(cd "$repo" && latestRemoteTag "$remote") || die "could not determine latest tag of remote \033[0;36m%s\033[0m and none set via argument %s" "$remote" "$tagParamPattern"
-	logInfo >&2 "latest is \033[0;36m%s\033[0m" "$tag"
+	tag=$(cd "$repo" && latestRemoteTag "$remote" "$tagFilter") ||
+		die "could not determine latest tag of remote \033[0;36m%s\033[0m with filter %s, need to abort as no tag was specified via argument %s either" "$remote" "$tagFilter" "$tagParamPattern"
+	logInfo >&2 "latest is \033[0;36m%s\033[0m honoring the tag filter %s" "$tag" "$tagFilter"
 	echo "$tag"
 }
 
@@ -302,7 +303,7 @@ function determineDefaultBranch() {
 	local repo
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
-	git --git-dir "$repo/.git"  remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
+	git --git-dir "$repo/.git" remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
 		(
 			logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" "$remote"
 			echo "main"
@@ -337,4 +338,8 @@ function exitIfRepoBrokenAndReInitIfAbsent() {
 	else
 		reInitialiseGitDirIfDotGitNotPresent "$workingDirAbsolute" "$remote"
 	fi
+}
+
+function logWarningCouldNotWritePullArgs() {
+	logWarning "was not able to write %s %s into %s\nPlease do it manually or use %s when using 'gt pull' with the remote %s" "$@"
 }

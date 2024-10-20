@@ -28,31 +28,63 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function pulledTsvEntry() {
-	local tag file relativeTarget sha512
+	local tag file relativeTarget tagFilter sha512
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(tag file relativeTarget sha512)
+	local -ra params=(tag file relativeTarget tagFilter sha512)
 	parseFnArgs params "$@"
-	printf "%s\t" "$tag" "$file" "$relativeTarget"
+	printf "%s\t" "$tag" "$file" "$relativeTarget" "$tagFilter"
 	printf "%s\n" "$sha512"
 }
 
 function migratePulledTsvFormat() {
-	local pulledTsvLatestVersionPragma
+	local pulledTsvLatestVersionPragma pulledTsvLatestVersionPragmaWithoutVersion
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r pulledTsv=$1
 	local -r fromVersion=$2
 	local -r toVersion=$3
 	shift 3 || traceAndDie "could not shift by 2"
 
-	if [[ $fromVersion == "unspecified" ]]; then
-		# pulled.tsv without version pragma, convert to current
+	function logMigrationAvailable() {
 		logInfo "Format migration available, going to rewrite %s automatically from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m" "$pulledTsv" "$fromVersion" "$toVersion"
-		echo "$pulledTsvLatestVersionPragma" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to \033[0;36m%s\033[0m -- please do it manually" "$pulledTsvLatestVersionPragma" "$pulledTsv"
-		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able append the current %s to \033[0;36m%s\033[0m" "$pulledTsv" "$pulledTsv.new"
+	}
+	function writeVersionPragma() {
+		local -r version=$1
+		shift 1 || die "could not shift by 1"
+		local -r pragma="${pulledTsvLatestVersionPragmaWithoutVersion}$version"
+		echo "$pragma" >>"$pulledTsv.new" || die "was not able to add version pragma \`%s\` to \033[0;36m%s\033[0m -- please do it manually" "$pragma" "$pulledTsv"
+	}
+	function switchNewPulledTsv() {
 		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override \033[0;36m%s\033[0m with the new content from %s" "$pulledTsv" "$pulledTsv.new"
+	}
+
+	if [[ $fromVersion == "unspecified" ]]; then
+		# pulled.tsv without version pragma, convert to 1.0.0
+		logMigrationAvailable
+		writeVersionPragma "1.0.0"
+		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able to append the current %s to \033[0;36m%s\033[0m" "$pulledTsv" "$pulledTsv.new"
+		switchNewPulledTsv
+		migratePulledTsvFormat "$pulledTsv" "1.0.0" "$toVersion"
+	elif [[ $fromVersion == "1.0.0" ]]; then
+		logMigrationAvailable
+		writeVersionPragma "1.1.0"
+		echo $'tag\tfile\trelativeTarget\ttagFilter\tsha512' >>"$pulledTsv.new"
+
+		# shellcheck disable=SC2317		# is called by name
+		function migrate_pulledTsv_1_0_0_to_1_1_0() {
+			# start from line 3, i.e. skip the version pragma + header in pulled.tsv
+			eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+			while read -u "$fileDescriptorIn" -r entry; do
+				local entryTag entryFile entryRelativePath entrySha
+				IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
+				pulledTsvEntry "$entryTag" "$entryFile" "$entryRelativePath" ".*" "$entrySha" >>"$pulledTsv.new"
+			done
+		}
+		withCustomOutputInput 20 21 migrate_pulledTsv_1_0_0_to_1_1_0 "$remote"
+		switchNewPulledTsv
 	else
 		die "no automatic migration available from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m\nIn case you updated gt, then check the release notes for migration hints:\n%s" "$fromVersion" "$toVersion" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
 	fi
@@ -92,9 +124,11 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 }
 
 function setEntryVariables() {
-	# yes the variables are not used here but they are (should be) in the parent scope
+	local -ra variableNames=(entryTag entryFile entryRelativePath entryTagFilter entrySha)
+	exitIfVariablesNotDeclared variableNames
+
 	# shellcheck disable=SC2034
-	IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$1" || die "could not setEntryVariables for entry:\n%s" "$1"
+	IFS=$'\t' read -r "${variableNames[@]}" <<<"$1" || die "could not setEntryVariables for entry:\n%s" "$1"
 }
 
 function grepPulledEntryByFile() {
@@ -132,14 +166,14 @@ function readPulledTsv() {
 		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
 	fi
 
-	# start from line 3, i.e. skip the header in pulled.tsv
-	eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+	# start from line 3, i.e. skip the version pragma + header in pulled.tsv
+	eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || traceAndDie "could not tail %s" "$pulledTsv"
 	while read -u "$fileDescriptorIn" -r entry; do
-		local entryTag entryFile entryRelativePath
+		local entryTag entryFile entryRelativePath entryTagFilter entrySha
 		setEntryVariables "$entry"
-		local entryAbsolutePath
+		local localAbsolutePath
 		#shellcheck disable=SC2310		# we know that set -e is disabled for readlink due to ||
-		entryAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
-		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$entryAbsolutePath" || return $?
+		localAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
+		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$localAbsolutePath" "$entryTagFilter" "$entrySha" || return $?
 	done
 }

@@ -45,16 +45,16 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(realpath "$dir_of_gt/../lib/tegonal-scripts/src")"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_gt/pulled-utils.sh"
-sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_gt/gt-pull.sh"
 sourceOnce "$dir_of_gt/gt-remote.sh"
 sourceOnce "$dir_of_gt/gt-re-pull.sh"
+sourceOnce "$dir_of_gt/pulled-utils.sh"
+sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_reset() {
-	local defaultWorkingDir unsecureParamPattern
+	local defaultWorkingDir unsecureParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir gpgOnly
@@ -129,7 +129,7 @@ function gt_reset() {
 		if noAscInDir "$repo/.gt"; then
 			if [[ -n $unsecureArgs ]]; then
 				logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s was specified in %s" "$remote" "$unsecureArgs" "$pullArgsFile"
-				echo "$unsecureParamPattern true" >>"$workingDirAbsolute/pull.args"
+				echo "$unsecureParamPatternLong true" >>"$workingDirAbsolute/pull.args" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 				return 0
 			else
 				logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it" "$remote"
@@ -149,7 +149,7 @@ function gt_reset() {
 				logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecureArgs"
 				return 0
 			else
-				exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
+				exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong"
 			fi
 		fi
 		logSuccess "re-established trust in remote \033[0;36m%s\033[0m" "$remote"

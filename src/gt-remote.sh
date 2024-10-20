@@ -18,6 +18,17 @@
 #    # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
 #    gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
 #
+#    # adds the remote test with url https://github.com/tegonal/test
+#    # specifying that this repo has most likely no GPG keys setup -- if so,
+#    # then --unsecure true is added to the pull.args
+#    gt remote add -r test -u https://github.com/tegonal/test --unsecure true
+#
+#    # adds the remote tegonal-gh-commons with url https://github.com/tegonal/github-commons
+#    # specifying that only tags matching the given tag-filter shall be considered when
+#    # determining the latest version (when using `gt pull` or `gt update` without specifying a tag)
+#    gt remote add -r tegonal-gh-commons -u https://github.com/tegonal/github-commons --tag-filter "^commons-.*" true
+#
+#
 #    # lists all existing remotes
 #    gt remote list
 #
@@ -61,13 +72,14 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 }
 
 function gt_remote_add() {
+	local pullDirParamPatternLong unsecureParamPatternLong tagFilterParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local remote url pullDir unsecure workingDir
+	local remote url pullDir unsecure workingDir tagFilter
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'name identifying this remote'
@@ -75,6 +87,7 @@ function gt_remote_add() {
 		pullDir "$pullDirParamPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
+		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -98,6 +111,7 @@ function gt_remote_add() {
 	if ! [[ -v pullDir ]]; then pullDir="lib/${remote-'remote-not-defined'}"; fi
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
+	if ! [[ -v tagFilter ]]; then tagFilter=".*"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local -r remoteIdentifierRegex="^[a-zA-Z0-9_-]+$"
@@ -115,7 +129,7 @@ function gt_remote_add() {
 			local gitIgnore="$currentDir/.gitignore"
 			if [[ -f "$gitIgnore" ]] && ! grep "$workingDir/" "$gitIgnore"; then
 				if askYesOrNo "Shall I add gt specific ignore patterns to %s" "$gitIgnore"; then
-					printf "%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore"
+					printf "%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore" || logWarning "was not able to write gpg ignore patterns to %s, please add them manually" "$gitIgnore"
 				fi
 			fi
 		else
@@ -140,7 +154,11 @@ function gt_remote_add() {
 	# shellcheck disable=SC2064
 	trap "gt_remote_cleanupRemoteOnUnexpectedExit '$remoteDir' '$currentDir'" EXIT SIGINT
 
-	echo "--directory \"$pullDir\"" >"$pullArgsFile" || logWarning "was not able to write the pull directory %s into %s\nPlease do it manually or use --directory when using 'gt pull' with the remote %s" "$pullDir" "$pullArgsFile" "$remote"
+	echo "$pullDirParamPatternLong \"$pullDir\"" >"$pullArgsFile" || logWarningCouldNotWritePullArgs "the pull directory" "$pullDir" "$pullArgsFile" "$pullDirParamPatternLong" "$remote"
+
+	if ! [[ $tagFilter == ".*" ]]; then
+		echo "$tagFilterParamPattern \"$tagFilter\"" >>"$pullArgsFile" || logWarningCouldNotWritePullArgs "the tag filter" "$tagFilter" "$pullArgsFile" "$tagFilterParamPatternLong" "$remote"
+	fi
 
 	mkdir "$publicKeysDir" || die "was not able to create the public keys dir at %s" "$publicKeysDir"
 	initialiseGpgDir "$gpgDir"
@@ -157,25 +175,27 @@ function gt_remote_add() {
 
 	if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch"; then
 		if [[ $unsecure == true ]]; then
-			logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecureParamPattern"
-			echo "$unsecureParamPattern true" >>"$pullArgsFile" || logWarning "was not able to write '%s true' into %s, please do it manually" "$unsecureParamPattern" "$pullArgsFile"
+			logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecureParamPatternLong"
+			echo "$unsecureParamPatternLong true" >>"$pullArgsFile" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 			return 0
 		else
-			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gt\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecureParamPattern"
+			logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gt\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s) -- you can disable this check via %s true" "$remote" "$defaultBranch" "$unsecureParamPatternLong"
 			return 1
 		fi
 	fi
 
 	if noAscInDir "$repo/.gt"; then
 		if [[ $unsecure == true ]]; then
-			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecureParamPattern"
-			echo "$unsecureParamPattern true" >>"$workingDirAbsolute/pull.args"
+			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecureParamPatternLong"
+			echo "$unsecureParamPatternLong true" >>"$pullArgsFile" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 			return 0
 		else
-			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecureParamPattern"
+			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecureParamPatternLong"
 			return 1
 		fi
 	fi
+
+	# end of checks, can start importing keys
 
 	local -i numberOfImportedKeys=0
 	# shellcheck disable=SC2317   # called by name
@@ -187,10 +207,10 @@ function gt_remote_add() {
 
 	if ((numberOfImportedKeys == 0)); then
 		if [[ $unsecure == true ]]; then
-			logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecureParamPattern"
+			logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecureParamPatternLong"
 			return 0
 		else
-			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPattern"
+			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong"
 		fi
 	fi
 
@@ -308,9 +328,9 @@ function gt_remote_remove() {
 		local -i numberOfDeletedFiles=0
 
 		function gt_remote_remove_readCallback() {
-			local _entryTag _entryFile _entryRelativePath entryAbsolutePath
+			local _entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath)
+			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entrySha512)
 			parseFnArgs params "$@"
 			rm "$entryAbsolutePath"
 			((++numberOfDeletedFiles))
