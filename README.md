@@ -320,7 +320,7 @@ Parameters:
 -d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---tag-filter             (optional) define a basic regexp pattern to filter available tags when determining the latest tag
+--tag-filter             (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 
 --help     prints this help
 --version  prints the version of this script
@@ -422,7 +422,7 @@ Parameters:
 --auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false
---tag-filter                 (optional) define a basic regexp pattern to filter available tags when determining the latest tag
+--tag-filter                 (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 
 --help     prints this help
 --version  prints the version of this script
