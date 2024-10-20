@@ -73,6 +73,7 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 
 function gt_remote_add() {
 	local pullDirParamPatternLong unsecureParamPatternLong tagFilterParamPatternLong
+	local workingDirParamPatternLong remoteParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir
@@ -145,7 +146,17 @@ function gt_remote_add() {
 	if [[ -f $remoteDir ]]; then
 		die "cannot create remote directory, there is a file at this location: %s" "$remoteDir"
 	elif [[ -d $remoteDir ]]; then
-		returnDying "remote \033[0;36m%s\033[0m already exists, remove with: gt remote remove -r %s" "$remote" "$remote" || return $?
+		if [[ -f "$remoteDir/pulled.tsv" ]]; then
+			returnDying "remote \033[0;36m%s\033[0m already exists with pulled files" "$remote" || return $?
+		else
+			logError "remote \033[0;36m%s\033[0m already exists but without pulled files" "$remote"
+			if askYesOrNo "Shall I remove the remote for you and continue?"; then
+				gt_remote_remove "$workingDirParamPatternLong" "$workingDirAbsolute" "$remoteParamPatternLong" "$remote"
+			else
+				return 1
+			fi
+		fi
+
 	fi
 
 	mkdir "$remoteDir" || die "failed to create remote directory %s" "$remoteDir"
