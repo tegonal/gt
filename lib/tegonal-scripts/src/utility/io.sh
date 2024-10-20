@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  utility function dealing with Input/Ouput
@@ -54,14 +54,14 @@ function withCustomOutputInput() {
 	local outputNr=$1
 	local inputNr=$2
 	local fun=$3
-	shift 3 || die "could not shift by 3"
+	shift 3 || traceAndDie "could not shift by 3"
 
 	exitIfArgIsNotFunction "$fun" 3
 
 	local tmpFile
 	tmpFile=$(mktemp /tmp/tegonal-scripts-io.XXXXXXXXX)
-	eval "exec ${outputNr}>\"$tmpFile\"" || die "could not create output file descriptor %s" "$outputNr"
-	eval "exec ${inputNr}<\"$tmpFile\"" || die "could not create input file descriptor %s" "$inputNr"
+	eval "exec ${outputNr}>\"$tmpFile\"" || traceAndDie "could not create output file descriptor %s" "$outputNr"
+	eval "exec ${inputNr}<\"$tmpFile\"" || traceAndDie "could not create input file descriptor %s" "$inputNr"
 	# don't fail if we cannot delete the tmp file, if this should happened, then the system should clean-up the file when the process ends
 	rm "$tmpFile" || true
 
@@ -73,7 +73,7 @@ function withCustomOutputInput() {
 
 function deleteDirChmod777() {
 	local -r dir=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	# e.g files in .git will be write-protected and we don't want sudo for this command
 	# yet, if it fails, then we ignore the problem and still try to delete the folder
 	chmod -R 777 "$dir" || true

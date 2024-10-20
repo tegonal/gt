@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  utility functions for dealing with arrays
@@ -63,7 +63,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 joinByChar() {
 	local IFS="$1"
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	echo "$*"
 }
 
@@ -78,7 +78,7 @@ joinByString() {
 	if (($# > 1)); then
 		local separator="$1"
 		local firstArg="$2"
-		shift 2 || die "could not shift by 2"
+		shift 2 || traceAndDie "could not shift by 2"
 		printf "%s" "$firstArg" "${@/#/$separator}"
 	fi
 }
@@ -96,7 +96,7 @@ function arrFilter() {
 	local -rn arrFilter_arrIn=$1
 	local -rn arrFilter_arrOut=$2
 	local -r predicate=$3
-	shift 3 || die "could not shift by 3"
+	shift 3 || traceAndDie "could not shift by 3"
 
 	exitIfArgIsNotFunction "$predicate" 3
 
@@ -127,7 +127,7 @@ function arrTakeEveryX() {
 	local -rn arrFilterMod_arrOut=$2
 	local -ri modulo=$3
 	local -ri offset=$4
-	shift 4 || die "could not shift by 4"
+	shift 4 || traceAndDie "could not shift by 4"
 
   # shellcheck disable=SC2317   # is passed by name to arrFilter
 	function arrFilterMod_fn() {
@@ -146,7 +146,7 @@ function arrStringEntryMaxLength() {
 		exit 9
 	fi
 	local -rn arrStringEntryMaxLength_arr=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 
 	local -i i maxLength=0 arrLength="${#arrStringEntryMaxLength_arr[@]}"
 	for ((i = 0; i < arrLength; ++i)); do

@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -20,7 +20,7 @@
 #
 #    jobs:
 #      steps:
-#        - name: install shellcheck v0.10.0
+#        - name: install shellcheck
 #          run: ./lib/tegonal-scripts/src/ci/install-shellcheck.sh
 #        # and most likely as well
 #        - name: run shellcheck

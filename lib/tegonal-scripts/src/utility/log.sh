@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.3.0
+#                                         Version: v3.5.0
 #######  Description  #############
 #
 #  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
@@ -88,45 +88,45 @@ unset CDPATH
 
 function logInfo() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	logInfoWithoutNewline "$msg\n" "$@"
 }
 function logInfoWithoutNewline() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	printf "\033[0;34mINFO\033[0m: $msg" "$@"
 }
 
 function logWarning() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	logWarningWithoutNewline "$msg\n" "$@"
 }
 function logWarningWithoutNewline() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	printf "\033[0;93mWARNING\033[0m: $msg" "$@"
 }
 
 function logError() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	logErrorWithoutNewline "$msg\n" "$@"
 }
 function logErrorWithoutNewline() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	printf >&2 "\033[0;31mERROR\033[0m: $msg" "$@"
 }
 
 function logSuccess() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	logSuccessWithoutNewline "$msg\n" "$@"
 }
 function logSuccessWithoutNewline() {
 	local msg=$1
-	shift || die "could not shift by 1"
+	shift 1 || traceAndDie "could not shift by 1"
 	printf "\033[0;32mSUCCESS\033[0m: $msg" "$@"
 }
 
