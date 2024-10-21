@@ -25,10 +25,13 @@
 #    # - pull files defined in .gt/remotes/tegonal-scripts/pulled.tsv
 #    gt reset -r tegonal-scripts
 #
+#    # only re-initialise gpg trust based on public keys defined in .gt/remotes/tegonal-scripts/public-keys/*.asc
+#    gt reset -r tegonal-scripts --gpg-only true
+#
 #    # uses a custom working directory and resets the remote tegonal-scripts which means:
 #    # - re-initialise gpg trust based on public keys defined in .github/.gt/remotes/tegonal-scripts/public-keys/*.asc
 #    # - pull files defined in .github/.gt/remotes/tegonal-scripts/pulled.tsv
-#    gt reset -r tegonal-scripts -w .github/.gt
+#    gt reset -w .github/.gt -r tegonal-scripts
 #
 ###################################
 set -euo pipefail
@@ -61,8 +64,8 @@ function gt_reset() {
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 		gpgOnly "--gpg-only" '(optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false'
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312

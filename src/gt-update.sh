@@ -60,9 +60,9 @@ function gt_update() {
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the files of this remote are updated, otherwise all'
-		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		tag "$tagParamPattern" "(optional) define from which tag files shall be pulled, only valid if remote via $remoteParamPattern is specified"
+		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312

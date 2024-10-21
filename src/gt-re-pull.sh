@@ -25,8 +25,13 @@
 #    # pull all files defined in .gt/remotes/tegonal-scripts/pulled.tsv regardless if they already exist locally or not
 #    gt re-pull -r tegonal-scripts --only-missing false
 #
+#    # re-pull alls files defined in .gt/remotes/tegonal-scripts/pulled.tsv
+#    # and trust all gpg-keys stored in .gt/remotes/tegonal-scripts/public-keys
+#    # if the remotes gpg sotre is not yet set up
+#    gt pull -r tegonal-scripts --auto-trust true
+#
 #    # uses a custom working directory and re-pulls files of remote tegonal-scripts which are missing locally
-#    gt re-pull -r tegonal-scripts -w .github/.gt
+#    gt re-pull -w .github/.gt -r tegonal-scripts
 #
 ###################################
 set -euo pipefail
@@ -63,9 +68,9 @@ function gt_re_pull() {
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		onlyMissing "$onlyMissingPattern" "(optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true"
+		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -76,8 +81,8 @@ function gt_re_pull() {
 			# re-pull all files of all remotes which are missing locally
 			gt re-pull
 
-			# re-pull all files (not only missing) of remote tegonal-scripts, imports gpg keys without manual consent if necessary
-			gt re-pull -r tegonal-scripts --only-missing false --auto-trust true
+			# re-pull all files (not only missing) of remote tegonal-scripts
+			gt re-pull -r tegonal-scripts --only-missing false
 		EOM
 	)
 

@@ -18,17 +18,6 @@
 #    # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
 #    gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
 #
-#    # adds the remote test with url https://github.com/tegonal/test
-#    # specifying that this repo has most likely no GPG keys setup -- if so,
-#    # then --unsecure true is added to the pull.args
-#    gt remote add -r test -u https://github.com/tegonal/test --unsecure true
-#
-#    # adds the remote tegonal-gh-commons with url https://github.com/tegonal/github-commons
-#    # specifying that only tags matching the given tag-filter shall be considered when
-#    # determining the latest version (when using `gt pull` or `gt update` without specifying a tag)
-#    gt remote add -r tegonal-gh-commons -u https://github.com/tegonal/github-commons --tag-filter "^commons-.*" true
-#
-#
 #    # lists all existing remotes
 #    gt remote list
 #
@@ -89,9 +78,9 @@ function gt_remote_add() {
 		remote "$remoteParamPattern" 'name identifying this remote'
 		url '-u|--url' 'url of the remote repository'
 		pullDir "$pullDirParamPattern" '(optional) directory into which files are pulled -- default: lib/<remote>'
+		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined at $defaultWorkingDir/*.asc -- default: false"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -103,6 +92,10 @@ function gt_remote_add() {
 			# uses a custom pull directory, files of the remote tegonal-scripts will now
 			# be placed into scripts/lib/tegonal-scripts instead of default location lib/tegonal-scripts
 			gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -d scripts/lib/tegonal-scripts
+
+			# defines a tag-filter which is used when determining the latest version (in \`gt pull\` and in \`gt update\`)
+			# this filter would for instance not match a version 2.0.0-RC1 and hence \`gt update\` would ignore it.
+			gt remote add -r tegonal-scripts --tag-filter "^v[0-9]+\.[0-9]+\.[0-9]+$"
 
 			# Does not complain if the remote does not provide a GPG key for verification (but still tries to fetch one)
 			gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecure true
@@ -233,7 +226,7 @@ function gt_remote_add() {
 }
 
 function gt_remote_list_raw() {
-	source "$dir_of_gt/common-constants.source.sh"
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
@@ -294,17 +287,20 @@ function gt_remote_remove() {
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'define the name of the remote which shall be removed'
+		deletePulledFiles "--delete-pulled-files" "(optional) if set to true, then all files defined in the remote's pulled.tsv are deleted as well -- default: false"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
-		deletePulledFiles "--delete-pulled-files" "(optional) if set, then all files defined in the remote's pulled.tsv are deleted as well -- default: false"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
 		cat <<-EOM
-			# removes the remote tegonal-scripts
+			# removes the remote tegonal-scripts (but keeps already pulled files)
 			gt remote remove -r tegonal-scripts
 
+			# removes the remote tegonal-scripts and all pulled files
+			gt remote remove -r tegonal-scripts --delete-pulled-files true
+
 			# uses a custom working directory
-			gt remote remove -r tegonal-scripts -w .github/.gt
+			gt remote remove -r tegonal-scripts -w .github/$defaultWorkingDir
 		EOM
 	)
 
