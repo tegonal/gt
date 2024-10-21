@@ -67,7 +67,10 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 	shift 2 || traceAndDie "could not shift by 2"
 
 	if ! ((result == 0)) && [[ -d $remoteDir ]]; then
+		# delete the remoteDir and its content
 		deleteDirChmod777 "$remoteDir"
+		# re-add so that one can still establish trust manually
+		mkdir "$remoteDir"
 	fi
 }
 
