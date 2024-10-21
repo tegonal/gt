@@ -25,13 +25,36 @@
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 #
 #    # pull the file src/utility/ask.sh from remote tegonal-scripts
-#    # from the latest version and put into ./scripts/ instead of the default directory of this remote
+#    # in the latest version and put into ./scripts/ instead of the default directory of this remote
 #    # chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/
 #    gt pull -r tegonal-scripts -p src/utility/ask.sh -d ./scripts/ --chop-path true
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts
-#    # from the latest version matching the specified tag-filter (i.e. one starting with v3)
+#    # in the latest version matching the specified tag-filter (i.e. one starting with v3)
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
+#
+#    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
+#    # trust all gpg-keys stored in .gt/remotes/tegonal-scripts/public-keys
+#    # if the remotes gpg sotre is not yet set up
+#    gt pull -r tegonal-scripts --auto-trust true -p src/utlity/checks.sh
+#
+#    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
+#    # Ignore if the gpg store of the remote is not set up and no suitable gpg key is defined in
+#    # .gt/tegonal-scripts/public-keys. However, if the gpg store is setup or a suitable key is defined,
+#    # then checks.sh will still be verified against it.
+#    # (you might want to add --unsecure true to .gt/tegonal-scripts/pull.args if you never intend to
+#    # set up gpg -- this way you don't have to repeat this option)
+#    gt pull -r tegonal-scripts --unsecure true  -p src/utlity/checks.sh
+#
+#    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
+#    # without verifying its signature (if defined) against the remotes gpg store
+#    # you should not use this option unless you want to pull a file from a remote which signs files
+#    # but has not signed the file you intend to pull.
+#    gt pull -r tegonal-scripts --unsecure-no-verification true -p src/utlity/checks.sh
+#
+#    # pull the file src/utility/checks.sh from remote tegonal-scripts (in the custom working directory .github/.gt)
+#    # in the latest version
+#    gt pull -w .github/.gt -r tegonal-scripts -p src/utlity/checks.sh
 #
 ###################################
 set -euo pipefail
@@ -85,11 +108,11 @@ function gt_pull() {
 		path "$pathParamPattern" 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirParamPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		chopPath "$chopPathParamPattern" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
-		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
+		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecureParamPatternLong true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
-		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
+		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 
 	local -r examples=$(
@@ -97,6 +120,7 @@ function gt_pull() {
 		cat <<-EOM
 			# pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 			# in version v0.1.0 (i.e. tag v0.1.0 is used)
+			# into the default directory of this remote
 			gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 
 			# pull the directory src/utility/ from remote tegonal-scripts
@@ -107,6 +131,10 @@ function gt_pull() {
 			# without repeating the path (option --chop-path), i.e is pulled directly into .github/CODE_OF_CONDUCT.md
 			# and not into .github/.github/CODE_OF_CONDUCT.md
 			gt pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
+
+			# pull the file src/utility/checks.sh in the latest version matching the specified tag-filter
+			# (i.e. a version starting with v3)
+			gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
 		EOM
 	)
 

@@ -18,8 +18,8 @@
 
 g(it)t(ools) is a bash based script which pulls a file or a directory stored in a git repository.
 It includes automatic verification via GPG.  
-It enables that files can be maintained at a single place and pulled into multiple projects (e.g. scripts, config files
-etc.)
+It enables that files (e.g. scripts, config files etc.) can be maintained at a single place and pulled into multiple
+projects (at different places per file if desired).
 In this sense, gt is a bit like a package manager which is based on git repositories but without dependency resolution
 and such.
 
@@ -31,7 +31,7 @@ Maybe you even made them public so that others can use them as well
 (as we have done with [Tegonal scripts](https://github.com/tegonal/scripts)).
 This tool provides an easy way to pull them into your project.
 
-Likewise, you can use gt to pull other kind of scripts (not only bash scripts, e.g. gradle scripts), config files, 
+Likewise, you can use gt to pull other kind of scripts (not only bash scripts, e.g. gradle scripts), config files,
 templates etc. which you use in multiple projects but want to maintain at a single place.
 
 </details>
@@ -47,7 +47,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 - [Installation](#installation)
 	- [install.sh](#using-installsh)
 	- [manually](#manually)
-    - [additional installation steps](#additional-installation-steps)
+	- [additional installation steps](#additional-installation-steps)
 - [Usage](#usage)
 	- [remote](#remote)
 		- [add](#add)
@@ -59,7 +59,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 	- [reset](#reset)
 	- [update](#update)
 		- [GitHub Workflow](#github-workflow)
-        - [Gitlab Job](#gitlab-job) <!-- if you change this anchor then update src/gitlab/install-gt.sh -->
+		- [Gitlab Job](#gitlab-job) <!-- if you change this anchor then update src/gitlab/install-gt.sh -->
 	- [self-update](#self-update)
 - [FAQ](#faq)
 - [Contributors and contribute](#contributors-and-contribute)
@@ -69,7 +69,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 
 ## using install.sh
 
-`intall.sh` downloads the latest or a specific tag of gt and verifies gt's files against
+`install.sh` downloads the latest or a specific tag of gt and verifies gt's files against
 the current GPG key (the one in the main branch).
 
 We suggest you verify install.sh against the public key of this repository and
@@ -194,8 +194,8 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ### .gitignore
 
-Once you add your first remote via `gt remote add -r <remote_name> -u <url>` gt will ask you if it shall add the 
-following to your `.gitignore` file (if there is one in the directory where you executed `gt`). 
+Once you add your first remote via `gt remote add -r <remote_name> -u <url>` gt will ask you if it shall add the
+following to your `.gitignore` file (if there is one in the directory where you executed `gt`).
 Depending on your setup `gt` might not find it or you maybe want to add it in a different place:
 
 ```gitignore
@@ -219,17 +219,20 @@ gt re-pull
 
 to fetch all ignored files.
 
+Feel free to not ignore any files (i.e. commit all), to ignore only certain files but not all or to ignore all pulled
+files.
+
 ### completions for zsh
 
 if gt detects zsh during the installation and is able to find the vendor-completions directory, then it tries to add
 the completion file into this directory (you need to enter the sudo password, so you should notice it). If for whatever
-reason gt was not able to detect zsh or copy it you can of course copy it manually. Head over to the installation 
-directory of gt (default `$HOME/.local/lib/gt`) and copy the file `src/install/zsh/_gt` into a directory which is your
-`$fpath`.
+reason gt was not able to detect zsh or copy it you can of course copy it manually. Head over to the installation
+directory of gt (default `$HOME/.local/lib/gt`) and copy the file `src/install/zsh/_gt` into a directory which is
+in your `$fpath`.
 
 # Usage
 
-Following the output of running `gt --help`:
+First of all, you can always run `gt --help`, to see the available commands:
 
 <gt-help>
 
@@ -251,6 +254,14 @@ v0.20.0-SNAPSHOT
 ```
 
 </gt-help>
+
+In order to pull files from a remote, you need to:
+
+1. [`gt remote add` a remote](#add)
+2. [`gt pull` the desired file/directory](#pull)
+
+The following sections will outline all available commands. For a quick-start you can follow the links above
+and come back for more advanced scenarios afterwards.
 
 ## remote
 
@@ -286,17 +297,6 @@ Some examples (see documentation of each sub command in subsection for more deta
 # adds the remote tegonal-scripts with url https://github.com/tegonal/scripts
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
 
-# adds the remote test with url https://github.com/tegonal/test
-# specifying that this repo has most likely no GPG keys setup -- if so,
-# then --unsecure true is added to the pull.args
-gt remote add -r test -u https://github.com/tegonal/test --unsecure true
-
-# adds the remote tegonal-gh-commons with url https://github.com/tegonal/github-commons
-# specifying that only tags matching the given tag-filter shall be considered when
-# determining the latest version (when using `gt pull` or `gt update` without specifying a tag)
-gt remote add -r tegonal-gh-commons -u https://github.com/tegonal/github-commons --tag-filter "^commons-.*" true
-
-
 # lists all existing remotes
 gt remote list
 
@@ -318,9 +318,9 @@ Parameters:
 -r|--remote              name identifying this remote
 -u|--url                 url of the remote repository
 -d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
+--tag-filter             (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---tag-filter             (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 
 --help     prints this help
 --version  prints the version of this script
@@ -333,6 +333,10 @@ gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts
 # uses a custom pull directory, files of the remote tegonal-scripts will now
 # be placed into scripts/lib/tegonal-scripts instead of default location lib/tegonal-scripts
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -d scripts/lib/tegonal-scripts
+
+# defines a tag-filter which is used when determining the latest version (in `gt pull` and in `gt update`)
+# this filter would for instance not match a version 2.0.0-RC1 and hence `gt update` would ignore it.
+gt remote add -r tegonal-scripts --tag-filter "^v[0-9]+\.[0-9]+\.[0-9]+$"
 
 # Does not complain if the remote does not provide a GPG key for verification (but still tries to fetch one)
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecure true
@@ -356,15 +360,18 @@ Following the output of running `gt remote remove --help`:
 ```text
 Parameters:
 -r|--remote              define the name of the remote which shall be removed
+--delete-pulled-files    (optional) if set to true, then all files defined in the remote's pulled.tsv are deleted as well -- default: false
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---delete-pulled-files    (optional) if set, then all files defined in the remote's pulled.tsv are deleted as well -- default: false
 
 --help     prints this help
 --version  prints the version of this script
 
 Examples:
-# removes the remote tegonal-scripts
+# removes the remote tegonal-scripts (but keeps already pulled files)
 gt remote remove -r tegonal-scripts
+
+# removes the remote tegonal-scripts and all pulled files
+gt remote remove -r tegonal-scripts --delete-pulled-files true
 
 # uses a custom working directory
 gt remote remove -r tegonal-scripts -w .github/.gt
@@ -418,11 +425,11 @@ Parameters:
 -p|--path                    path in remote repository which shall be pulled (file or directory)
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
--w|--working-directory       (optional) path which gt shall use as working directory -- default: .gt
+--tag-filter                 (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 --auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false
---tag-filter                 (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
+-w|--working-directory       (optional) path which gt shall use as working directory -- default: .gt
 
 --help     prints this help
 --version  prints the version of this script
@@ -430,6 +437,7 @@ Parameters:
 Examples:
 # pull the file src/utility/update-bash-docu.sh from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
+# into the default directory of this remote
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 
 # pull the directory src/utility/ from remote tegonal-scripts
@@ -440,6 +448,10 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 # without repeating the path (option --chop-path), i.e is pulled directly into .github/CODE_OF_CONDUCT.md
 # and not into .github/.github/CODE_OF_CONDUCT.md
 gt pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE_OF_CONDUCT.md
+
+# pull the file src/utility/checks.sh in the latest version matching the specified tag-filter
+# (i.e. a version starting with v3)
+gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
 
 INFO: Version of gt-pull.sh is:
 v0.20.0-SNAPSHOT
@@ -465,13 +477,36 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 
 # pull the file src/utility/ask.sh from remote tegonal-scripts
-# from the latest version and put into ./scripts/ instead of the default directory of this remote
+# in the latest version and put into ./scripts/ instead of the default directory of this remote
 # chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/
 gt pull -r tegonal-scripts -p src/utility/ask.sh -d ./scripts/ --chop-path true
 
 # pull the file src/utility/checks.sh from remote tegonal-scripts
-# from the latest version matching the specified tag-filter (i.e. one starting with v3)
+# in the latest version matching the specified tag-filter (i.e. one starting with v3)
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
+
+# pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
+# trust all gpg-keys stored in .gt/remotes/tegonal-scripts/public-keys
+# if the remotes gpg sotre is not yet set up
+gt pull -r tegonal-scripts --auto-trust true -p src/utlity/checks.sh
+
+# pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
+# Ignore if the gpg store of the remote is not set up and no suitable gpg key is defined in
+# .gt/tegonal-scripts/public-keys. However, if the gpg store is setup or a suitable key is defined,
+# then checks.sh will still be verified against it.
+# (you might want to add --unsecure true to .gt/tegonal-scripts/pull.args if you never intend to
+# set up gpg -- this way you don't have to repeat this option)
+gt pull -r tegonal-scripts --unsecure true  -p src/utlity/checks.sh
+
+# pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
+# without verifying its signature (if defined) against the remotes gpg store
+# you should not use this option unless you want to pull a file from a remote which signs files
+# but has not signed the file you intend to pull.
+gt pull -r tegonal-scripts --unsecure-no-verification true -p src/utlity/checks.sh
+
+# pull the file src/utility/checks.sh from remote tegonal-scripts (in the custom working directory .github/.gt)
+# in the latest version
+gt pull -w .github/.gt -r tegonal-scripts -p src/utlity/checks.sh
 ```
 
 </gt-pull>
@@ -483,7 +518,8 @@ gt allows to hook into the pull process at two stages:
 - before the file is moved from the downloaded path to the desired location
 - after the file was moved to the desired location
 
-If you want to use those hook, then you need create a `pull-hook.sh` in `<WORKGIN_DIR>/remotes/<REMOTE>/pull-hook.sh`
+If you want to use (one of) those hook(s), then you need create a `pull-hook.sh` in
+`<WORKGIN_DIR>/remotes/<REMOTE>/pull-hook.sh`
 (for instance in `.gt/remotes/tegonal-scripts/pull-hook.sh`).
 
 This file should contain two functions named `gt_pullHook_<REMOTE>_before` and `gt_pullHook_<REMOTE>_after`.
@@ -493,7 +529,7 @@ and `gt_pullHook_tegonal_scripts_after`
 
 These two functions will be called for each file which is pulled where the following arguments are passed.
 
-1. tag specified via `-t|--target`
+1. tag specified via `-t|--tag`
 2. path of the file before the move to its target destination
 3. target destination
 
@@ -535,9 +571,9 @@ Following the output of running `gt re-pull --help`:
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
--w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --only-missing           (optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true
+--auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+-w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
 --help     prints this help
 --version  prints the version of this script
@@ -549,8 +585,8 @@ gt re-pull -r tegonal-scripts
 # re-pull all files of all remotes which are missing locally
 gt re-pull
 
-# re-pull all files (not only missing) of remote tegonal-scripts, imports gpg keys without manual consent if necessary
-gt re-pull -r tegonal-scripts --only-missing false --auto-trust true
+# re-pull all files (not only missing) of remote tegonal-scripts
+gt re-pull -r tegonal-scripts --only-missing false
 
 INFO: Version of gt-re-pull.sh is:
 v0.20.0-SNAPSHOT
@@ -576,8 +612,13 @@ gt re-pull -r tegonal-scripts
 # pull all files defined in .gt/remotes/tegonal-scripts/pulled.tsv regardless if they already exist locally or not
 gt re-pull -r tegonal-scripts --only-missing false
 
+# re-pull alls files defined in .gt/remotes/tegonal-scripts/pulled.tsv
+# and trust all gpg-keys stored in .gt/remotes/tegonal-scripts/public-keys
+# if the remotes gpg sotre is not yet set up
+gt pull -r tegonal-scripts --auto-trust true
+
 # uses a custom working directory and re-pulls files of remote tegonal-scripts which are missing locally
-gt re-pull -r tegonal-scripts -w .github/.gt
+gt re-pull -w .github/.gt -r tegonal-scripts
 ```
 
 </gt-re-pull>
@@ -595,8 +636,8 @@ Following the output of running `gt reset --help`:
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
--w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 --gpg-only               (optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false
+-w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
 --help     prints this help
 --version  prints the version of this script
@@ -635,10 +676,13 @@ gt reset
 # - pull files defined in .gt/remotes/tegonal-scripts/pulled.tsv
 gt reset -r tegonal-scripts
 
+# only re-initialise gpg trust based on public keys defined in .gt/remotes/tegonal-scripts/public-keys/*.asc
+gt reset -r tegonal-scripts --gpg-only true
+
 # uses a custom working directory and resets the remote tegonal-scripts which means:
 # - re-initialise gpg trust based on public keys defined in .github/.gt/remotes/tegonal-scripts/public-keys/*.asc
 # - pull files defined in .github/.gt/remotes/tegonal-scripts/pulled.tsv
-gt reset -r tegonal-scripts -w .github/.gt
+gt reset -w .github/.gt -r tegonal-scripts
 ```
 
 </gt-reset>
@@ -654,9 +698,9 @@ Following the output of running `gt update --help`:
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
--w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
---auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 -t|--tag                 (optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified
+--auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
+-w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
 --help     prints this help
 --version  prints the version of this script
@@ -708,13 +752,15 @@ This repository contains a github workflow which runs every week to check if the
 - the public keys of the remotes.
 
 It requires you to define a variable named PUBLIC_GPG_KEYS_WE_TRUST which represents an armored export of all
-gpg public keys you trust signing the public keys of remotes, 
+gpg public keys you trust signing the public keys of remotes,
 i.e. those are used to verify the public keys of the remotes you added via `gt remote add`.
 
 You can define two optional secrets in addition which steer the PR creation which is done via the github action
 [peter-evans/create-pull-request](https://github.com/peter-evans/create-pull-request):
+
 - `AUTO_PR_TOKEN` is used as `token`
-- `AUTO_PR_FORK_NAME` is used as `push-to-fork` (we look first for a variable `AUTO_PR_FORK_NAME` and fallback to a secret afterwards)
+- `AUTO_PR_FORK_NAME` is used as `push-to-fork` (we look first for a variable `AUTO_PR_FORK_NAME` and fallback to a
+  secret afterwards)
 
 You can re-use the workflow in your repository. We suggest you fetch it via gt 😉
 
@@ -723,7 +769,8 @@ gt remote add -r gt -u https://github.com/tegonal/gt
 gt pull -r gt -p .github/workflows/gt-update.yml -d ./ 
 ```
 
-Accordingly, you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc) to PUBLIC_GPG_KEYS_WE_TRUST in order
+Accordingly, you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc) to
+PUBLIC_GPG_KEYS_WE_TRUST in order
 that this workflow can update the workflow itself.
 
 #### Required modifications
@@ -759,6 +806,7 @@ Just make sure you replace YOUR_SLUG with your actual slug.
 ### Gitlab Job
 
 The setup requires three steps:
+
 1. pull files and include in your .gitlab-ci.yml
 2. configure Variables and Deploy Keys
 3. Set up a Scheduled Pipeline
@@ -766,9 +814,10 @@ The setup requires three steps:
 #### setup .gitlab-ci.yml
 
 This repository contains a `.gitlab-ci.yml` which defines two job templates:
+
 1. gt-update which checks if there are updates for:
-   - the files which have been pulled
-   - the public keys of the remotes
+	- the files which have been pulled
+	- the public keys of the remotes
 
    and creates a Merge Request if there are some.
 
@@ -782,12 +831,15 @@ gt pull -r gt -p src/gitlab/
 ```
 
 In your `.gitlab-ci.yml` you need to add `gt` to your stages and it should be the first stage:
+
 ```yml
 stages:
-- gt
+	- gt
 ...
 ```
+
 At some point you add in addition
+
 ```yml
 include: 'lib/gt/src/gitlab/.gitlab-ci.yml'
 ```
@@ -799,38 +851,39 @@ That's it, this defines the two jobs. Yet, you need some extra configuration to 
 
 If you need to run additional before_script or the like, then you can re-define
 the job e.g. as follows (after the `include` above):
+
 ```yaml
 gt-update:
-  extends: .gt-update
-  # your modifications here, e.g. for an additional step in before_script
-  before_script:
-	- !reference [.gt-update, before_script]
-    - cd subdirectory
+	extends: .gt-update
+	# your modifications here, e.g. for an additional step in before_script
+	before_script:
+	- !reference [ .gt-update, before_script ]
+		- cd subdirectory
 ```
 
 </details>
 
 #### Additional configuration
 
-The `gt-update` job (the `install-gt.sh` to be precise) 
+The `gt-update` job (the `install-gt.sh` to be precise)
 requires you to define a variable named PUBLIC_GPG_KEYS_WE_TRUST which represents an armored export of all
-gpg public keys you trust signing the public keys of remotes, 
+gpg public keys you trust signing the public keys of remotes,
 i.e. those are used to verify the public keys of the remotes you added via `gt remote add`.
 
-For instance, if you fetched the gitlab job via gt as suggested, 
-then you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc) 
+For instance, if you fetched the gitlab job via gt as suggested,
+then you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc)
 to PUBLIC_GPG_KEYS_WE_TRUST in order that this job can update itself.
 
-Moreover, the `create-mr.sh` requires an access token which is stored in variable GT_UPDATE_API_TOKEN. 
+Moreover, the `create-mr.sh` requires an access token which is stored in variable GT_UPDATE_API_TOKEN.
 It is used to create the merge request.
 
-The gitlab job uses the image [gitlab-git](https://github.com/tegonal/gitlab-git) which requires you to define 
-the variable GITBOT_SSH_PRIVATE_KEY and a deploy key for it. 
+The gitlab job uses the image [gitlab-git](https://github.com/tegonal/gitlab-git) which requires you to define
+the variable GITBOT_SSH_PRIVATE_KEY and a deploy key for it.
 See [Basic Setup](https://github.com/tegonal/gitlab-git#basic-setup) for more information
 
 #### Scheduled job
 
-Now, all that is left is to create a scheduled pipeline (CI/CD -> Schedules) where you need to define Variable 
+Now, all that is left is to create a scheduled pipeline (CI/CD -> Schedules) where you need to define Variable
 `DO_GT_UPDATE` with value `true`. Up to you how often you want to let it run (we run it weekly).
 
 ## self-update
@@ -867,20 +920,22 @@ v0.20.0-SNAPSHOT
 
 Short version:
 
-- git (v2.73.3) submodules only support to checkout a certain branch but not a certain tag.
-- gt only supports to pull files from a certain tag but not from a random branch or sha
+- git submodules are intended to checkout a certain branch but not a certain tag and files need to reside in the
+  submodule
+- gt only supports to pull files from a certain tag but not from a random branch or sha and allows to put files in any 
+  directory.
 
 Longer version:
 
-- gt also integrates file integrity checks based on GPG
+- gt also integrates file integrity and authenticity checks based on GPG
 - allows to fetch only parts of a repository (maybe possible for submodules via sparse checkout)
-- allows to place it at different places
-- is not intended to push changes back
+- allows to place files at different places (also in the root of your repo)
+- is not intended to push changes back to the remote
 
 # Does gt run on all linux distros?
 
 Most likely not, it was tested only on Ubuntu 22.04.  
-For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work 
+For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work
 (could be that executing other gt commands require more dependencies).
 
 # Contributors and contribute
