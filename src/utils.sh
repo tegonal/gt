@@ -248,10 +248,13 @@ function validateGpgKeysAndImport() {
 				if [[ $autoTrust == true ]]; then
 					logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustParamPattern"
 					importIt=true
-				elif askYesOrNo "You can still import it via manual consent, do you want to proceed and take a look at the public key?"; then
-					importIt=true
 				else
-					echo "Decision: do not continue! Skipping this public key accordingly"
+					logInfo "You can still trust this repository via manual consent.\nIf you do, then the public key(s) used for signing artifacts from this remote will be stored in the remote's gpg store (not in your personal store) located at:\n%s" "$gpgDir"
+					if askYesOrNo "Do you want to proceed and take a look at the public key(s) to be able to decide (one by one) if you trust them or not?"; then
+						importIt=true
+					else
+						echo "Decision: do not continue! Skipping this public key accordingly"
+					fi
 				fi
 			else
 				logInfo "trust confirmed (verified via public key, see further above)" "$publicKey"
@@ -269,6 +272,9 @@ function validateGpgKeysAndImport() {
 }
 
 function importRemotesPulledPublicKeys() {
+	local defaultWorkingDir
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+
 	local workingDirAbsolute remote importRemotesPulledPublicKeys_callback
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(workingDirAbsolute remote importRemotesPulledPublicKeys_callback)
@@ -289,7 +295,7 @@ function importRemotesPulledPublicKeys() {
 		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature \033[0;36m%s\033[0m into public keys directory %s" "$sig" "$publicKeysDir"
 		"$importRemotesPulledPublicKeys_callback" "$publicKey" "$sig"
 	}
-	validateGpgKeysAndImport "$repo/.gt" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
+	validateGpgKeysAndImport "$repo/$defaultWorkingDir" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
 
 	deleteDirChmod777 "$repo/.gt" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gt"
 }
