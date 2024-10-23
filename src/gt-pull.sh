@@ -180,7 +180,7 @@ function gt_pull() {
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
-	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
+	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 
 	if [[ "$path" =~ ^/.* ]]; then
 		die "Leading / not allowed for path, given: \033[0;36m%s\033[0m" "$path"
