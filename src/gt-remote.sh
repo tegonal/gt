@@ -261,7 +261,7 @@ function gt_remote_list_raw() {
 	local cutLength
 	cutLength=$((${#remotesDir} + 2))
 
-	[[ -d $remotesDir ]] && find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- || echo ""
+	[[ -d $remotesDir ]] && find "$remotesDir" -maxdepth 1 -type d -not -path "$remotesDir" | cut -c "$cutLength"- | sort || echo ""
 }
 
 function gt_remote_list() {
