@@ -61,6 +61,9 @@ function migratePulledTsvFormat() {
 		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override \033[0;36m%s\033[0m with the new content from %s" "$pulledTsv" "$pulledTsv.new"
 	}
 
+	local migrationFileDescriptorOut=20
+	local migrationFileDescriptorIn=21
+
 	if [[ $fromVersion == "unspecified" ]]; then
 		# pulled.tsv without version pragma, convert to 1.0.0
 		logMigrationAvailable
@@ -73,17 +76,19 @@ function migratePulledTsvFormat() {
 		writeVersionPragma "1.1.0"
 		echo $'tag\tfile\trelativeTarget\ttagFilter\tsha512' >>"$pulledTsv.new"
 
+
+
 		# shellcheck disable=SC2317		# is called by name
 		function migrate_pulledTsv_1_0_0_to_1_1_0() {
 			# start from line 3, i.e. skip the version pragma + header in pulled.tsv
-			eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || die "could not tail %s" "$pulledTsv"
-			while read -u "$fileDescriptorIn" -r entry; do
+			eval "tail -n +3 \"$pulledTsv\" >&$migrationFileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+			while read -u "$migrationFileDescriptorIn" -r entry; do
 				local entryTag entryFile entryRelativePath entrySha
 				IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
 				pulledTsvEntry "$entryTag" "$entryFile" "$entryRelativePath" ".*" "$entrySha" >>"$pulledTsv.new"
 			done
 		}
-		withCustomOutputInput 20 21 migrate_pulledTsv_1_0_0_to_1_1_0 "$remote"
+		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_0_0_to_1_1_0 "$remote"
 		switchNewPulledTsv
 	else
 		die "no automatic migration available from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m\nIn case you updated gt, then check the release notes for migration hints:\n%s" "$fromVersion" "$toVersion" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
