@@ -81,7 +81,9 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_pull_cleanupRepo() {
 	local -r repository=$1
-	find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
+	if [[ -d $repository ]]; then
+		find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
+	fi
 }
 
 function gt_pull_noop() {
