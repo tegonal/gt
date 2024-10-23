@@ -60,6 +60,10 @@ function gt_reset() {
 	local defaultWorkingDir unsecureParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
+	local currentDir
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+	local -r currentDir
+
 	local remote workingDir gpgOnly
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
@@ -85,9 +89,13 @@ function gt_reset() {
 	if ! [[ -v remote ]]; then remote=""; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v gpgOnly ]]; then gpgOnly=false; fi
-	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	# before we report about missing arguments we check if the working directory exists and
+	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
+	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"

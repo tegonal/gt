@@ -109,6 +109,9 @@ function gt_remote_add() {
 	if ! [[ -v unsecure ]]; then unsecure=false; fi
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v tagFilter ]]; then tagFilter=".*"; fi
+
+	# before we report about missing arguments we check if the working directory is inside of the call location
+	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local -r remoteIdentifierRegex="^[a-zA-Z0-9_-]+$"
@@ -228,6 +231,10 @@ function gt_remote_add() {
 function gt_remote_list_raw() {
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
+	local currentDir
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+	local -r currentDir
+
 	local workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
@@ -246,9 +253,13 @@ function gt_remote_list_raw() {
 
 	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
-	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	# before we report about missing arguments we check if the working directory exists and
+	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
+	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
@@ -281,6 +292,10 @@ function gt_remote_list() {
 }
 
 function gt_remote_remove() {
+	local currentDir
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+	local -r currentDir
+
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir deletePulledFiles
@@ -307,9 +322,13 @@ function gt_remote_remove() {
 	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v deletePulledFiles ]]; then deletePulledFiles="false"; fi
-	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	# before we report about missing arguments we check if the working directory exists and
+	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
+	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"

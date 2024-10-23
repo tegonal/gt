@@ -58,6 +58,10 @@ function gt_re_pull() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
+	local currentDir
+	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+	local -r currentDir
+
 	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
 	local pullDirParamPatternLong chopPathParamPatternLong autoTrustParamPatternLong tagFilterParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
@@ -91,9 +95,13 @@ function gt_re_pull() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v onlyMissing ]]; then onlyMissing=true; fi
-	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	# before we report about missing arguments we check if the working directory exists and
+	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
+	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+
+	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
@@ -129,7 +137,8 @@ function gt_re_pull() {
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_re_pull_incrementError due to ||
 			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
-				if gt_pull "$workingDirParamPatternLong" "$workingDirAbsolute" \
+				if gt_pull \
+					"$workingDirParamPatternLong" "$workingDirAbsolute" \
 					"$remoteParamPatternLong" "$remote" \
 					"$tagParamPatternLong" "$entryTag" \
 					"$pathParamPatternLong" "$entryFile" \

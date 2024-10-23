@@ -92,6 +92,25 @@ function exitIfRemoteDirDoesNotExist() {
 	fi
 }
 
+function checkIfDirectoryNamedIsOutsideOf() {
+	local directory name parentDirectory
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(directory name parentDirectory)
+	parseFnArgs params "$@"
+
+	local directoryAbsolute parentDirectoryAbsolute
+	directoryAbsolute="$(realpath "$directory")"
+	parentDirectoryAbsolute="$(realpath "$parentDirectory")"
+	if ! [[ "$directoryAbsolute" == "$parentDirectoryAbsolute"* ]]; then
+		returnDying "the given \033[0;36m%s\033[0m %s is outside of %s" "$name" "$directoryAbsolute" "$parentDirectory"
+	fi
+}
+
+function exitIfDirectoryNamedIsOutsideOf() {
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkIfDirectoryNamedIsOutsideOf
+	checkIfDirectoryNamedIsOutsideOf "$@" || exit $?
+}
+
 function invertBool() {
 	local b=$1
 	shift 1 || traceAndDie "could not shift by 1"

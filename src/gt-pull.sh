@@ -168,6 +168,11 @@ function gt_pull() {
 	if ! [[ -v tag ]]; then tag="$fakeTag"; fi
 	if ! [[ -v tagFilter ]]; then tagFilter=".*"; fi
 
+	# before we report about missing arguments we check if the working directory exists and
+	# if it is inside of the call location
+	exitIfWorkingDirDoesNotExist "$workingDir"
+	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+
 	# if remote does not exist then pull.args does not and most likely pullDir is thus not defined, in this case we want
 	# to show the error about the non existing remote before other missing arguments
 	if ! [[ -v pullDir && -v workingDir && -n $workingDir ]] && [[ -v remote && -n $remote ]]; then
@@ -175,17 +180,16 @@ function gt_pull() {
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
+	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
+
 	if [[ "$path" =~ ^/.* ]]; then
 		die "Leading / not allowed for path, given: \033[0;36m%s\033[0m" "$path"
 	fi
 
 	local workingDirAbsolute pullDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
-	pullDirAbsolute=$(readlink -m "$pullDir")
 	local -r workingDirAbsolute pullDirAbsolute
-
-	exitIfWorkingDirDoesNotExist "$workingDirAbsolute"
-	exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
+	checkIfDirectoryNamedIsOutsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
 
 	local publicKeysDir repo gpgDir pulledTsv pullHookFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
