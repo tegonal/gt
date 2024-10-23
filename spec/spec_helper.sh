@@ -17,7 +17,10 @@
 spec_helper_precheck() {
 	# Available functions: info, warn, error, abort, setenv, unsetenv
 	# Available variables: VERSION, SHELL_TYPE, SHELL_VERSION
-	: minimum_version "0.28.1"
+	minimum_version "0.28.1"
+	if [ "$SHELL_TYPE" != "bash" ]; then
+		abort "Only bash is supported."
+	fi
 }
 
 # This callback function will be invoked after a specfile has been loaded.
@@ -29,4 +32,9 @@ spec_helper_loaded() {
 spec_helper_configure() {
 	# Available functions: import, before_each, after_each, before_all, after_all
 	: import 'test-utils/custom_matcher'
+	before_all "global_vars"
+}
+#
+global_vars() {
+    SPEC_HELPER_GT_COMMANDS=(pull re-pull reset update self-update 'remote add' 'remote remove' 'remote list')
 }

@@ -7,7 +7,7 @@
 #         /___/                           Please report bugs and contribute back your improvements
 #
 ###################################
-Describe 'gt smoke tests'
+Describe 'smoke specs /'
 	Include src/gt.sh
 
 	It 'gt --help'
