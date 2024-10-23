@@ -57,7 +57,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_reset() {
-	local defaultWorkingDir unsecureParamPatternLong
+	local defaultWorkingDir unsecureParamPatternLong signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir
@@ -127,9 +127,9 @@ function gt_reset() {
 
 		local defaultBranch
 		defaultBranch=$(determineDefaultBranch "$workingDirAbsolute" "$remote")
-		if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch"; then
+		if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch" "$defaultWorkingDir"; then
 			if [[ -n $unsecureArgs ]]; then
-				logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s was specified in %s" "$remote" "$unsecureArgs" "$pullArgsFile"
+				logWarning "no %s directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s was specified in %s" "$defaultWorkingDir" "$remote" "$unsecureArgs" "$pullArgsFile"
 				return 0
 			else
 				logError "remote \033[0;36m%s\033[0m has no directory \033[0;36m.gt\033[0m defined in branch \033[0;36m%s\033[0m, unable to fetch the GPG key(s)" "$remote" "$defaultBranch"
@@ -137,13 +137,14 @@ function gt_reset() {
 			fi
 		fi
 
-		if noAscInDir "$repo/.gt"; then
+
+		if ! [[ -f "$repo/$defaultWorkingDir/$signingKeyAsc" ]]; then
 			if [[ -n $unsecureArgs ]]; then
-				logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s was specified in %s" "$remote" "$unsecureArgs" "$pullArgsFile"
+				logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m%s\033[0m but no %s in it. Ignoring it because %s was specified in %s" "$remote" "$defaultWorkingDir" "$signingKeyAsc" "$unsecureArgs" "$pullArgsFile"
 				echo "$unsecureParamPatternLong true" >>"$workingDirAbsolute/pull.args" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 				return 0
 			else
-				logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it" "$remote"
+				logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m%s\033[0m but no %s in it." "$remote" "$defaultWorkingDir" "$signingKeyAsc"
 				return 1
 			fi
 		fi
@@ -160,7 +161,7 @@ function gt_reset() {
 				logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecureArgs"
 				return 0
 			else
-				exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong"
+				exitBecauseSigningKeyNotImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong" "$signingKeyAsc"
 			fi
 		fi
 		logSuccess "re-established trust in remote \033[0;36m%s\033[0m" "$remote"

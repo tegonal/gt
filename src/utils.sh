@@ -29,14 +29,14 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
-function exitBecauseNoGpgKeysImported() {
-	local remote publicKeysDir gpgDir unsecureParamPatternLong
+function exitBecauseSigningKeyNotImported() {
+	local remote publicKeysDir gpgDir unsecureParamPatternLong signingKeyAsc
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(remote publicKeysDir gpgDir unsecureParamPatternLong)
+	local -ra params=(remote publicKeysDir gpgDir unsecureParamPatternLong signingKeyAsc)
 	parseFnArgs params "$@"
 
-	logError "no GPG keys imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$remote" "$unsecureParamPatternLong"
-	printf >&2 "Alternatively, you can:\n- place public keys in %s or\n- setup a gpg store yourself at %s\n" "$publicKeysDir" "$gpgDir"
+	logError "%s not imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n"  "$signingKeyAsc" "$remote" "$unsecureParamPatternLong"
+	printf >&2 "Alternatively, you can:\n- place the %s manually in %s or\n- setup a gpg store yourself at %s\n" "$signingKeyAsc" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
 	exit 1
 }
@@ -45,15 +45,6 @@ function findAscInDir() {
 	local -r dir=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	find "$dir" -maxdepth 1 -type f -name "*.asc" "$@"
-}
-
-function noAscInDir() {
-	local -r dir=$1
-	shift 1 || traceAndDie "could not shift by 1"
-	local numberOfAsc
-	#shellcheck disable=SC2310			# we are aware of that set -e is disabled for findAscInDir
-	numberOfAsc=$(findAscInDir "$dir" | wc -l) || die "could not determine the number of *.asc files in dir %s, see errors above (use \`gt reset\` to re-import the remote's GPG keys)" "$dir"
-	((numberOfAsc == 0))
 }
 
 function checkWorkingDirExists() {
@@ -222,72 +213,63 @@ function latestRemoteTagIncludingChecks() {
 	echo "$tag"
 }
 
-function validateGpgKeysAndImport() {
-	local sourceDir gpgDir publicKeysDir validateGpgKeysAndImport_callback autoTrust
+function validateSigningKeyAndImport() {
+	local sourceDir gpgDir publicKeysDir validateSigningKeyAndImport_callback autoTrust
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(sourceDir gpgDir publicKeysDir validateGpgKeysAndImport_callback autoTrust)
+	local -ra params=(sourceDir gpgDir publicKeysDir validateSigningKeyAndImport_callback autoTrust)
 	parseFnArgs params "$@"
 
-	exitIfArgIsNotFunction "$validateGpgKeysAndImport_callback" 4
+	exitIfArgIsNotFunction "$validateSigningKeyAndImport_callback" 4
 
-	local autoTrustParamPattern
+	local autoTrustParamPattern signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
+	local -r publicKey="$sourceDir/$signingKeyAsc"
 	local -r sigExtension="sig"
 
-	# shellcheck disable=SC2317   # called by name
-	function validateGpgKeysAndImport_do() {
-		findAscInDir "$sourceDir" -print0 >&3
-		echo ""
-		local publicKey
-		while read -u 4 -r -d $'\0' publicKey; do
+	logInfo "Verifying if we trust %s\n" "$publicKey"
 
-			logInfo "Verifying if we trust the public key %s\n" "$publicKey"
+	local confirm
+	confirm="--confirm=$(invertBool "$autoTrust")"
 
-			local confirm
-			confirm="--confirm=$(invertBool "$autoTrust")"
+	local importIt=false
 
-			local importIt=false
+	if ! [[ -f "$publicKey.$sigExtension" ]]; then
+		logWarning "There is no %s.%s next to %s, cannot verify it" "$signingKeyAsc" "$sigExtension" "$publicKey"
+	else
+		# note we verify the signature of the public key based on the normal gpg dir
+		# i.e. not based on the gpg dir of the remote but of the user
+		# which means we trust the public key only if the user trusts the public key which created the sig
+		if gpg --verify "$publicKey.$sigExtension" "$publicKey"; then
+			confirm="false"
+			importIt=true
+		else
+			logWarning "gpg verification failed for signing key \033[0;36m%s\033[0m -- if you trust this repo, then import the public key which signed %s into your personal gpg store" "$publicKey" "$signingKeyAsc"
+		fi
+	fi
 
-			if ! [[ -f "$publicKey.$sigExtension" ]]; then
-				logWarning "There is no %s.sig next to the public key %s, cannot verify it" "$(basename "$publicKey")" "$publicKey"
+	if [[ $importIt != true ]]; then
+		if [[ $autoTrust == true ]]; then
+			logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustParamPattern"
+			importIt=true
+		else
+			logInfo "You can still trust this repository via manual consent.\nIf you do, then the %s of this remote will be stored in the remote's gpg store (not in your personal store) located at:\n%s" "$signingKeyAsc" "$gpgDir"
+			if askYesOrNo "Do you want to proceed and take a look at the remote's %s to be able to decide if you trust it or not?" "$signingKeyAsc"; then
+				importIt=true
 			else
-				# note we verify the signature of the public key based on the normal gpg dir
-				# i.e. not based on the gpg dir of the remote but of the user
-				# which means we trust the public key only if tbe user trusts the public key which created the sig
-				if gpg --verify "$publicKey.$sigExtension" "$publicKey"; then
-					confirm="false"
-					importIt=true
-				else
-					logWarning "gpg verification failed for public key \033[0;36m%s\033[0m -- if you trust this repo, then import the public key which signed %s into your personal gpg store" "$publicKey" "$(basename "$publicKey")"
-				fi
+				echo "Decision: do not continue! Skipping this public key accordingly"
 			fi
+		fi
+	else
+		logInfo "trust confirmed (verified via public key, see further above)" "$publicKey"
+	fi
 
-			if [[ $importIt != true ]]; then
-				if [[ $autoTrust == true ]]; then
-					logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustParamPattern"
-					importIt=true
-				else
-					logInfo "You can still trust this repository via manual consent.\nIf you do, then the public key(s) used for signing artifacts from this remote will be stored in the remote's gpg store (not in your personal store) located at:\n%s" "$gpgDir"
-					if askYesOrNo "Do you want to proceed and take a look at the public key(s) to be able to decide (one by one) if you trust them or not?"; then
-						importIt=true
-					else
-						echo "Decision: do not continue! Skipping this public key accordingly"
-					fi
-				fi
-			else
-				logInfo "trust confirmed (verified via public key, see further above)" "$publicKey"
-			fi
-
-			if [[ $importIt == true ]] && importGpgKey "$gpgDir" "$publicKey" "--confirm=$confirm"; then
-				"$validateGpgKeysAndImport_callback" "$publicKey" "$publicKey.$sigExtension"
-			else
-				logInfo "deleting gpg key file $publicKey for security reasons"
-				rm "$publicKey" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$publicKey"
-			fi
-		done
-	}
-	withCustomOutputInput 3 4 validateGpgKeysAndImport_do
+	if [[ $importIt == true ]] && importGpgKey "$gpgDir" "$publicKey" "--confirm=$confirm"; then
+		"$validateSigningKeyAndImport_callback" "$publicKey" "$publicKey.$sigExtension"
+	else
+		logInfo "deleting gpg key file $publicKey for security reasons"
+		rm "$publicKey" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$publicKey"
+	fi
 }
 
 function importRemotesPulledPublicKeys() {
@@ -314,7 +296,7 @@ function importRemotesPulledPublicKeys() {
 		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature \033[0;36m%s\033[0m into public keys directory %s" "$sig" "$publicKeysDir"
 		"$importRemotesPulledPublicKeys_callback" "$publicKey" "$sig"
 	}
-	validateGpgKeysAndImport "$repo/$defaultWorkingDir" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
+	validateSigningKeyAndImport "$repo/$defaultWorkingDir" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
 
 	deleteDirChmod777 "$repo/.gt" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gt"
 }
@@ -336,9 +318,9 @@ function determineDefaultBranch() {
 }
 
 function checkoutGtDir() {
-	local workingDirAbsolute remote branch
+	local workingDirAbsolute remote branch defaultWorkingDir
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(workingDirAbsolute remote branch)
+	local -ra params=(workingDirAbsolute remote branch defaultWorkingDir)
 	parseFnArgs params "$@"
 
 	local repo
@@ -346,7 +328,7 @@ function checkoutGtDir() {
 
 	git -C "$repo" fetch --depth 1 "$remote" "$branch" || die "was not able to \033[0;36mgit fetch\033[0m from remote \033[0;36m%s\033[0m" "$remote"
 	# execute as if we are inside repo as we want to checkout there, remove all folders
-	git -C "$repo" checkout "$remote/$branch" -- '.gt' && find "$repo/.gt" -maxdepth 1 -type d -not -path "$repo/.gt" -exec rm -r {} \;
+	git -C "$repo" checkout "$remote/$branch" -- "$defaultWorkingDir" && find "$repo/$defaultWorkingDir" -maxdepth 1 -type d -not -path "$repo/$defaultWorkingDir" -exec rm -r {} \;
 }
 
 function exitIfRepoBrokenAndReInitIfAbsent() {

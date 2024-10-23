@@ -65,7 +65,7 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 
 function gt_remote_add() {
 	local pullDirParamPatternLong unsecureParamPatternLong tagFilterParamPatternLong
-	local workingDirParamPatternLong remoteParamPatternLong
+	local workingDirParamPatternLong remoteParamPatternLong signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir
@@ -183,9 +183,9 @@ function gt_remote_add() {
 	local defaultBranch
 	defaultBranch=$(determineDefaultBranch "$workingDirAbsolute" "$remote")
 
-	if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch"; then
+	if ! checkoutGtDir "$workingDirAbsolute" "$remote" "$defaultBranch" "$defaultWorkingDir"; then
 		if [[ $unsecure == true ]]; then
-			logWarning "no .gt directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$remote" "$unsecureParamPatternLong"
+			logWarning "no %s directory defined in remote \033[0;36m%s\033[0m which means no GPG key available, ignoring it because %s true was specified" "$defaultWorkingDir" "$remote" "$unsecureParamPatternLong"
 			echo "$unsecureParamPatternLong true" >>"$pullArgsFile" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 			return 0
 		else
@@ -194,13 +194,13 @@ function gt_remote_add() {
 		fi
 	fi
 
-	if noAscInDir "$repo/.gt"; then
+	if ! [[ -f "$repo/$defaultWorkingDir/$signingKeyAsc" ]]; then
 		if [[ $unsecure == true ]]; then
-			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it, ignoring it because %s true was specified" "$remote" "$unsecureParamPatternLong"
+			logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m%s\033[0m but no %s in it. Ignoring it because %s true was specified" "$remote" "$defaultWorkingDir" "$signingKeyAsc" "$unsecureParamPatternLong"
 			echo "$unsecureParamPatternLong true" >>"$pullArgsFile" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 			return 0
 		else
-			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m.gt\033[0m but no GPG key ending in *.asc defined in it -- you can disable this check via %s true" "$remote" "$unsecureParamPatternLong"
+			logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m%s\033[0m but no %s in it -- you can disable this check via %s true" "$remote" "$defaultWorkingDir" "$signingKeyAsc" "$unsecureParamPatternLong"
 			return 1
 		fi
 	fi
@@ -220,7 +220,7 @@ function gt_remote_add() {
 			logWarning "no GPG keys imported, ignoring it because %s true was specified" "$unsecureParamPatternLong"
 			return 0
 		else
-			exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong"
+			exitBecauseSigningKeyNotImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong" "$signingKeyAsc"
 		fi
 	fi
 

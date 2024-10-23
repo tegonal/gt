@@ -98,7 +98,7 @@ function gt_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local pulledTsvLatestVersionPragma pulledTsvHeader
+	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
@@ -224,16 +224,16 @@ function gt_pull() {
 				die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the gpg dir's location: %s" "$remote" "$gpgDir"
 			fi
 
-			logInfo "gpg directory does not exist at %s\nWe are going to import all public keys which are stored in %s" "$gpgDir" "$publicKeysDir"
+			logInfo "gpg directory does not exist at %s\nWe are going to import %s from %s" "$gpgDir"  "$signingKeyAsc" "$publicKeysDir"
 
-			if noAscInDir "$publicKeysDir"; then
+			if ! [[ -f "$publicKeysDir/$signingKeyAsc" ]]; then
 				if [[ $unsecure == true ]]; then
-					logWarning "no GPG key found, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPatternLong"
+					logWarning "\033[0;36m%s\033[0m not found, won't be able to verify files (which is OK because '%s true' was specified)" "$signingKeyAsc" "$unsecureParamPatternLong"
 					doVerification=false
 					# we initialiseGpgDir so that we don't try it next time
 					initialiseGpgDir "$gpgDir"
 				else
-					die "no public keys for remote \033[0;36m%s\033[0m defined in %s" "$remote" "$publicKeysDir"
+					die "\033[0;36m%s\033[0m not defined in %s"  "$signingKeyAsc" "$publicKeysDir"
 				fi
 			else
 				initialiseGpgDir "$gpgDir"
@@ -242,14 +242,14 @@ function gt_pull() {
 				function gt_pull_importKeyCallback() {
 					((++numberOfImportedKeys))
 				}
-				validateGpgKeysAndImport "$publicKeysDir" "$gpgDir" "$publicKeysDir" gt_pull_importKeyCallback "$autoTrust"
+				validateSigningKeyAndImport "$publicKeysDir" "$gpgDir" "$publicKeysDir" gt_pull_importKeyCallback "$autoTrust"
 
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then
-						logWarning "all GPG keys declined, won't be able to verify files (which is OK because '%s true' was specified)" "$unsecureParamPatternLong"
+						logWarning "\033[0;36m%s\033[0m declined, won't be able to verify files (which is OK because '%s true' was specified)" "$signingKeyAsc" "$unsecureParamPatternLong"
 						doVerification=false
 					else
-						exitBecauseNoGpgKeysImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong"
+						exitBecauseSigningKeyNotImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong" "$signingKeyAsc"
 					fi
 				fi
 			fi

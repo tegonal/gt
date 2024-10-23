@@ -49,3 +49,5 @@ local -r pathParamPattern="-p|$pathParamPatternLong"
 
 local -r chopPathParamPatternLong='--chop-path'
 local -r chopPathParamPattern="$chopPathParamPatternLong"
+
+local -r signingKeyAsc='signing-key.public.asc'
