@@ -126,3 +126,31 @@ jobs:
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
+
+  gpg_expiration:
+    name: "Check signing-key"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check if signing key already are or will expire within the next 3 months
+        run: |
+          currentDir="$(pwd)"
+          signingKey=".gt/signing-key.public.asc"
+          if ! [[ -f "$currentDir/$signingKey" ]]; then
+            echo "$signingKey does not exist in this repo"
+          else
+            set -e
+            tmpDir=$(mktemp -d -t gt-check-gpg-XXXXXXXXXX)
+            cd "$tmpDir"
+            gpg --homedir . --import "$currentDir/$signingKey"
+            expired=0
+            while read -r key; do
+              expirationDate=$(cut -d ':' -f7 <<<"$key")
+              echo "expirationDate: $expirationDate"
+              if (( $expirationDate < $(date -d "+1 year" +%s) )); then
+                echo >&2 "expiration date $(date -d "@$((expirationDate + 0))" +%s) of key $key"
+                ((++expired))
+              fi
+            done < <(gpg --homedir . --list-keys --list-options show-unusable-subkeys --with-colons | grep '^pub')
+            [[ expired -eq 0 ]]
+          fi
