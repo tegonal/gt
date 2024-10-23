@@ -188,6 +188,7 @@ function gt_pull() {
 
 	local workingDirAbsolute pullDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
+	pullDirAbsolute=$(readlink -m "$pullDir")
 	local -r workingDirAbsolute pullDirAbsolute
 	checkIfDirectoryNamedIsOutsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
 
