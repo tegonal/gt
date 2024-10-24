@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.5.0
+#                                         Version: v4.0.0
 #######  Description  #############
 #
 #  function which calls shellspec in case the command exists and otherwise prints a warning
@@ -24,6 +24,9 @@
 #
 #    runShellspecIfInstalled
 #
+#    # you can also pass arguments to shellspec
+#    runShellspecIfInstalled --jobs 2
+#
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
@@ -36,12 +39,12 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 function runShellspecIfInstalled() {
-		if checkCommandExists "shellspec" 2>/dev/null; then
-  		local shellspecVersion
-  		shellspecVersion="$(shellspec -version)"
-  		logInfo "Running shellspec $shellspecVersion ..."
-  		shellspec
-  	else
-  		logWarning "shellspec is not installed, skipping running specs.\nConsider to install it https://github.com/shellspec/shellspec#installation"
-  	fi
+	if checkCommandExists "shellspec" 2>/dev/null; then
+		local shellspecVersion
+		shellspecVersion="$(shellspec -version)"
+		logInfo "Running shellspec $shellspecVersion ..."
+		shellspec "$@"
+	else
+		logWarning "shellspec is not installed, skipping running specs.\nConsider to install it https://github.com/shellspec/shellspec#installation"
+	fi
 }

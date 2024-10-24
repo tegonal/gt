@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.5.0
+#                                         Version: v4.0.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
@@ -147,7 +147,7 @@ function parseArgumentsInternal {
 	while (($# > 0)); do
 		parseArguments_argName="$1"
 		if [[ $parseArguments_argName == --help ]]; then
-			parse_args_printHelp parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version"
+			parse_args_printHelp parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version" 4
 			if ! ((parseArguments_numOfArgumentsParsed == 0)); then
 				logWarning "there were arguments defined prior to --help, they were all ignored and instead the help is shown"
 			elif (($# > 1)); then
@@ -171,10 +171,10 @@ function parseArgumentsInternal {
 			local parseArguments_regex="^($parseArguments_pattern)$"
 			if [[ $parseArguments_argName =~ $parseArguments_regex ]]; then
 				if (($# < 2)); then
-					logError "no value defined for parameter \033[1;36m%s\033[0m (pattern %s) in %s" "$parseArguments_paramName" "$parseArguments_pattern" "${BASH_SOURCE[1]}"
+					logError "no value defined for parameter \033[1;36m%s\033[0m (pattern %s) in %s" "$parseArguments_paramName" "$parseArguments_pattern" "${BASH_SOURCE[2]}"
 					echo >&2 "following the help documentation:"
 					echo >&2 ""
-					parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version"
+					parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version" 4
 					printStackTrace
 					exit 9
 				fi
@@ -193,7 +193,7 @@ function parseArgumentsInternal {
 				logError "unknown argument \033[1;36m%s\033[0m" "$parseArguments_argName"
 			fi
 			if askYesOrNo "Shall I print the help for you?"; then
-				parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version"
+				parse_args_printHelp >&2 parseArguments_paramArr "$parseArguments_examples" "$parseArguments_version" 4
 			fi
 			exit 9
 		fi
@@ -202,17 +202,20 @@ function parseArgumentsInternal {
 }
 
 function parse_args_printHelp {
-	if ! (($# == 3)); then
+	if ! (($# == 4)); then
 		logError "Three arguments need to be passed to parse_args_printHelp, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1: params    the name of an array which contains the parameter definitions'
-		echo >&2 '2: examples  a string containing examples (or an empty string)'
-		echo >&2 '3: version   the version which shall be shown if one uses --version'
+		echo >&2 '1: params       the name of an array which contains the parameter definitions'
+		echo >&2 '2: examples     a string containing examples (or an empty string)'
+		echo >&2 '3: version      the version which shall be shown if one uses --version'
+		echo >&2 '4: stackFrame   number of frames to drop to determine the source of the call'
 		printStackTrace
 		exit 9
 	fi
 	local -rn parse_args_printHelp_paramArr=$1
 	local -r examples=$2
 	local -r version=$3
+	local -r stackFrame=$4
+	shift 4 || traceAndDie "could not shift by 4"
 
 	parse_args_exitIfParameterDefinitionIsNotTriple parse_args_printHelp_paramArr
 
@@ -244,7 +247,7 @@ function parse_args_printHelp {
 		echo "$examples"
 	fi
 	echo ""
-	printVersion "$version" 4
+	printVersion "$version" "$stackFrame"
 }
 
 function exitIfNotAllArgumentsSet {
@@ -287,7 +290,7 @@ function exitIfNotAllArgumentsSet {
 		echo >&2 ""
 		echo >&2 "following the help documentation:"
 		echo >&2 ""
-		parse_args_printHelp >&2 exitIfNotAllArgumentsSet_paramArr "$exitIfNotAllArgumentsSet_examples" "$exitIfNotAllArgumentsSet_version"
+		parse_args_printHelp >&2 exitIfNotAllArgumentsSet_paramArr "$exitIfNotAllArgumentsSet_examples" "$exitIfNotAllArgumentsSet_version" 5
 		if ((${#FUNCNAME[@]} > printStackTraceIfMoreThan)); then
 			printStackTrace
 		fi
