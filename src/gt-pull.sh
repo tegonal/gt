@@ -79,6 +79,13 @@ sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
+function gt_pull_cleanupGpgDir() {
+	local -r gpgDir=$1
+	if [[ -d $gpgDir ]]; then
+		deleteDirChmod777 "$gpgDir" &>/dev/null
+	fi
+}
+
 function gt_pull_cleanupRepo() {
 	# note, we want to cleanup also for normal exits, so no need to check for $?
 	local -r repository=$1
@@ -225,7 +232,7 @@ function gt_pull() {
 				die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the gpg dir's location: %s" "$remote" "$gpgDir"
 			fi
 
-			logInfo "gpg directory does not exist at %s\nWe are going to import %s from %s" "$gpgDir"  "$signingKeyAsc" "$publicKeysDir"
+			logInfo "gpg directory does not exist at %s\nWe are going to import %s from %s" "$gpgDir" "$signingKeyAsc" "$publicKeysDir"
 
 			if ! [[ -f "$publicKeysDir/$signingKeyAsc" ]]; then
 				if [[ $unsecure == true ]]; then
@@ -234,9 +241,15 @@ function gt_pull() {
 					# we initialiseGpgDir so that we don't try it next time
 					initialiseGpgDir "$gpgDir"
 				else
-					die "\033[0;36m%s\033[0m not defined in %s"  "$signingKeyAsc" "$publicKeysDir"
+					die "\033[0;36m%s\033[0m not defined in %s" "$signingKeyAsc" "$publicKeysDir"
 				fi
 			else
+				# we want to expand $gpgDir here and not when signal happens (as $gpgDir might be out of scope), hence we ignore
+				# shellcheck disable=SC2064
+				# we use this trap to delete the gpgDir in case something goes wrong during the import, i.e. to avoid that that
+				# we keep a gpg store with a non-trusted signing-key (which would then be used during gt pull and the like)
+				trap "gt_pull_cleanupGpgDir '$gpgDir'" EXIT
+
 				initialiseGpgDir "$gpgDir"
 
 				local -i numberOfImportedKeys=0
@@ -267,6 +280,8 @@ function gt_pull() {
 
 	# we want to expand $repo here and not when signal happens (as $repo might be out of scope)
 	# shellcheck disable=SC2064
+	# note, this replaces the previous EXIT trap gt_pull_cleanupGpgDir which is intentional, we want to keep the gpg dir
+	# now that it was established
 	trap "gt_pull_cleanupRepo '$repo'" EXIT
 
 	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"

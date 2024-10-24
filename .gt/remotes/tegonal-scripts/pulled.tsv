@@ -37,3 +37,4 @@ v4.0.0	src/releasing/prepare-next-dev-cycle-template.sh	../lib/tegonal-scripts/s
 v4.0.0	src/utility/cleanups.sh	../lib/tegonal-scripts/src/utility/cleanups.sh	c686d5e932d54ca5cb22531eb67bae9784c569d450c2005beb8960988ab5e7b0c55dac8c41e350abc5414091f37b643e9bf846cec3d754c49a058a43eed467de
 v4.0.0	src/ci/install-shellspec.sh	../lib/tegonal-scripts/src/ci/install-shellspec.sh	3d6c88a7984e5d0eb6342050e5bfc789795d25df3b43adc674f607a6b6f8ea6200bc883f4ea9bb98ce6ba8b2f56cc36f718bdb7ac1455c715d087c14abc09fe1
 v4.0.0	src/qa/run-shellspec-if-installed.sh	../lib/tegonal-scripts/src/qa/run-shellspec-if-installed.sh	7e540126a38a2d1184903760fca8970f544544e144544a735962ea260039e524e83d6257e648e0358c134187597830c88bbda184175182d83bb0f953954911a4
+v4.0.0	src/utility/date-utils.sh	../lib/tegonal-scripts/src/utility/date-utils.sh	ebd74294fb217aad3f1f233ffaeb3a66d06c529b6840a6b7c29413b7ad4576bd1f690a5f354bd7cc398c069ba094ff084828bec7713bbe19ca72eb1fef3ec701
