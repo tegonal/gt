@@ -126,3 +126,76 @@ jobs:
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
+
+  signing_key:
+    name: "Check signing-key"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: check if signing key already are or will expire within the next 3 months
+        run: |
+          set -euo pipefail
+          currentDir="$(pwd)"
+          signingKey=".gt/signing-key.public.asc"
+          if ! [[ -f "$currentDir/$signingKey" ]]; then
+            echo "$signingKey does not exist in this repo"
+            return 0
+          fi
+
+          tmpDir=$(mktemp -d -t gt-check-gpg-XXXXXXXXXX)
+          gpg --homedir "$tmpDir" --import "$currentDir/$signingKey"
+
+
+          limitTimestamp=$(date -d "+3 month" +%s)
+          limitDate=$(date -d "@$limitTimestamp" +"%Y-%m-%dT%H:%M:%S")
+          echo "checking if the following public keys defined in $signingKey are valid until $limitDate"
+          gpg --homedir "$tmpDir" --list-keys \
+            --list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids,show-usage,show-user-notations \
+            --keyid-format LONG
+          echo ""
+
+          expired=0
+          while read -r key; do
+            keyId=$(cut -d ':' -f5 <<<"$key")
+            expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
+            if (( expirationTimestamp < $limitTimestamp )); then
+              expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
+              printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
+              ((++expired))
+            fi
+          done < <(gpg --homedir "$tmpDir" --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
+          [[ $expired -eq 0 ]]
+
+
+  trusted_keys:
+    name: "Check trusted-key(s)"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+      run: |
+        gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+          || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+        false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+          || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+        false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
+    - name: check if gpg key(s) we trust already are or will expire within the next 3 months
+      run: |
+        set -euo pipefail
+        limitTimestamp=$(date -d "+3 month" +%s)
+        limitDate=$(date -d "@$limitTimestamp" +"%Y-%m-%dT%H:%M:%S")
+        echo "checking if the following public keys defined in PUBLIC_GPG_KEYS_WE_TRUST are valid until $limitDate"
+        gpg --list-keys \
+          --list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids,show-usage,show-user-notations \
+          --keyid-format LONG
+        echo ""
+        expired=0
+        while read -r key; do
+          keyId=$(cut -d ':' -f5 <<<"$key")
+          expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
+          if (( expirationTimestamp < $limitTimestamp )); then
+            expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
+            printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
+            ((++expired))
+          fi
+        done < <(gpg --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
+        [[ $expired -eq 0 ]]
