@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.5.0
+#                                         Version: v4.0.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
@@ -65,7 +65,7 @@ function printVersion() {
 	if ! (($# == 1)) && ! (($# == 2)); then
 		logError "One argument needs to be passed to printVersion, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: version   		the version which shall be shown if one uses --version'
-		echo >&2 '1: stackFrame   numberthe version which shall be shown if one uses --version'
+		echo >&2 '2: stackFrame   number of frames to drop to determine the source of the call'
 		printStackTrace
 		exit 9
 	fi
