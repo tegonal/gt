@@ -80,6 +80,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_pull_cleanupRepo() {
+	# note, we want to cleanup also for normal exits, so no need to check for $?
 	local -r repository=$1
 	if [[ -d $repository ]]; then
 		find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
@@ -266,7 +267,7 @@ function gt_pull() {
 
 	# we want to expand $repo here and not when signal happens (as $repo might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gt_pull_cleanupRepo '$repo'" EXIT SIGINT
+	trap "gt_pull_cleanupRepo '$repo'" EXIT
 
 	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
 

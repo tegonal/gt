@@ -52,12 +52,11 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 	local -r result=$?
 
 	local -r remoteDir=$1
-	local -r currentDir=$2
-	shift 2 || traceAndDie "could not shift by 2"
-
 	if ! ((result == 0)) && [[ -d $remoteDir ]]; then
-		# delete the remoteDir and its content
-		deleteDirChmod777 "$remoteDir"
+		if [[ -d $remoteDir ]]; then
+			# delete the remoteDir and its content
+			deleteDirChmod777 "$remoteDir"
+		fi
 		# re-add so that one can still establish trust manually
 		mkdir "$remoteDir"
 	fi
@@ -162,7 +161,7 @@ function gt_remote_add() {
 
 	# we want to expand $remoteDir and $currentDir here and not when signal happens (as they might be out of scope)
 	# shellcheck disable=SC2064
-	trap "gt_remote_cleanupRemoteOnUnexpectedExit '$remoteDir' '$currentDir'" EXIT SIGINT
+	trap "gt_remote_cleanupRemoteOnUnexpectedExit '$remoteDir'" EXIT
 
 	echo "$pullDirParamPatternLong \"$pullDir\"" >"$pullArgsFile" || logWarningCouldNotWritePullArgs "the pull directory" "$pullDir" "$pullArgsFile" "$pullDirParamPatternLong" "$remote"
 
