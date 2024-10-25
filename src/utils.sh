@@ -26,6 +26,8 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$dir_of_gt/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
+sourceOnce "$dir_of_tegonal_scripts/utility/date-utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
@@ -35,7 +37,7 @@ function exitBecauseSigningKeyNotImported() {
 	local -ra params=(remote publicKeysDir gpgDir unsecureParamPatternLong signingKeyAsc)
 	parseFnArgs params "$@"
 
-	logError "%s not imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n"  "$signingKeyAsc" "$remote" "$unsecureParamPatternLong"
+	logError "%s not imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$signingKeyAsc" "$remote" "$unsecureParamPatternLong"
 	printf >&2 "Alternatively, you can:\n- place the %s manually in %s or\n- setup a gpg store yourself at %s\n" "$signingKeyAsc" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
 	exit 1
@@ -221,36 +223,106 @@ function validateSigningKeyAndImport() {
 
 	exitIfArgIsNotFunction "$validateSigningKeyAndImport_callback" 4
 
-	local autoTrustParamPattern signingKeyAsc
+	local autoTrustParamPatternLong signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r publicKey="$sourceDir/$signingKeyAsc"
 	local -r sigExtension="sig"
+	local -r sigFile="$publicKey.$sigExtension"
 
 	logInfo "Verifying if we trust %s\n" "$publicKey"
 
 	local confirm
-	confirm="--confirm=$(invertBool "$autoTrust")"
+	confirm=$(invertBool "$autoTrust")
 
+	local verified=false
 	local importIt=false
 
-	if ! [[ -f "$publicKey.$sigExtension" ]]; then
-		logWarning "There is no %s.%s next to %s, cannot verify it" "$signingKeyAsc" "$sigExtension" "$publicKey"
+	if ! [[ -f $sigFile ]]; then
+		logWarning "There is no %s next to %s, cannot verify it" "$sigFile" "$publicKey"
 	else
 		# note we verify the signature of the public key based on the normal gpg dir
 		# i.e. not based on the gpg dir of the remote but of the user
 		# which means we trust the public key only if the user trusts the public key which created the sig
-		if gpg --verify "$publicKey.$sigExtension" "$publicKey"; then
-			confirm="false"
-			importIt=true
+		if gpg --verify "$sigFile" "$publicKey"; then
+			verified=true
+			confirm=false
+			# new line on purpose to separate output of verify
+			echo ""
+
+			# signature is valid but it could be that the gpg key was expired or even revoked by now
+			local keyData keyId
+			keyData=$(getSigningGpgKeyData "$sigFile") || die "could not get the key data of %s" "$sigFile"
+			keyId=$(extractGpgKeyIdFromKeyData "$keyData")
+			if isGpgKeyInKeyDataExpired "$keyData"; then
+				local expirationTimestamp
+				expirationTimestamp=$(extractExpirationTimestampFromKeyData "$keyData") || die "could not extract the expiration timestamp out of the key data:\n%" "$keyData"
+				expirationDate=$(timestampToDateTime "$expirationTimestamp") || die "was not able to convert the expiration timestamp %s to a date" "$expirationTimestamp"
+
+				if [[ $autoTrust == true ]]; then
+					logInfo "The key %s used to sign %s expired at %s, ignoring it since you specified % true" "$keyId" "$publicKey" "$expirationDate" "$autoTrustParamPatternLong"
+					importIt=true
+				else
+					logInfo "The key %s used to sign %s expired at %s" "$keyId" "$publicKey" "$expirationDate"
+					if askYesOrNo "The signature as such is OK and thus we assume you still trust it. Or would you like to take a closer look at the key %s?" "$keyId"; then
+						listSignaturesAndHighlightKey "$keyId"
+						if askYesOrNo "Do you want to trust %s seeing now more details of the key %s which signed it" "$signingKeyAsc" "$keyId"; then
+							importIt=true
+						else
+							importIt=false
+						fi
+					else
+						importIt=true
+					fi
+
+					if [[ $importIt == true ]]; then
+						logInfo "trust confirmed for %s -- signature verified (see further above) via expired key %s" "$publicKey" "$keyId"
+					fi
+				fi
+			elif isGpgKeyInKeyDataRevoked "$keyData"; then
+				# key was revoked, lets see if the signature was created before the revocation,
+				# if so, then we ask the user if they still trust it
+				local getSigCreationDate sigCreationTimestamp
+				getSigCreationDate=$(getSigCreationDate "$sigFile") || die "could not get the creation date of the signature %s" "$sigFile"
+				sigCreationTimestamp=$(dateToTimestamp "$getSigCreationDate") || die "was not able to convert the signature creation date %s to a timestamp" "$getSigCreationDate"
+
+				local revData revCreatedTimestamp revCreate
+				revData=$(getRevocationData "$keyId" "") || die "could ont get the revocation data for key %s" "$keyId"
+				revCreatedTimestamp=$(extractCreationTimestampFromRevocationData "$revData") || die "was not able to extract the revocation creation timestamp from the revocation information:\n%" "$revData"
+				revCreate=$(timestampToDateTime "$revCreatedTimestamp") || die "was not able to convert the revocation creation timestamp %s to a date" "$revCreatedTimestamp"
+
+				if ((sigCreationTimestamp < revCreatedTimestamp)); then
+					logWarning "The key %s used to sign the %s was revoked at %s.\nHowever, the signature was created before at %s. You should take a closer look at the key and the reason why it was revoked to decide if you trust the signature." "$keyId" "$publicKey" "$revCreate" "$getSigCreationDate"
+
+					printf "Press enter to see the signatures of %s (will be shown automatically after 20 seconds)\n\n" "$keyId"
+					read -t 20 -r || true
+
+					listSignaturesAndHighlightKey "$keyId"
+
+					if askYesOrNo "Do you want to trust the %s although the key %s signing it was revoked?" "$signingKeyAsc" "$keyId"; then
+						logInfo "trust confirmed for %s -- signature verified (see further above) via revoked key %s" "$publicKey" "$keyId"
+						importIt=true
+					else
+						importIt=false
+					fi
+				else
+					logError "The key %s used to sign the %s was revoked at %s and but the signature was created afterwards at %s -- i.e. we cannot trust it" "$keyId" "$signingKeyAsc" "$revCreate" "$getSigCreationDate"
+					importIt=false
+				fi
+			else
+				logInfo "trust confirmed for %s -- signature verified" "$publicKey"
+				importIt=true
+			fi
 		else
+			# new line on purpose to separate output of verify
+			echo ""
 			logWarning "gpg verification failed for signing key \033[0;36m%s\033[0m -- if you trust this repo, then import the public key which signed %s into your personal gpg store" "$publicKey" "$signingKeyAsc"
 		fi
 	fi
 
-	if [[ $importIt != true ]]; then
+	if [[ $verified != true ]]; then
 		if [[ $autoTrust == true ]]; then
-			logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustParamPattern"
+			logInfo "since you specified %s true, we trust it nonetheless. This can be a security risk" "$autoTrustParamPatternLong"
 			importIt=true
 		else
 			logInfo "You can still trust this repository via manual consent.\nIf you do, then the %s of this remote will be stored in the remote's gpg store (not in your personal store) located at:\n%s" "$signingKeyAsc" "$gpgDir"
@@ -260,12 +332,17 @@ function validateSigningKeyAndImport() {
 				echo "Decision: do not continue! Skipping this public key accordingly"
 			fi
 		fi
-	else
-		logInfo "trust confirmed (verified via public key, see further above)" "$publicKey"
 	fi
 
-	if [[ $importIt == true ]] && importGpgKey "$gpgDir" "$publicKey" "--confirm=$confirm"; then
-		"$validateSigningKeyAndImport_callback" "$publicKey" "$publicKey.$sigExtension"
+	local confirmationQuestion
+	if [[ $confirm == false ]]; then
+		confirmationQuestion=""
+	else
+		confirmationQuestion="The above key(s) will be used to verify the files you will pull from this remote, do you trust them?"
+	fi
+
+	if [[ $importIt == true ]] && echo "" && importGpgKey "$gpgDir" "$publicKey" "$confirmationQuestion"; then
+		"$validateSigningKeyAndImport_callback" "$publicKey" "$sigFile"
 	else
 		logInfo "deleting gpg key file $publicKey for security reasons"
 		rm "$publicKey" || die "was not able to delete the gpg key file \033[0;36m%s\033[0m, aborting" "$publicKey"
