@@ -160,7 +160,7 @@ jobs:
             expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
             if (( expirationTimestamp < $limitTimestamp )); then
               expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
-              printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
+              printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
               ((++expired))
             fi
           done < <(gpg --homedir "$tmpDir" --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
@@ -194,7 +194,7 @@ jobs:
           expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
           if (( expirationTimestamp < $limitTimestamp )); then
             expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
-            printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
+            printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
             ((++expired))
           fi
         done < <(gpg --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
