@@ -425,6 +425,7 @@ Parameters:
 -p|--path                    path in remote repository which shall be pulled (file or directory)
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
+--target-file-name           (optional) if you want to use a different file name then the one specified in the remote -- default: name as specified in the remote
 --tag-filter                 (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 --auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
@@ -480,6 +481,10 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 # in the latest version and put into ./scripts/ instead of the default directory of this remote
 # chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/
 gt pull -r tegonal-scripts -p src/utility/ask.sh -d ./scripts/ --chop-path true
+
+# pull the file src/utility/ask.sh from remote tegonal-scripts
+# in the latest version and rename to asking.sh
+gt pull -r tegonal-scripts -p src/utility/ask.sh --target-file-name asking.sh
 
 # pull the file src/utility/checks.sh from remote tegonal-scripts
 # in the latest version matching the specified tag-filter (i.e. one starting with v3)
@@ -937,9 +942,12 @@ Most likely not, it was tested only on Ubuntu 22.04.
 For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work
 (could be that executing other gt commands require more dependencies).
 
-## 3. Can I rename pulled files?
+## 3. Can I rename already pulled files?
 
-If the rename is static, then simply rename the file after you have pulled it and adjust the entry in
+Yes, however different things to consider. In order that [`gt re-pull`](#re-pull) and [`gt update`](#update) still work
+you need to make a few adjustments. 
+
+If the rename is static, then simply rename the file and adjust the entry in
 .gt/remotes/<REMOTE>/pulled.tsv
 
 If your rename is dynamic (i.e. incorporates some logic), then create a [pull-hook](#pull-hook) and implement your logic

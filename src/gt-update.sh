@@ -53,7 +53,9 @@ function gt_update() {
 	local startTime endTime elapsed
 	startTime=$(date +%s.%3N)
 
-	local defaultWorkingDir
+	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
+	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
+	local tagFilterParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir autoTrust tag
@@ -116,10 +118,13 @@ function gt_update() {
 		local previousLatestTag=""
 
 		function gt_update_rePullInternal_callback() {
-			local _entryTag entryFile _entryRelativePath localAbsolutePath entryTagFilter _entrySha512
+			local _entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(_entryTag entryFile _entryRelativePath localAbsolutePath entryTagFilter _entrySha512)
+			local -ra params=(_entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512)
 			parseFnArgs params "$@"
+
+			local entryTargetFileName
+			entryTargetFileName=$(basename "$entryRelativePath")
 
 			local tagToPull
 			if [[ -n $tag ]]; then
@@ -141,7 +146,16 @@ function gt_update() {
 
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
 			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
-			if gt_pull -w "$workingDirAbsolute" -r "$remote" -t "$tagToPull" -p "$entryFile" -d "$parentDir" --chop-path true --auto-trust "$autoTrust"; then
+			if gt_pull \
+				"$workingDirParamPatternLong" "$workingDirAbsolute" \
+				"$remoteParamPatternLong" "$remote" \
+				"$tagParamPatternLong" "$tagToPull" \
+				"$pathParamPatternLong" "$entryFile" \
+				"$pullDirParamPatternLong" "$parentDir" \
+				"$chopPathParamPatternLong" true \
+				"$targetFileNamePatternLong" "$entryTargetFileName" \
+				"$autoTrustParamPatternLong" "$autoTrust" \
+				"$tagFilterParamPatternLong" "$entryTagFilter"; then
 				((++pulled))
 			else
 				gt_update_incrementError "$entryFile" "$remote"
