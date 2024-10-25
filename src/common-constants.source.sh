@@ -51,3 +51,6 @@ local -r chopPathParamPatternLong='--chop-path'
 local -r chopPathParamPattern="$chopPathParamPatternLong"
 
 local -r signingKeyAsc='signing-key.public.asc'
+
+local -r targetFileNamePatternLong='--target-file-name'
+local -r targetFileNamePattern="$targetFileNamePatternLong"

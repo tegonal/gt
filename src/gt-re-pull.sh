@@ -63,7 +63,8 @@ function gt_re_pull() {
 	local -r currentDir
 
 	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
-	local pullDirParamPatternLong chopPathParamPatternLong autoTrustParamPatternLong tagFilterParamPatternLong
+	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
+	local tagFilterParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"
@@ -128,11 +129,14 @@ function gt_re_pull() {
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 		function gt_re_pull_rePullInternal_callback() {
-			local entryTag entryFile _entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
+			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
 
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile _entryRelativePath entryAbsolutePath entryTagFilter _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512)
 			parseFnArgs params "$@"
+
+			local entryTargetFileName
+			entryTargetFileName=$(basename "$entryRelativePath")
 
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_re_pull_incrementError due to ||
 			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
@@ -144,6 +148,7 @@ function gt_re_pull() {
 					"$pathParamPatternLong" "$entryFile" \
 					"$pullDirParamPatternLong" "$parentDir" \
 					"$chopPathParamPatternLong" true \
+					"$targetFileNamePatternLong" "$entryTargetFileName" \
 					"$autoTrustParamPatternLong" "$autoTrust" \
 					"$tagFilterParamPatternLong" "$entryTagFilter"; then
 					((++pulled))
