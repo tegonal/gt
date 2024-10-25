@@ -110,7 +110,7 @@ function gt_remote_add() {
 	if ! [[ -v tagFilter ]]; then tagFilter=".*"; fi
 
 	# before we report about missing arguments we check if the working directory is inside of the call location
-	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	local -r remoteIdentifierRegex="^[a-zA-Z0-9_-]+$"
@@ -256,7 +256,7 @@ function gt_remote_list_raw() {
 	# before we report about missing arguments we check if the working directory exists and
 	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
-	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
@@ -325,7 +325,7 @@ function gt_remote_remove() {
 	# before we report about missing arguments we check if the working directory exists and
 	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
-	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
