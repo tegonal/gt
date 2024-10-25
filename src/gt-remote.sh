@@ -212,7 +212,7 @@ function gt_remote_add() {
 		((++numberOfImportedKeys))
 	}
 
-	importRemotesPulledPublicKeys "$workingDirAbsolute" "$remote" gt_remote_importKeyCallback
+	importRemotesPulledSigningKey "$workingDirAbsolute" "$remote" gt_remote_importKeyCallback
 
 	if ((numberOfImportedKeys == 0)); then
 		if [[ $unsecure == true ]]; then
