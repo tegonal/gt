@@ -432,14 +432,24 @@ function gt_pull() {
 
 		local repoFile
 		repoFile=$(realpath --relative-to="$repo" "$absoluteFile")
-		if [[ $doVerification == true && -f "$absoluteFile.$sigExtension" ]]; then
+		local -r sigFile="$absoluteFile.$sigExtension"
+		if [[ $doVerification == true && -f $sigFile ]]; then
 			printf "verifying \033[0;36m%s\033[0m from remote %s\n" "$repoFile" "$remote"
 			if [[ -d "$pullDirAbsolute/$repoFile" ]]; then
 				die "there exists a directory with the same name at %s" "$pullDirAbsolute/$repoFile"
 			fi
-			gpg --homedir "$gpgDir" --verify "$absoluteFile.$sigExtension" "$absoluteFile" || returnDying "gpg verification failed for file \033[0;36m%s\033[0m from remote %s" "$repoFile" "$remote" || return $?
+			if gpg --homedir "$gpgDir" --verify "$sigFile" "$absoluteFile"; then
+				local keyData keyId
+				keyData=$(getSigningGpgKeyData "$sigFile") || die "could not get the key data of %s" "$sigFile"
+				keyId=$(extractGpgKeyIdFromKeyData "$keyData")
+				if isGpgKeyInKeyDataRevoked "$keyData"; then
+					returnDying "the key %s which signed the file \033[0;36m%s\033[0m form remote %s was revoked" "$keyId" "$repoFile" "$remote" || return $?
+				fi
+			else
+				returnDying "gpg verification failed for file \033[0;36m%s\033[0m from remote %s" "$repoFile" "$remote" || return $?
+			fi
 			# or true as we will try to cleanup the repo on exit
-			rm "$absoluteFile.$sigExtension" || true
+			rm "$sigFile" || true
 
 			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
 			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
