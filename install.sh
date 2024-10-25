@@ -136,8 +136,10 @@ function install() {
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir "$gpgDir" --list-sig || true
 
+	local previousKeyId=""
+
 	find "$repoDir" \
-	  -type f \
+		-type f \
 		-name "*.sig" \
 		-not -path "$repoDir/.gt/signing-key.public.asc.sig" \
 		-not -path "$repoDir/.gt/remotes/*/public-keys/*.sig" \
@@ -149,6 +151,27 @@ function install() {
 			if ! output="$(gpg --homedir "$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
 				printf "verification failed for %s:\n%s\n\n" "$file" "$output"
 				return 2
+			else
+				local sigPackets keyId
+				sigPackets=$(gpg --list-packets "$sigFile") || returnDying "could not list-packets for %s" "$sigFile" || return $?
+				keyId=$(grep -oE "keyid .*" <<<"$sigPackets" | cut -c7-) || returnDying "could not extract keyid from signature packets:\n%s" "$sigPackets" || return $?
+				if [[ $previousKeyId != "$keyId" ]]; then
+					previousKeyId="$keyId"
+					local keyData
+					keyData=$(
+						gpg --homedir "$gpgDir" --list-keys \
+							--list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids \
+							--with-colons "$keyId" | grep -E "^(pub|sub).*$keyId"
+					) || returnDying "was not able to extract the key data for %s" "$keyId" || return $?
+					if grep -E '^(sub|pub):r:' <<<"$keyData" >/dev/null; then
+						#shellcheck disable=SC2310		# kind of false positive, we return afterwards with an error anyway
+						logError "key %s which signed the files of tag %s was revoked, aborting installation" "$keyId" "$tag"
+						return 3
+					else
+						#shellcheck disable=SC2310		# we don't care that we don't exit if the logInfo fails (should not anyway)
+						logInfo "verified that key %s which signed files is not revoked" "$keyId"
+					fi
+				fi
 			fi
 		done || die "verification failed, see above"
 
@@ -198,8 +221,12 @@ function install() {
 		vendorPath=$(grep -oE "[^ ]+vendor-completions" <<<"$fpath_output")
 		if [[ -n $vendorPath ]]; then
 			logInfo "determined zsh, trying to add it to %s via sudo" "$vendorPath"
-			sudo -k cp "$installDir/src/install/zsh/_gt" "$vendorPath"
-			logSuccess "copied zsh completion into %s" "$vendorPath"
+			local gtCompletion="$installDir/src/install/zsh/_gt"
+			if sudo -k cp "$gtCompletion" "$vendorPath"; then
+				logSuccess "copied zsh completion into %s" "$vendorPath"
+			else
+				logError "was not able to copy %s into %s -- do it manually if you want" "$gtCompletion" "$vendorPath"
+			fi
 		fi
 	fi
 

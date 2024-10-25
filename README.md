@@ -70,7 +70,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 ## using install.sh
 
 `install.sh` downloads the latest or a specific tag of gt and verifies gt's files against
-the current GPG key (the one in the main branch).
+the current GPG key (the one in the main branch) and also checks that the key used to sign the files is not revoked.
 
 We suggest you verify install.sh against the public key of this repository and
 the public key of this repository against
@@ -83,8 +83,8 @@ If you haven't done this already, then execute:
 wget -O- https://www.tegonal.com/gpg/github.asc | gpg --import -
 ```
 
-Now you are ready to execute the following commands which download and verify the public key as well as the install.sh
-and of course execute the install.sh as such.
+Now you are ready to execute the following commands which download and verify the public key as well as the `install.sh`
+and of course execute the `install.sh` as such.
 
 
 <install>
@@ -140,7 +140,7 @@ false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
 
 </details>
 
-Per default, it downloads the latest tag and installs it into `$HOME/.local/lib/gt`
+Per default, `install.sh` downloads the latest tag and installs it into `$HOME/.local/lib/gt`
 and sets up a symbolic link at `$HOME/.local/bin/gt`.
 
 You can tweak this behaviour as shown as follows (replace the `./install.sh ...` command above):
@@ -166,7 +166,7 @@ Last but not least, see [additional installation steps](#additional-installation
 1. [![Download](https://img.shields.io/badge/Download-v0.19.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v0.19.0)
 2. extract the zip/tar.gz
 3. open a terminal at the corresponding folder and verify the public key of this repo
-   against [our public key](https://tegonal.com/gpg/github.asc):
+   against [Tegonal's public key](https://tegonal.com/gpg/github.asc):
    ```bash
    wget -O- https://tegonal.com/gpg/github.asc | gpg --import -
    gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc
@@ -179,6 +179,9 @@ Last but not least, see [additional installation steps](#additional-installation
      echo "verification successful" || echo "verification failed, don't continue"
    rm -r ./gpg
    ```
+   Note, `gpg --verify` does not fail if the key which created the signature was revoked in the meantime
+   (it only verifies the signature). Take a look at the output (the [`install.sh`](#using-installsh) checks this 
+   automatically)
 5. copy the src directory to a place where you want to store gt:
 	1. For instance, if you only want it for the current user, then place it into $HOME/.local/lib/gt
 	2. if it shall be available for all users, then place it e.g. in /opt/gt or

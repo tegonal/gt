@@ -93,7 +93,7 @@ function gt_reset() {
 	# before we report about missing arguments we check if the working directory exists and
 	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
-	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
