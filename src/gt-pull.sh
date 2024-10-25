@@ -256,7 +256,7 @@ function gt_pull() {
 				function gt_pull_importKeyCallback() {
 					((++numberOfImportedKeys))
 				}
-				validateSigningKeyAndImport "$publicKeysDir" "$gpgDir" "$publicKeysDir" gt_pull_importKeyCallback "$autoTrust"
+				validateSigningKeyAndImport "$remote" "$publicKeysDir" "$gpgDir" "$publicKeysDir" gt_pull_importKeyCallback "$autoTrust"
 
 				if ((numberOfImportedKeys == 0)); then
 					if [[ $unsecure == true ]]; then

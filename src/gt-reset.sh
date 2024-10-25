@@ -154,7 +154,7 @@ function gt_reset() {
 			((++numberOfImportedKeys))
 		}
 
-		importRemotesPulledPublicKeys "$workingDirAbsolute" "$remote" gt_reset_importKeyCallback
+		importRemotesPulledSigningKey "$workingDirAbsolute" "$remote" gt_reset_importKeyCallback
 
 		if ((numberOfImportedKeys == 0)); then
 			if [[ -n $unsecureArgs ]]; then

@@ -216,9 +216,9 @@ function latestRemoteTagIncludingChecks() {
 }
 
 function validateSigningKeyAndImport() {
-	local sourceDir gpgDir publicKeysDir validateSigningKeyAndImport_callback autoTrust
+	local remote sourceDir gpgDir publicKeysDir validateSigningKeyAndImport_callback autoTrust
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(sourceDir gpgDir publicKeysDir validateSigningKeyAndImport_callback autoTrust)
+	local -ra params=(remote sourceDir gpgDir publicKeysDir validateSigningKeyAndImport_callback autoTrust)
 	parseFnArgs params "$@"
 
 	exitIfArgIsNotFunction "$validateSigningKeyAndImport_callback" 4
@@ -326,7 +326,7 @@ function validateSigningKeyAndImport() {
 			importIt=true
 		else
 			logInfo "You can still trust this repository via manual consent.\nIf you do, then the %s of this remote will be stored in the remote's gpg store (not in your personal store) located at:\n%s" "$signingKeyAsc" "$gpgDir"
-			if askYesOrNo "Do you want to proceed and take a look at the remote's %s to be able to decide if you trust it or not?" "$signingKeyAsc"; then
+			if askYesOrNo "Do you want to proceed and take a look at the %s of remote %s to be able to decide if you trust it or not?" "$signingKeyAsc" "$remote"; then
 				importIt=true
 			else
 				echo "Decision: do not continue! Skipping this public key accordingly"
@@ -338,7 +338,7 @@ function validateSigningKeyAndImport() {
 	if [[ $confirm == false ]]; then
 		confirmationQuestion=""
 	else
-		confirmationQuestion="The above key(s) will be used to verify the files you will pull from this remote, do you trust them?"
+		confirmationQuestion="The above key(s) will be used to verify the files you will pull from remote $remote, do you trust them?"
 	fi
 
 	if [[ $importIt == true ]] && echo "" && importGpgKey "$gpgDir" "$publicKey" "$confirmationQuestion"; then
@@ -349,16 +349,16 @@ function validateSigningKeyAndImport() {
 	fi
 }
 
-function importRemotesPulledPublicKeys() {
+function importRemotesPulledSigningKey() {
 	local defaultWorkingDir
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
-	local workingDirAbsolute remote importRemotesPulledPublicKeys_callback
+	local workingDirAbsolute remote importRemotesPulledSigningKey_callback
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(workingDirAbsolute remote importRemotesPulledPublicKeys_callback)
+	local -ra params=(workingDirAbsolute remote importRemotesPulledSigningKey_callback)
 	parseFnArgs params "$@"
 
-	exitIfArgIsNotFunction "$importRemotesPulledPublicKeys_callback" 3
+	exitIfArgIsNotFunction "$importRemotesPulledSigningKey_callback" 3
 
 	local gpgDir publicKeysDir repo
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
@@ -371,9 +371,9 @@ function importRemotesPulledPublicKeys() {
 
 		mv "$publicKey" "$publicKeysDir/" || die "unable to move public key \033[0;36m%s\033[0m into public keys directory %s" "$publicKey" "$publicKeysDir"
 		mv "$sig" "$publicKeysDir/" || die "unable to move the public key's signature \033[0;36m%s\033[0m into public keys directory %s" "$sig" "$publicKeysDir"
-		"$importRemotesPulledPublicKeys_callback" "$publicKey" "$sig"
+		"$importRemotesPulledSigningKey_callback" "$publicKey" "$sig"
 	}
-	validateSigningKeyAndImport "$repo/$defaultWorkingDir" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
+	validateSigningKeyAndImport "$remote" "$repo/$defaultWorkingDir" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
 
 	deleteDirChmod777 "$repo/.gt" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gt"
 }
