@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.0.0
+#                                         Version: v4.1.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -73,6 +73,11 @@
 #    declare myVar4
 #    exitIfVariablesNotDeclared myVar4 myVar5 # would exit because myVar5 is not set
 #    echo "myVar4 $myVar4"
+#
+#    declare currentDir
+#    currentDir=$(pwd)
+#    checkIfPathNamedIsOutsideOf "$myVar4" "source directory" "$currentDir" # same as exitIfPathNamedIsOutsideOf if set -e has an effect on this line
+#    exitIfPathNamedIsOutsideOf "$myVar4/plugins.txt" "plugins" "$currentDir"
 #
 ###################################
 set -euo pipefail
@@ -309,4 +314,23 @@ function exitIfVariablesNotDeclared() {
 			exit 1
 		fi
 	done
+}
+
+function checkIfPathNamedIsOutsideOf() {
+	local path name parentDirectory
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(path name parentDirectory)
+	parseFnArgs params "$@"
+
+	local pathAbsolute parentDirectoryAbsolute
+	pathAbsolute="$(realpath "$path")"
+	parentDirectoryAbsolute="$(realpath "$parentDirectory")"
+	if ! [[ "$pathAbsolute" == "$parentDirectoryAbsolute"* ]]; then
+		returnDying "the given \033[0;36m%s\033[0m %s is outside of %s" "$name" "$pathAbsolute" "$parentDirectory" || return $?
+	fi
+}
+
+function exitIfPathNamedIsOutsideOf() {
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkIfPathNamedIsOutsideOf
+	checkIfPathNamedIsOutsideOf "$@" || exit $?
 }
