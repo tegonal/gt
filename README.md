@@ -931,11 +931,19 @@ Longer version:
 - allows to place files at different places (also in the root of your repo)
 - is not intended to push changes back to the remote
 
-# Does gt run on all linux distros?
+## 2. Does gt run on all linux distros?
 
 Most likely not, it was tested only on Ubuntu 22.04.  
 For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work
 (could be that executing other gt commands require more dependencies).
+
+## 3. Can I rename pulled files?
+
+If the rename is static, then simply rename the file after you have pulled it and adjust the entry in
+.gt/remotes/<REMOTE>/pulled.tsv
+
+If your rename is dynamic (i.e. incorporates some logic), then create a [pull-hook](#pull-hook) and implement your logic
+there.
 
 # Contributors and contribute
 
