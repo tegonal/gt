@@ -463,7 +463,7 @@ function gt_pull() {
 	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
 	if ((numberOfPulledFiles > 1)); then
 		logSuccess "%s files pulled from %s %s in %s seconds" "$numberOfPulledFiles" "$remote" "$path" "$elapsed"
-	elif ((numberOfPulledFiles = 1)); then
+	elif ((numberOfPulledFiles == 1)); then
 		logSuccess "file %s pulled from %s in %s seconds" "$path" "$remote" "$elapsed"
 	else
 		returnDying "0 files could be pulled from %s, most likely verification failed, see above." "$remote"
