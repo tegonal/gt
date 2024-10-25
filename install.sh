@@ -136,14 +136,11 @@ function install() {
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir "$gpgDir" --list-sig || true
 
-  # TODO remove .gget with 1.0.0
 	find "$repoDir" \
 	  -type f \
 		-name "*.sig" \
 		-not -path "$repoDir/.gt/signing-key.public.asc.sig" \
 		-not -path "$repoDir/.gt/remotes/*/public-keys/*.sig" \
-		-not -path "$repoDir/.gget/signing-key.public.asc.sig" \
-		-not -path "$repoDir/.gget/remotes/*/public-keys/*.sig" \
 		-print0 |
 		while read -r -d $'\0' sigFile; do
 			local file=${sigFile::-4}
