@@ -540,8 +540,7 @@ For instance, a pull-hook.sh could look as follows:
 set -eu -o pipefail
 
 function gt_pullHook_tegonal_scripts_before(){
-  # no op, nothing to do
-  true
+  : # no op, nothing to do
 }
 
 function gt_pullHook_tegonal_scripts_after(){

@@ -36,12 +36,5 @@ function gt_pullHook_tegonal_gh_commons_before() {
 }
 
 function gt_pullHook_tegonal_gh_commons_after() {
-	local _tag source target
-	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(_tag source target)
-	parseFnArgs params "$@"
-
-	if [[ $source =~ .*/src/gt/signing-key.public.asc.actual_sig ]]; then
-		mv "$target" "$(dirname "$target")/signing-key.public.asc.sig"
-	fi
+	: # no op, nothing to do
 }
