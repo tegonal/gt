@@ -5,11 +5,11 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v4.0.0
+#                                         Version: v4.1.0
 #
 #######  Description  #############
 #
-#  utility functions for dealing with git
+#  utility functions for dealing with date
 #
 #######  Usage  ###################
 #
