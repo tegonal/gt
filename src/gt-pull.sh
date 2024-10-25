@@ -185,7 +185,7 @@ function gt_pull() {
 	# before we report about missing arguments we check if the working directory exists and
 	# if it is inside of the call location
 	exitIfWorkingDirDoesNotExist "$workingDir"
-	exitIfDirectoryNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
+	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	# if remote does not exist then pull.args does not and most likely pullDir is thus not defined, in this case we want
 	# to show the error about the non existing remote before other missing arguments
@@ -208,7 +208,7 @@ function gt_pull() {
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	pullDirAbsolute=$(readlink -m "$pullDir")
 	local -r workingDirAbsolute pullDirAbsolute
-	checkIfDirectoryNamedIsOutsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
+	checkIfPathNamedIsOutsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
 
 	local publicKeysDir repo gpgDir pulledTsv pullHookFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
@@ -426,6 +426,10 @@ function gt_pull() {
 
 	local absoluteFile
 	while read -r -d $'\0' absoluteFile; do
+		# in theory this check should not be necessary as we already check that the pullDir is not outside
+		# but better be sure as we don't want that `gt re-pull` can be a security risk (leaving pull-hooks aside)
+		checkIfPathNamedIsOutsideOf "$absoluteFile" "target path" "$currentDir" || return $?
+
 		local repoFile
 		repoFile=$(realpath --relative-to="$repo" "$absoluteFile")
 		if [[ $doVerification == true && -f "$absoluteFile.$sigExtension" ]]; then
