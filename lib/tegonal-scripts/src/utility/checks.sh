@@ -76,7 +76,7 @@
 #
 #    declare currentDir
 #    currentDir=$(pwd)
-#    checkIfPathNamedIsOutsideOf "$myVar4" "source directory" "$currentDir" # same as exitIfPathNamedIsOutsideOf if set -e has an effect on this line
+#    checkPathNamedIsInsideOf "$myVar4" "source directory" "$currentDir" # same as exitIfPathNamedIsOutsideOf if set -e has an effect on this line
 #    exitIfPathNamedIsOutsideOf "$myVar4/plugins.txt" "plugins" "$currentDir"
 #
 ###################################
@@ -316,15 +316,15 @@ function exitIfVariablesNotDeclared() {
 	done
 }
 
-function checkIfPathNamedIsOutsideOf() {
+function checkPathNamedIsInsideOf() {
 	local path name parentDirectory
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(path name parentDirectory)
 	parseFnArgs params "$@"
 
 	local pathAbsolute parentDirectoryAbsolute
-	pathAbsolute="$(realpath "$path")"
-	parentDirectoryAbsolute="$(realpath "$parentDirectory")"
+	pathAbsolute="$(realpath -m "$path")"
+	parentDirectoryAbsolute="$(realpath -m "$parentDirectory")"
 	if ! [[ "$pathAbsolute" == "$parentDirectoryAbsolute"* ]]; then
 		returnDying "the given \033[0;36m%s\033[0m %s is outside of %s" "$name" "$pathAbsolute" "$parentDirectory" || return $?
 	fi
@@ -332,5 +332,5 @@ function checkIfPathNamedIsOutsideOf() {
 
 function exitIfPathNamedIsOutsideOf() {
 	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkIfPathNamedIsOutsideOf
-	checkIfPathNamedIsOutsideOf "$@" || exit $?
+	checkPathNamedIsInsideOf "$@" || exit $?
 }
