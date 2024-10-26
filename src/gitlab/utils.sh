@@ -6,12 +6,12 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.0.0
+#                                         Version: v1.1.0-SNAPSHOT
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GT_VERSION='v1.0.0'
+export GT_VERSION='v1.1.0-SNAPSHOT'
 
 function exitIfEnvVarNotSet() {
 	local -rn exitIfEnvVarNotSet_arr=$1
