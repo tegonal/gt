@@ -93,27 +93,31 @@ jobs:
       - name: gt update
         id: gt_update
         run: |
-          gt update -r "${{ matrix.remote }}" && gt update -r "${{ matrix.remote }}"
+          set -euo pipefail
+          gt update -r "${{ matrix.remote }}"
+          gt update -r "${{ matrix.remote }}"
           echo "remote_version=$(git --git-dir='.gt/remotes/${{ matrix.remote}}/repo/.git' tag | sort --version-sort | tail -n 1)" >> $GITHUB_OUTPUT
       - id: has_changes
         name: git status
         run: |
-            git status
-            gitStatus=$(git status --porcelain)
-            (if [[ $gitStatus != "" ]]; then echo "has_changes=1"; else echo "has_changes=0"; fi) >> $GITHUB_OUTPUT
+          set -euo pipefail
+          git status
+          gitStatus=$(git status --porcelain)
+          (if [[ $gitStatus != "" ]]; then echo "has_changes=1"; else echo "has_changes=0"; fi) >> $GITHUB_OUTPUT
       - name: git commit
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
         run: |
-            git config --local user.name 'tegonal-bot'
-            git config --local user.email 'tegonal-bot@users.noreply.github.com'
-            git commit -am 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt' || true
+          set -euo pipefail
+          git config --local user.name 'tegonal-bot'
+          git config --local user.email 'tegonal-bot@users.noreply.github.com'
+          git commit -am 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt' || true
       - name: cleanup-on-push-to-main
         if: ${{ steps.has_changes.outputs.has_changes == 1 && hashFiles('./scripts/cleanup-on-push-to-main.sh') != '' }}
         run: |
-            (
-                ./scripts/cleanup-on-push-to-main.sh || (printf '\033[0;31mERROR\033[0m: during cleanup, see error above\n' && false) &&
-                (git commit -am 'cleanup after gt pull for remote ${{ matrix.remote }} and version ${{steps.gt_update.outputs.remote_version}}' || (printf '\033[0;31mERROR\033[0m: during commit, maybe no changes due to cleanup (which would be fine)?, see above\n'; false ))
-            ) || (printf '\033[0;34mINFO\033[0m: going to reset changes back to the status after `gt update` and continue without cleanup\n' && git reset --hard)
+          (
+              ./scripts/cleanup-on-push-to-main.sh || (printf '\033[0;31mERROR\033[0m: during cleanup, see error above\n' && false) &&
+              (git commit -am 'cleanup after gt pull for remote ${{ matrix.remote }} and version ${{steps.gt_update.outputs.remote_version}}' || (printf '\033[0;31mERROR\033[0m: during commit, maybe no changes due to cleanup (which would be fine)?, see above\n'; false ))
+          ) || (printf '\033[0;34mINFO\033[0m: going to reset changes back to the status after `gt update` and continue without cleanup\n' && git reset --hard)
       - name: Create pull request if necessary
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
         uses: peter-evans/create-pull-request@v7
@@ -171,31 +175,31 @@ jobs:
     name: "Check trusted-key(s)"
     runs-on: ubuntu-latest
     steps:
-    - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
-      run: |
-        gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
-          || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
-        false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
-          || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
-        false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
-    - name: check if gpg key(s) we trust already are or will expire within the next 3 months
-      run: |
-        set -euo pipefail
-        limitTimestamp=$(date -d "+3 month" +%s)
-        limitDate=$(date -d "@$limitTimestamp" +"%Y-%m-%dT%H:%M:%S")
-        echo "checking if the following public keys defined in PUBLIC_GPG_KEYS_WE_TRUST are valid until $limitDate"
-        gpg --list-keys \
-          --list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids,show-usage,show-user-notations \
-          --keyid-format LONG
-        echo ""
-        expired=0
-        while read -r key; do
-          keyId=$(cut -d ':' -f5 <<<"$key")
-          expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
-          if (( expirationTimestamp < $limitTimestamp )); then
-            expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
-            printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
-            ((++expired))
-          fi
-        done < <(gpg --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
-        [[ $expired -eq 0 ]]
+      - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: |
+          gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
+      - name: check if gpg key(s) we trust already are or will expire within the next 3 months
+        run: |
+          set -euo pipefail
+          limitTimestamp=$(date -d "+3 month" +%s)
+          limitDate=$(date -d "@$limitTimestamp" +"%Y-%m-%dT%H:%M:%S")
+          echo "checking if the following public keys defined in PUBLIC_GPG_KEYS_WE_TRUST are valid until $limitDate"
+          gpg --list-keys \
+            --list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids,show-usage,show-user-notations \
+            --keyid-format LONG
+          echo ""
+          expired=0
+          while read -r key; do
+            keyId=$(cut -d ':' -f5 <<<"$key")
+            expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
+            if (( expirationTimestamp < $limitTimestamp )); then
+              expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
+              printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
+              ((++expired))
+            fi
+          done < <(gpg --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
+          [[ $expired -eq 0 ]]
