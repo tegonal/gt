@@ -440,10 +440,10 @@ function gt_pull() {
 			fi
 			if gpg --homedir "$gpgDir" --verify "$sigFile" "$absoluteFile"; then
 				local keyData keyId
-				keyData=$(getSigningGpgKeyData "$sigFile" "$gpgDir") || die "could not get the key data of %s" "$sigFile"
+				keyData=$(getSigningGpgKeyData "$sigFile" "$gpgDir") || die "could not get the key data of %s out of gpg store %s\nFollowing the available public keys" "$sigFile" "$gpgDir"
 				keyId=$(extractGpgKeyIdFromKeyData "$keyData")
 				if isGpgKeyInKeyDataRevoked "$keyData"; then
-					returnDying "the key %s which signed the file \033[0;36m%s\033[0m form remote %s was revoked" "$keyId" "$repoFile" "$remote" || return $?
+					returnDying "the key %s which signed the file \033[0;36m%s\033[0m from remote %s was revoked" "$keyId" "$repoFile" "$remote" || return $?
 				fi
 			else
 				returnDying "gpg verification failed for file \033[0;36m%s\033[0m from remote %s" "$repoFile" "$remote" || return $?
