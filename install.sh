@@ -215,7 +215,7 @@ function install() {
 	fi
 
 	local fpath_output
-	fpath_output=$(zsh -c 'echo $fpath') || echo ""
+	fpath_output=$(zsh -c 'echo $fpath' 2> /dev/null) || echo ""
 	if [[ -n "$fpath_output" ]]; then
 		local vendorPath
 		vendorPath=$(grep -oE "[^ ]+vendor-completions" <<<"$fpath_output")
