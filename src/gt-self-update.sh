@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.1.0-SNAPSHOT
+#                                         Version: v1.0.1
 #######  Description  #############
 #
 #  'self-update' command of gt: utility to update gt
@@ -22,7 +22,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export GT_VERSION='v1.1.0-SNAPSHOT'
+export GT_VERSION='v1.0.1'
 
 if ! [[ -v dir_of_gt ]]; then
 	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
