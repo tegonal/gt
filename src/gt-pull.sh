@@ -406,10 +406,16 @@ function gt_pull() {
 				currentLocation=$(realpath --relative-to="$currentDir" "$workingDirAbsolute/$entryRelativePath" || echo "$workingDirAbsolute/$entryRelativePath")
 				newLocation=$(realpath --relative-to="$currentDir" "$pullDir/$targetFile" || echo "$pullDir/$targetFile")
 				local -r currentLocation newLocation
-				logWarning "the file was previously pulled to a different location"
-				echo "current location: $currentLocation"
-				echo "    new location: $newLocation"
-				printf "Won't pull the file again, you have several alternatives:\n- remove the entry from %s and pull it again\n- move the file manually and adjust the relativeTarget of the entry (and pull again)\n" "$pulledTsv"
+				if [[ "$currentLocation" != "$newLocation" ]]; then
+					logWarning "the file was previously pulled to a different location"
+					echo "current location: $currentLocation"
+					echo "    new location: $newLocation"
+					printf "Won't pull the file again, you have several alternatives:\n- remove the entry from %s and pull it again\n- move the file manually and adjust the relativeTarget of the entry (and pull again)\n" "$pulledTsv"
+				else
+					logWarning "the file was pulled previously but with a different tag-filter (see difference between new and old entry):"
+					gitDiffChars "$currentEntry" "$entry"
+					printf "Won't pull the file again, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pulledTsv"
+				fi
 				rm "$source"
 				return
 			elif [[ -f $absoluteTarget ]]; then
