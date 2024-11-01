@@ -170,7 +170,7 @@ function reInitialiseGitDirIfDotGitNotPresent() {
 function initialiseGpgDir() {
 	local -r gpgDir=$1
 	shift 1 || traceAndDie "could not shift by 1"
-	mkdir "$gpgDir" || die "could not create the gpg directory at %s" "$gpgDir"
+	mkdir -p "$gpgDir" || die "could not create the gpg directory at %s" "$gpgDir"
 	# it's OK if we are not able to set the rights as we only use it temporary. This will cause warnings by gpg
 	# so the user could be aware of that something went wrong
 	chmod 700 "$gpgDir" || true
