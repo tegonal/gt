@@ -401,7 +401,7 @@ function gt_pull() {
 				printf "Won't pull the file, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$source"
 				return
-			elif ! grep -x "$entry" "$pulledTsv" >/dev/null; then
+			elif ! grep -x -F "$entry" "$pulledTsv" >/dev/null; then
 				local currentLocation newLocation
 				currentLocation=$(realpath --relative-to="$currentDir" "$workingDirAbsolute/$entryRelativePath" || echo "$workingDirAbsolute/$entryRelativePath")
 				newLocation=$(realpath --relative-to="$currentDir" "$pullDir/$targetFile" || echo "$pullDir/$targetFile")
