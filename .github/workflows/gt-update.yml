@@ -141,35 +141,32 @@ jobs:
           set -euo pipefail
           currentDir="$(pwd)"
           signingKey=".gt/signing-key.public.asc"
-          if ! [[ -f "$currentDir/$signingKey" ]]; then
-            echo "$signingKey does not exist in this repo"
-            return 0
+          if [[ -f "$currentDir/$signingKey" ]]; then
+            tmpDir=$(mktemp -d -t gt-check-gpg-XXXXXXXXXX)
+            gpg --homedir "$tmpDir" --import "$currentDir/$signingKey"
+
+            limitTimestamp=$(date -d "+3 month" +%s)
+            limitDate=$(date -d "@$limitTimestamp" +"%Y-%m-%dT%H:%M:%S")
+            echo "checking if the following public keys defined in $signingKey are valid until $limitDate"
+            gpg --homedir "$tmpDir" --list-keys \
+              --list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids,show-usage,show-user-notations \
+              --keyid-format LONG
+            echo ""
+
+            expired=0
+            while read -r key; do
+              keyId=$(cut -d ':' -f5 <<<"$key")
+              expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
+              if (( expirationTimestamp < $limitTimestamp )); then
+                expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
+                printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
+                ((++expired))
+              fi
+            done < <(gpg --homedir "$tmpDir" --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
+            [[ $expired -eq 0 ]]
+          else
+            echo "$signingKey does not exist in this repo, nothing to check"
           fi
-
-          tmpDir=$(mktemp -d -t gt-check-gpg-XXXXXXXXXX)
-          gpg --homedir "$tmpDir" --import "$currentDir/$signingKey"
-
-
-          limitTimestamp=$(date -d "+3 month" +%s)
-          limitDate=$(date -d "@$limitTimestamp" +"%Y-%m-%dT%H:%M:%S")
-          echo "checking if the following public keys defined in $signingKey are valid until $limitDate"
-          gpg --homedir "$tmpDir" --list-keys \
-            --list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids,show-usage,show-user-notations \
-            --keyid-format LONG
-          echo ""
-
-          expired=0
-          while read -r key; do
-            keyId=$(cut -d ':' -f5 <<<"$key")
-            expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
-            if (( expirationTimestamp < $limitTimestamp )); then
-              expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
-              printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
-              ((++expired))
-            fi
-          done < <(gpg --homedir "$tmpDir" --list-keys --list-options show-unusable-subkeys --with-colons | grep -E '^(pub|sub)')
-          [[ $expired -eq 0 ]]
-
 
   trusted_keys:
     name: "Check trusted-key(s)"
