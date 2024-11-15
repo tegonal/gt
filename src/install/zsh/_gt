@@ -29,6 +29,9 @@ function _gt_pull() {
 		(chop-path)
 			_describe 'chop-path' "('true:chop the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'gt.sh') in the target folder' 'false:keep the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'src/gt.sh') in the target folder')"
 			;;
+		(directory)
+			_files
+			;;
 		(unsecure)
 			_describe 'unsecure' "('true:can pull from a remote for which no GPG key(s) are defined' 'false:can only pull from a secure remote for which GPG key(s) are defined')"
 			;;
@@ -37,6 +40,9 @@ function _gt_pull() {
 			;;
 		(remote)
 			_gt_describe_remotes
+			;;
+		(working-directory)
+			_files
 			;;
 	esac
 }
@@ -55,6 +61,8 @@ function _gt_re_pull() {
 		(remote)
 			_gt_describe_remotes
 			;;
+		(working-directory)
+			_files
 	esac
 }
 
@@ -73,6 +81,8 @@ function _gt_remote_add() {
 		(unsecure)
 			_describe 'unsecure' "('true:will not require a GPG key and will add --unsecure true to the remotes pull.args so that it doesn'\''t need to be repeated during gt pull' 'false:will fetch the GPG key(s) of the remote defined at .gt/*.asc and verify if we trust them')"
 			;;
+		(working-directory)
+			_files
 	esac
 }
 
@@ -87,6 +97,8 @@ function _gt_remote_remove() {
 		(remote)
 			_gt_describe_remotes
 			;;
+		(working-directory)
+			_files
 	esac
 }
 
@@ -107,6 +119,8 @@ function _gt_reset() {
 		(remote)
 			_gt_describe_remotes
 			;;
+		(working-directory)
+			_files
 	esac
 }
 
@@ -121,6 +135,8 @@ function _gt_update() {
 		(remote)
 			_gt_describe_remotes
 			;;
+		(working-directory)
+			_files
 	esac
 }
 
