@@ -438,7 +438,7 @@ function gt_pull() {
 
 		local repoFile
 		repoFile=$(realpath --relative-to="$repo" "$absoluteFile")
-		local -r sigFile="$absoluteFile.$sigExtension"
+		local sigFile="$absoluteFile.$sigExtension"
 		if [[ $doVerification == true && -f $sigFile ]]; then
 			printf "verifying \033[0;36m%s\033[0m from remote %s\n" "$repoFile" "$remote"
 			if [[ -d "$pullDirAbsolute/$repoFile" ]]; then
