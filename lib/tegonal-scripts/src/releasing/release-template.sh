@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.1.0
+#                                         Version: v4.2.0
 #######  Description  #############
 #
 #  Defines a release process template where some conventions are defined:
@@ -80,7 +80,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.1.0'
+export TEGONAL_SCRIPTS_VERSION='v4.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -156,8 +156,14 @@ function releaseTemplate() {
 
 	if [[ $prepareOnly != true ]]; then
 		git add . || return $?
-		git commit -m "$version" || return $?
-		git tag "$version" || return $?
+		git commit --edit -m "$version " || return $?
+		local signsTags
+		signsTags=$(git config --get tag.gpgSign)
+		if [[ $signsTags == true ]]; then
+			git tag -a "$version" -m "$version" || return $?
+		else
+			git tag "$version" || return $?
+		fi
 
 		"$prepareNextDevCycleFn" \
 			"$versionParamPatternLong" "$nextVersion" \

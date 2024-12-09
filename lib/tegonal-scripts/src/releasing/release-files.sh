@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.1.0
+#                                         Version: v4.2.0
 #######  Description  #############
 #
 #  Releasing files based on conventions:
@@ -49,7 +49,8 @@
 #    function specialBeforePr(){
 #    	beforePr && echo "imagine some additional work"
 #    }
-#    # make the function visible to release-files.sh / not necessary if you sourcerepare-files-next-dev-cycle.sh, see further below
+#    # make the function visible to release-files.sh / not necessary if you source prepare-files-next-dev-cycle.sh
+#    # see further below
 #    declare -fx specialBeforePr
 #
 #    # releases version v0.1.0 using the key 0x945FE615904E5C85 for signing and
@@ -75,7 +76,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.1.0'
+export TEGONAL_SCRIPTS_VERSION='v4.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."

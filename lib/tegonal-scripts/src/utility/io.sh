@@ -6,10 +6,10 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.1.0
+#                                         Version: v4.2.0
 #######  Description  #############
 #
-#  utility function dealing with Input/Ouput
+#  utility function dealing with Input/Output
 #
 #######  Usage  ###################
 #
@@ -51,24 +51,25 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 function withCustomOutputInput() {
-	local outputNr=$1
-	local inputNr=$2
-	local fun=$3
+	# prefix variables as the callback function might use variables from an outer scope and we would shadow those
+	local withCustomOutputInput_outputNr=$1
+	local withCustomOutputInput_inputNr=$2
+	local withCustomOutputInput_fun=$3
 	shift 3 || traceAndDie "could not shift by 3"
 
-	exitIfArgIsNotFunction "$fun" 3
+	exitIfArgIsNotFunction "$withCustomOutputInput_fun" 3
 
-	local tmpFile
-	tmpFile=$(mktemp /tmp/tegonal-scripts-io.XXXXXXXXX)
-	eval "exec ${outputNr}>\"$tmpFile\"" || traceAndDie "could not create output file descriptor %s" "$outputNr"
-	eval "exec ${inputNr}<\"$tmpFile\"" || traceAndDie "could not create input file descriptor %s" "$inputNr"
+	local withCustomOutputInput_tmpFile
+	withCustomOutputInput_tmpFile=$(mktemp /tmp/tegonal-scripts-io.XXXXXXXXX)
+	eval "exec ${withCustomOutputInput_outputNr}>\"$withCustomOutputInput_tmpFile\"" || traceAndDie "could not create output file descriptor %s" "$withCustomOutputInput_outputNr"
+	eval "exec ${withCustomOutputInput_inputNr}<\"$withCustomOutputInput_tmpFile\"" || traceAndDie "could not create input file descriptor %s" "$withCustomOutputInput_inputNr"
 	# don't fail if we cannot delete the tmp file, if this should happened, then the system should clean-up the file when the process ends
-	rm "$tmpFile" || true
+	rm "$withCustomOutputInput_tmpFile" || true
 
-	$fun "$@"
+	$withCustomOutputInput_fun "$@"
 
-	eval "exec ${outputNr}>&-"
-	eval "exec ${inputNr}<&-"
+	eval "exec ${withCustomOutputInput_outputNr}>&-"
+	eval "exec ${withCustomOutputInput_inputNr}<&-"
 }
 
 function deleteDirChmod777() {
