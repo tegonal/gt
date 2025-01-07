@@ -39,8 +39,8 @@
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
 #    # trust all gpg-keys stored in .gt/remotes/tegonal-scripts/public-keys
-#    # if the remotes gpg sotre is not yet set up
-#    gt pull -r tegonal-scripts --auto-trust true -p src/utlity/checks.sh
+#    # if the remote's gpg store is not yet set up
+#    gt pull -r tegonal-scripts --auto-trust true -p src/utility/checks.sh
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
 #    # Ignore if the gpg store of the remote is not set up and no suitable gpg key is defined in
@@ -48,17 +48,17 @@
 #    # then checks.sh will still be verified against it.
 #    # (you might want to add --unsecure true to .gt/tegonal-scripts/pull.args if you never intend to
 #    # set up gpg -- this way you don't have to repeat this option)
-#    gt pull -r tegonal-scripts --unsecure true  -p src/utlity/checks.sh
+#    gt pull -r tegonal-scripts --unsecure true  -p src/utility/checks.sh
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
 #    # without verifying its signature (if defined) against the remotes gpg store
 #    # you should not use this option unless you want to pull a file from a remote which signs files
 #    # but has not signed the file you intend to pull.
-#    gt pull -r tegonal-scripts --unsecure-no-verification true -p src/utlity/checks.sh
+#    gt pull -r tegonal-scripts --unsecure-no-verification true -p src/utility/checks.sh
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts (in the custom working directory .github/.gt)
 #    # in the latest version
-#    gt pull -w .github/.gt -r tegonal-scripts -p src/utlity/checks.sh
+#    gt pull -w .github/.gt -r tegonal-scripts -p src/utility/checks.sh
 #
 ###################################
 set -euo pipefail

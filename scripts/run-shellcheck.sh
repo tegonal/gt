@@ -24,11 +24,11 @@ fi
 sourceOnce "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
 
 function customRunShellcheck() {
-	declare srcDir="$scriptsDir/../src"
+	local srcDir="$scriptsDir/../src"
 
 	# shellcheck disable=SC2034   # is passed by name to runShellcheck
-	declare -a dirs=("$srcDir" "$scriptsDir" "$scriptsDir/../install.sh")
-	declare sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
+	local -a dirs=("$srcDir" "$scriptsDir" "$scriptsDir/../install.sh")
+	local sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
 	runShellcheck dirs "$sourcePath"
 
 	local -r gt_remote_dir="$scriptsDir/../.gt/remotes"
