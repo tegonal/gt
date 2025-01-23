@@ -223,6 +223,8 @@ function install() {
 			logInfo "determined zsh, trying to add it to %s via sudo" "$vendorPath"
 			local gtCompletion="$installDir/src/install/zsh/_gt"
 			if sudo -k cp "$gtCompletion" "$vendorPath"; then
+				# reload compinit to activate the gt completion without the need to re-open the terminal
+				(autoload -Uz compinit && compinit) || logInfo "autoload compinit failed, you need to close and re-open your terminal in order to get the gt code completion functionality working"
 				logSuccess "copied zsh completion into %s" "$vendorPath"
 			else
 				logError "was not able to copy %s into %s -- do it manually if you want" "$gtCompletion" "$vendorPath"
