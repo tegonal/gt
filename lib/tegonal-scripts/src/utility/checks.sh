@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.2.0
+#                                         Version: v4.3.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -106,7 +106,7 @@ function checkArgIsArray() {
 	reg='^declare -a.*'
 	local arrayDefinition
 	# we are not failing (with || die...) on this line as the if will fail afterwards
-	arrayDefinition="$(recursiveDeclareP checkArgIsArray_arr)"
+	arrayDefinition="$(recursiveDeclareP checkArgIsArray_arr)" || traceAndDie "could not get array definition of %s" "${!checkArgIsArray_arr}"
 	if ! [[ $arrayDefinition =~ $reg ]]; then
 		local funcName=${FUNCNAME[1]}
 		if [[ $funcName == "exitIfArgIsNotArray" ]]; then
@@ -216,7 +216,7 @@ function checkArgIsFunction() {
 	local name argNumberOrName
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(name argNumberOrName)
-	parseFnArgs params "$@"
+	parseFnArgs params "$@" || return $?
 
 	if ! declare -F "$name" >/dev/null; then
 		local declareP
@@ -239,7 +239,7 @@ function checkArgIsBoolean() {
 	local value argNumberOrName
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(value argNumberOrName)
-	parseFnArgs params "$@"
+	parseFnArgs params "$@" || return $?
 
 	if ! [[ $value =~ ^(true|false)$ ]]; then
 		local funcName=${FUNCNAME[1]}
@@ -316,21 +316,36 @@ function exitIfVariablesNotDeclared() {
 	done
 }
 
-function checkPathNamedIsInsideOf() {
-	local path name parentDirectory
-	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(path name parentDirectory)
-	parseFnArgs params "$@"
+function checkPathIsInsideOf() {
+	if ! (($# == 2)); then
+		logError "Two arguments needs to be passed to checkPathIsInsideOf, given \033[0;36m%s\033[0m\n" "$#"
+		echo >&2 '1: pathToCheck     the path which should be inside of rootDir'
+		echo >&2 '2: rootDir         the root directory'
+		printStackTrace
+		exit 9
 
-	local pathAbsolute parentDirectoryAbsolute
-	pathAbsolute="$(realpath -m "$path")"
-	parentDirectoryAbsolute="$(realpath -m "$parentDirectory")"
-	if ! [[ "$pathAbsolute" == "$parentDirectoryAbsolute"* ]]; then
-		returnDying "the given \033[0;36m%s\033[0m %s is outside of %s" "$name" "$pathAbsolute" "$parentDirectory" || return $?
+	fi
+	local path=$1
+	local rootDir=$2
+	local pathAbsolute rootDirectoryAbsolute
+	pathAbsolute="$(realpath -m "$path")" || return $?
+	rootDirectoryAbsolute="$(realpath -m "$rootDir")" || return $?
+	[[ "$pathAbsolute" == "$rootDirectoryAbsolute"* ]]
+}
+
+function checkPathNamedIsInsideOf() {
+	local path name rootDir
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(path name rootDir)
+	parseFnArgs params "$@" || return $?
+
+	# shellcheck disable=SC2310			# we are aware of that ! will disable set -e for checkPathIsInsideOf
+	if ! checkPathIsInsideOf "$path" "$rootDir"; then
+		returnDying "the given \033[0;36m%s\033[0m %s not inside of %s" "$name" "$pathAbsolute" "$rootDir" || return $?
 	fi
 }
 
 function exitIfPathNamedIsOutsideOf() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkIfPathNamedIsOutsideOf
+	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkPathNamedIsInsideOf
 	checkPathNamedIsInsideOf "$@" || exit $?
 }

@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.2.0
+#                                         Version: v4.3.0
 #######  Description  #############
 #
 #  function which calls shellspec in case the command exists and otherwise prints a warning
@@ -45,6 +45,6 @@ function runShellspecIfInstalled() {
 		logInfo "Running shellspec $shellspecVersion ..."
 		shellspec "$@"
 	else
-		logWarning "shellspec is not installed, skipping running specs.\nConsider to install it https://github.com/shellspec/shellspec#installation"
+		logWarning "shellspec is not installed, skipping running specs.\nConsider to install it, execute $dir_of_tegonal_scripts/ci/install-shellcheck.sh (if pulled) or see https://github.com/shellspec/shellspec#installation"
 	fi
 }

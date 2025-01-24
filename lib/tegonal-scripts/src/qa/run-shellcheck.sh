@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.2.0
+#                                         Version: v4.3.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -46,7 +46,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/array-utils.sh"
 
 function runShellcheck() {
-	exitIfCommandDoesNotExist "shellcheck" "see https://github.com/koalaman/shellcheck#installing"
+	exitIfCommandDoesNotExist "shellcheck" "execute $dir_of_tegonal_scripts/ci/install-shellcheck.sh (if pulled) or see https://github.com/koalaman/shellcheck#installing"
 
 	if (($# < 2)); then
 		logError "At least two parameters need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"

@@ -6,11 +6,10 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.2.0
+#                                         Version: v4.3.0
 #######  Description  #############
 #
-#  function which searches for *.sh files within defined paths (directories or a single *.sh) and
-#  runs shellcheck on each file with predefined settings i.a. sets `-s bash`
+#  installs shellcheck v0.10.0 into $HOME/.local/lib
 #
 #######  Usage  ###################
 #
@@ -35,12 +34,27 @@ declare currentDir
 currentDir=$(pwd)
 tmpDir=$(mktemp -d -t download-shellcheck-XXXXXXXXXX)
 cd "$tmpDir"
-echo "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87  ./shellcheck-v0.10.0.linux.x86_64.tar.xz" >shellcheck-v0.10.0.linux.x86_64.tar.xz.sha256
-wget --no-verbose https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.linux.x86_64.tar.xz
-sha256sum -c shellcheck-v0.10.0.linux.x86_64.tar.xz.sha256
-tar -xf ./shellcheck-v0.10.0.linux.x86_64.tar.xz
-chmod +x ./shellcheck-v0.10.0/shellcheck
+shellcheckVersion="v0.10.0"
+echo "6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87  ./shellcheck-$shellcheckVersion.linux.x86_64.tar.xz" >"shellcheck-$shellcheckVersion.linux.x86_64.tar.xz.sha256"
+wget --no-verbose "https://github.com/koalaman/shellcheck/releases/download/$shellcheckVersion/shellcheck-$shellcheckVersion.linux.x86_64.tar.xz"
+sha256sum -c "shellcheck-$shellcheckVersion.linux.x86_64.tar.xz.sha256"
+tar -xf "./shellcheck-$shellcheckVersion.linux.x86_64.tar.xz"
+chmod +x "./shellcheck-$shellcheckVersion/shellcheck"
 mkdir -p "$HOME/.local/bin"
-ln -s "$tmpDir/shellcheck-v0.10.0/shellcheck" "$HOME/.local/bin/shellcheck"
+shellcheckInTmp="$tmpDir/shellcheck-$shellcheckVersion"
+shellcheckInHomeLocalLib="$HOME/.local/lib/shellcheck-$shellcheckVersion"
+shellcheckBin="$HOME/.local/bin/shellcheck"
+if [[ -d "$shellcheckInHomeLocalLib" ]]; then
+	echo "going to remove the existing installation in $shellcheckInHomeLocalLib"
+	rm -r "$shellcheckInHomeLocalLib"
+else
+	mkdir -p "$HOME/.local/lib"
+fi
+mv "$shellcheckInTmp" "$shellcheckInHomeLocalLib"
+if [[ -f  "$shellcheckBin" ]]; then
+	rm  "$shellcheckBin"
+fi
+ln -s "$shellcheckInHomeLocalLib/shellcheck" "$shellcheckBin"
+
 cd "$currentDir"
 shellcheck --version

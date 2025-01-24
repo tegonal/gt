@@ -6,15 +6,14 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.2.0
+#                                         Version: v4.3.0
 #######  Description  #############
 #
-#  function which searches for *.sh files within defined paths (directories or a single *.sh) and
-#  runs shellcheck on each file with predefined settings i.a. sets `-s bash`
+#  installs shellspec 0.28.1 into $HOME/.local/lib
 #
 #######  Usage  ###################
 #
-#    # run the install-shellcheck.sh in your github/gitlab workflow
+#    # run the install-shellspec in your github/gitlab workflow
 #    # for instance, assuming you fetched this file via gt and remote name is tegonal-scripts
 #    # then in a github workflow you would have
 #
