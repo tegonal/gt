@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.2.0
+#                                         Version: v4.3.0
 #######  Description  #############
 #
 #  utility function dealing with Input/Output
@@ -63,7 +63,7 @@ function withCustomOutputInput() {
 	withCustomOutputInput_tmpFile=$(mktemp /tmp/tegonal-scripts-io.XXXXXXXXX)
 	eval "exec ${withCustomOutputInput_outputNr}>\"$withCustomOutputInput_tmpFile\"" || traceAndDie "could not create output file descriptor %s" "$withCustomOutputInput_outputNr"
 	eval "exec ${withCustomOutputInput_inputNr}<\"$withCustomOutputInput_tmpFile\"" || traceAndDie "could not create input file descriptor %s" "$withCustomOutputInput_inputNr"
-	# don't fail if we cannot delete the tmp file, if this should happened, then the system should clean-up the file when the process ends
+	# don't fail if we cannot delete the tmp file, if this should happen, then the system should clean-up the file when the process ends
 	rm "$withCustomOutputInput_tmpFile" || true
 
 	$withCustomOutputInput_fun "$@"
