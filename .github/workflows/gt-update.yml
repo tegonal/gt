@@ -157,7 +157,7 @@ jobs:
             while read -r key; do
               keyId=$(cut -d ':' -f5 <<<"$key")
               expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
-              if (( expirationTimestamp < $limitTimestamp )); then
+              if (( expirationTimestamp < limitTimestamp )); then
                 expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
                 printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
                 ((++expired))
@@ -193,7 +193,7 @@ jobs:
           while read -r key; do
             keyId=$(cut -d ':' -f5 <<<"$key")
             expirationTimestamp=$(cut -d ':' -f7 <<<"$key")
-            if (( expirationTimestamp < $limitTimestamp )); then
+            if (( expirationTimestamp < limitTimestamp )); then
               expirationDate=$(date -d "@$((expirationTimestamp + 0))" +"%Y-%m-%dT%H:%M:%S")
               printf >&2 "\033[0;31mERROR\033[0m: expiration date (%s) of key %s is before the given limit %s\n" "$expirationDate" "$keyId" "$limitDate"
               ((++expired))

@@ -68,7 +68,7 @@ function gt_reset() {
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		gpgOnly "--gpg-only" '(optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false'
+		gpgOnly "$gpgOnlyParamPattern" '(optional) if set to true, then only the gpg keys are reset but the files are not re-pulled -- default: false'
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
@@ -107,7 +107,7 @@ function gt_reset() {
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 		exitIfRepoBrokenAndReInitIfAbsent "$workingDirAbsolute" "$remote"
 
-		local publicKeysDir gpgDir repo pullArgsFile
+		local publicKeysDir gpgDir repo pullArgsFile lastCheckFile
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 		if [[ -d $publicKeysDir ]]; then
 			logInfo "Going to re-establish gpg trust in remote \033[0;36m%s\033[0m, removing %s" "$remote" "$publicKeysDir"
@@ -120,7 +120,7 @@ function gt_reset() {
 
 		local unsecureArgs
 		if [[ -f $pullArgsFile ]]; then
-			unsecureArgs=$(grep -E "(--unsecure|--unsecure-no-verification)\strue" "$pullArgsFile")
+			unsecureArgs=$(grep -E "(--unsecure|--unsecure-no-verification)\s*true" "$pullArgsFile")
 		else
 			unsecureArgs=""
 		fi
@@ -164,6 +164,7 @@ function gt_reset() {
 				exitBecauseSigningKeyNotImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong" "$signingKeyAsc"
 			fi
 		fi
+		date +"%Y-%m-%d" >"$lastCheckFile"
 		logSuccess "re-established trust in remote \033[0;36m%s\033[0m" "$remote"
 	}
 

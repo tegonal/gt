@@ -76,8 +76,10 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
+sourceOnce "$dir_of_gt/gt-reset.sh"
 sourceOnce "$dir_of_gt/pulled-utils.sh"
 sourceOnce "$dir_of_gt/utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/date-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
@@ -110,7 +112,8 @@ function gt_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc targetFileNamePatternLong
+	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc
+	local remoteParamPatternLong targetFileNamePatternLong workingDirParamPatternLong gpgOnlyParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
@@ -210,7 +213,7 @@ function gt_pull() {
 	local -r workingDirAbsolute pullDirAbsolute
 	checkPathNamedIsInsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
 
-	local publicKeysDir repo gpgDir pulledTsv pullHookFile
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -237,7 +240,37 @@ function gt_pull() {
 		doVerification=false
 	else
 		doVerification=true
-		if ! [[ -d $gpgDir ]]; then
+		if [[ -d $gpgDir ]]; then
+			# if the signingKey exists, then we assume that it was fetched from the remote and in this case
+			# want to check periodically that it was not revoked
+			if [[ -f "$publicKeysDir/$signingKeyAsc" ]]; then
+				local lastCheckDate lastCheckTimestamp aMonthAgoTimestamp
+				lastCheckTimestamp=$(date -d "-2 month" +%s)
+
+				if [[ -f $lastCheckFile ]]; then
+					local lastCheckDate
+					lastCheckDate=$(cat "$lastCheckFile")
+					lastCheckTimestamp=$(dateToTimestamp "$lastCheckDate") || die "looks like the date \033[0;36m%s\033[0m in %s is not in format YYYY-mm-dd" "$lastCheckDate" "$lastCheckFile"
+				fi
+				aMonthAgoTimestamp=$(date -d "-1 month" +%s)
+				if ((lastCheckTimestamp < aMonthAgoTimestamp)); then
+					local lastCheckDateInUserFormat
+					lastCheckDate=$(timestampToDate "$lastCheckTimestamp")
+					lastCheckDateInUserFormat=$(timestampToDateInUserFormat "$lastCheckTimestamp")
+
+					printf "==================================================\n"
+					logInfo "time to check if the signing key of remote \033[0;36m%s\033[0m, is still valid.\nLast check was on %s. Going to execute gt reset -r %s %s true" "$remote" "$lastCheckDateInUserFormat" "$remote" "$gpgOnlyParamPatternLong"
+					printf "==================================================\n"
+					if ! gt_reset "$remoteParamPatternLong" "$remote" \
+						"$workingDirParamPatternLong" "$workingDirAbsolute" \
+						"$gpgOnlyParamPatternLong" "true"; then
+
+						die "was not able to update the signing key of remote \033[0;36m%s\033[0m, check if it is still valid and if not whether you can trust the already pulled files\n In case this happens due to connection problems or the like, you can defer this check by modifying the date in %s" "$remote" "$lastCheckFile"
+					fi
+				fi
+
+			fi
+		else
 			if [[ -f $gpgDir ]]; then
 				die "looks like the remote \033[0;36m%s\033[0m is broken there is a file at the gpg dir's location: %s" "$remote" "$gpgDir"
 			fi
