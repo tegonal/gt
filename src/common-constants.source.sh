@@ -54,3 +54,6 @@ local -r signingKeyAsc='signing-key.public.asc'
 
 local -r targetFileNamePatternLong='--target-file-name'
 local -r targetFileNamePattern="$targetFileNamePatternLong"
+
+local -r gpgOnlyParamPatternLong="--gpg-only"
+local -r gpgOnlyParamPattern="$gpgOnlyParamPatternLong"
