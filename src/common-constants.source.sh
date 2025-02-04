@@ -57,3 +57,6 @@ local -r targetFileNamePattern="$targetFileNamePatternLong"
 
 local -r gpgOnlyParamPatternLong="--gpg-only"
 local -r gpgOnlyParamPattern="$gpgOnlyParamPatternLong"
+
+local -r listParamPatternLong="--list"
+local -r listParamPattern="$listParamPatternLong"

@@ -27,6 +27,9 @@
 #    # pulled.tsv to see the current tagFilter in use per file
 #    gt update -r tegonal-scripts -t v1.0.0
 #
+#    # lists the updatable files of remote tegonal-scripts
+#    get update -r tegonal-scripts --list true
+#
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
@@ -55,14 +58,15 @@ function gt_update() {
 
 	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
 	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
-	local tagFilterParamPatternLong
+	local tagFilterParamPatternLong listParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
-	local remote workingDir autoTrust tag
+	local remote workingDir list autoTrust tag
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the files of this remote are updated, otherwise all'
 		tag "$tagParamPattern" "(optional) define from which tag files shall be pulled, only valid if remote via $remoteParamPattern is specified"
+		list "$listParamPattern" "(optional) if set to true, then no files are updated and instead a list with updatable files including versions are output -- default: false"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
@@ -85,9 +89,11 @@ function gt_update() {
 	if ! [[ -v workingDir ]]; then workingDir="$defaultWorkingDir"; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v tag ]]; then tag=""; fi
+	if ! [[ -v list ]]; then list=false; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
+	exitIfArgIsNotBoolean "$list" "$listParamPatternLong"
 
 	if [[ -n $tag && -z $remote ]]; then
 		die "tag can only be defined if a remote is specified via %s" "$remoteParamPattern"
@@ -100,6 +106,7 @@ function gt_update() {
 	local -i pulled=0
 	local -i skipped=0
 	local -i errors=0
+	local -i updatable=0
 
 	function gt_update_incrementError() {
 		local -r entryFile=$1
@@ -114,13 +121,14 @@ function gt_update() {
 		local -r remote=$1
 		shift 1 || traceAndDie "could not shift by 1"
 
+		local -a updateablePerRemote=()
 		local previousTagFilter=""
 		local previousLatestTag=""
 
 		function gt_update_rePullInternal_callback() {
-			local _entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512
+			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(_entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512)
 			parseFnArgs params "$@"
 
 			local entryTargetFileName
@@ -129,7 +137,7 @@ function gt_update() {
 			local tagToPull
 			if [[ -n $tag ]]; then
 				tagToPull="$tag"
-				if ! grep -E "$entryTagFilter" > /dev/null <<<"$tagToPull"; then
+				if ! grep -E "$entryTagFilter" >/dev/null <<<"$tagToPull"; then
 					# if the given tag does not match the entryTagFilter for the specific file, then we ignore
 					((++skipped))
 					return
@@ -146,22 +154,47 @@ function gt_update() {
 
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
 			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
-			if gt_pull \
-				"$workingDirParamPatternLong" "$workingDirAbsolute" \
-				"$remoteParamPatternLong" "$remote" \
-				"$tagParamPatternLong" "$tagToPull" \
-				"$pathParamPatternLong" "$entryFile" \
-				"$pullDirParamPatternLong" "$parentDir" \
-				"$chopPathParamPatternLong" true \
-				"$targetFileNamePatternLong" "$entryTargetFileName" \
-				"$autoTrustParamPatternLong" "$autoTrust" \
-				"$tagFilterParamPatternLong" "$entryTagFilter"; then
-				((++pulled))
+
+			if [[ $list == true ]]; then
+				if [[ $entryTag != "$tagToPull" ]]; then
+					updateablePerRemote+=("$entryTag" "$tagToPull" "$entryFile")
+				fi
 			else
-				gt_update_incrementError "$entryFile" "$remote"
+				if gt_pull \
+					"$workingDirParamPatternLong" "$workingDirAbsolute" \
+					"$remoteParamPatternLong" "$remote" \
+					"$tagParamPatternLong" "$tagToPull" \
+					"$pathParamPatternLong" "$entryFile" \
+					"$pullDirParamPatternLong" "$parentDir" \
+					"$chopPathParamPatternLong" true \
+					"$targetFileNamePatternLong" "$entryTargetFileName" \
+					"$autoTrustParamPatternLong" "$autoTrust" \
+					"$tagFilterParamPatternLong" "$entryTagFilter"; then
+					((++pulled))
+				else
+					gt_update_incrementError "$entryFile" "$remote"
+				fi
 			fi
 		}
 		readPulledTsv "$workingDirAbsolute" "$remote" gt_update_rePullInternal_callback 5 6
+
+		if [[ $list == true ]]; then
+			local -r updatablePerRemoteLength="${#updateablePerRemote[@]}"
+			if ((updatablePerRemoteLength > 0)); then
+				((updatable += updatablePerRemoteLength))
+
+				logInfo "following the updates for remote \033[0;36m%s\033[0m:\nOld\tNew\tFile" "$remote"
+				for ((i = 0; i < updatablePerRemoteLength; i += 3)); do
+					local entryTag="${updateablePerRemote[i]}"
+					local tagToPull="${updateablePerRemote[i + 1]}"
+					local entryFile="${updateablePerRemote[i + 2]}"
+					printf "%s\t%s\t%s\n" "$entryTag" "$tagToPull" "$entryFile"
+				done
+			else
+				logInfo "no new version available for the files of remote \033[0;36m%s\033[0m" "$remote"
+			fi
+			printf "\n"
+		fi
 	}
 
 	function gt_update_rePullRemote() {
@@ -192,13 +225,21 @@ function gt_update() {
 		withCustomOutputInput 7 8 gt_update_allRemotes
 	fi
 
-	endTime=$(date +%s.%3N)
-	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
-	if ((errors == 0)); then
-		logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsed" "$skipped"
+	if [[ $list == true ]]; then
+		if ((updatable == 0)); then
+			logInfo "no updates available"
+		else
+			logInfo "%s updates available, see above." "$((updatable / 3))"
+		fi
 	else
-		logWarning "%s files updated in %s seconds (%s skipped), %s errors occurred, see above" "$pulled" "$elapsed" "$skipped" "$errors"
-		return 1
+		endTime=$(date +%s.%3N)
+		elapsed=$(bc <<<"scale=3; $endTime - $startTime")
+		if ((errors == 0)); then
+			logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsed" "$skipped"
+		else
+			logWarning "%s files updated in %s seconds (%s skipped), %s errors occurred, see above" "$pulled" "$elapsed" "$skipped" "$errors"
+			return 1
+		fi
 	fi
 }
 
