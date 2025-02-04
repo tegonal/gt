@@ -706,6 +706,7 @@ Following the output of running `gt update --help`:
 Parameters:
 -r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
 -t|--tag                 (optional) define from which tag files shall be pulled, only valid if remote via -r|--remote is specified
+--list                   (optional) if set to true, then no files are updated and instead a list with updatable files including versions are output -- default: false
 --auto-trust             (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
@@ -747,6 +748,9 @@ gt update -r tegonal-scripts
 # Side note, if no filter was specified during `gt pull`, then .* is used per default which includes all tags -- see
 # pulled.tsv to see the current tagFilter in use per file
 gt update -r tegonal-scripts -t v1.0.0
+
+# lists the updatable files of remote tegonal-scripts
+get update -r tegonal-scripts --list true
 ```
 
 </gt-update>

@@ -11,3 +11,6 @@ gt update -r tegonal-scripts
 # Side note, if no filter was specified during `gt pull`, then .* is used per default which includes all tags -- see
 # pulled.tsv to see the current tagFilter in use per file
 gt update -r tegonal-scripts -t v1.0.0
+
+# lists the updatable files of remote tegonal-scripts
+get update -r tegonal-scripts --list true
