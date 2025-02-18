@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.3.0
+#                                         Version: v4.4.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
@@ -151,7 +151,7 @@ function parseArgumentsInternal {
 			if ! ((parseArguments_numOfArgumentsParsed == 0)); then
 				logWarning "there were arguments defined prior to --help, they were all ignored and instead the help is shown"
 			elif (($# > 1)); then
-				logWarning "there were arguments defined after --help, they were all be ignored, you might want to remove --help"
+				logWarning "there were arguments defined after --help, they will all be ignored, you might want to remove --help"
 			fi
 			return 99
 		fi
