@@ -335,7 +335,7 @@ function gt_pull() {
 		logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToPull" "$remote"
 	else
 		local remoteTags
-		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote") || (logInfo >&2 "check your internet connection" && return 1) || return $?
+		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote" -r) || (logInfo >&2 "check your internet connection" && return 1) || return $?
 		grep "$tagToPull" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToPull" "$remoteTags" || return $?
 		git -C "$repo" fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
 	fi

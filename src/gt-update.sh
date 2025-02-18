@@ -103,6 +103,21 @@ function gt_update() {
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
+	local repo
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
+
+	if [[ -n $tag ]] && ! (cd "$repo" && hasRemoteTag "$tag" "$remote" 2>/dev/null); then
+		local majorVersion remoteTags filteredTags
+		majorVersion=$(sed -E 's/^(v?[0-9]+)\..*/\1/' <<<"$tag")
+		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote" -r) || (logInfo >&2 "check your internet connection" && return 1) || return $?
+		filteredTags=$(grep -E "^v?${majorVersion#v}" <<<"$remoteTags" || echo '')
+		if [[ -n $filteredTags ]]; then
+			die "remote %s does not have tag \033[0;36m%s\033[0m\nFollowing the available tags matching the same major version %s:\n%s" "$remote" "$tag" "$majorVersion" "$filteredTags"
+		else
+			die "remote %s does not have tag \033[0;36m%s\033[0m nor any tags matching the same major version %s\nFollowing the available tags:\n%s" "$remote" "$tag" "$majorVersion" "$remoteTags"
+		fi
+	fi
+
 	local -i pulled=0
 	local -i skipped=0
 	local -i errors=0
@@ -138,7 +153,7 @@ function gt_update() {
 			if [[ -n $tag ]]; then
 				tagToPull="$tag"
 				if ! grep -E "$entryTagFilter" >/dev/null <<<"$tagToPull"; then
-					# if the given tag does not match the entryTagFilter for the specific file, then we ignore
+					# if the given tag does not match the entryTagFilter for the specific file, then we ignore the entry
 					((++skipped))
 					return
 				fi
