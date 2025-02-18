@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v4.3.0
+#                                         Version: v4.4.0
 #
 #######  Description  #############
 #
@@ -73,6 +73,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/string-utils.sh"
 
 function currentGitBranch() {
 	git rev-parse --abbrev-ref HEAD
@@ -132,9 +133,10 @@ function hasRemoteTag() {
 	local -r tag=$1
 	local -r remote=${2:-"origin"}
 	shift 1 || traceAndDie "could not shift by 1"
-	local output
+	local output literalTag
 	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"$remote\""
-	grep "$tag" >/dev/null <<<"$output"
+	literalTag=$(escapeRegex "refs/tags/$tag")
+	grep -q -E "$literalTag\$" <<<"$output"
 }
 
 function remoteTagsSorted() {
@@ -150,11 +152,11 @@ function remoteTagsSorted() {
 
 function latestRemoteTag() {
 	if (($# > 2)); then
-			logError "Maximum 2 arguments can be passed to latestRemoteTag, given \033[0;36m%s\033[0m\n" "$#"
-			echo >&2 '1: remote   	(optional) the name of the remote, defaults to origin'
-			echo >&2 '2: tagFilter	(optional) a regex pattern (as supported by grep -E) which allows to filter available tags before determining the latest, defaults to .* (i.e. include all)'
-			printStackTrace
-			exit 9
+		logError "Maximum 2 arguments can be passed to latestRemoteTag, given \033[0;36m%s\033[0m\n" "$#"
+		echo >&2 '1: remote   	(optional) the name of the remote, defaults to origin'
+		echo >&2 '2: tagFilter	(optional) a regex pattern (as supported by grep -E) which allows to filter available tags before determining the latest, defaults to .* (i.e. include all)'
+		printStackTrace
+		exit 9
 	fi
 	local -r remote=${1:-"origin"}
 	local -r tagFilter=${2:-".*"}

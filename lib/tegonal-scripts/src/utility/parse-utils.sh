@@ -6,13 +6,10 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.3.0
+#                                         Version: v4.4.0
 #######  Description  #############
 #
-#  Intended to parse command line arguments. Provides a simple way to parse named arguments including a documentation
-#  if one uses the parameter `--help` and shows the version if one uses --version.
-#  I.e. that also means that `--help` and `--version` are reserved patterns and should not be used by your
-#  script/function.
+#  Utility functions for argument parser like function such as parse-args and parse-fn-args
 #
 #######  Usage  ###################
 #

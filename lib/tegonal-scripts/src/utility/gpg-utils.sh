@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.3.0
+#                                         Version: v4.4.0
 #######  Description  #############
 #
 #  utility functions for dealing with gpg
@@ -190,7 +190,7 @@ function isGpgKeyInKeyDataExpired() {
 	local -ra params=(keyData)
 	parseFnArgs params "$@"
 
-	grep -E '^(sub|pub):e:' <<<"$keyData" >/dev/null
+	grep -q -E '^(sub|pub):e:' <<<"$keyData"
 }
 
 function isGpgKeyInKeyDataRevoked() {
@@ -199,13 +199,13 @@ function isGpgKeyInKeyDataRevoked() {
 	local -ra params=(keyData)
 	parseFnArgs params "$@"
 
-	grep -E '^(sub|pub):r:' <<<"$keyData" >/dev/null
+	grep -q -E '^(sub|pub):r:' <<<"$keyData"
 }
 
 function getRevocationData() {
 	if (($# == 0)) || (($# > 2)); then
 		logError "You need to pass at least 1 and at max 2 arguments to getRevocationData, given \033[0;36m%s\033[0m\n" "$#"
-		echo >&2 '1: keyId   		the gpg keyId for which we shall print the revocation informatoin'
+		echo >&2 '1: keyId   		the gpg keyId for which we shall print the revocation information'
 		echo >&2 "2: gpgDir			(optional) the gpg-dir in which we shall search for the key -- default: use gpg's default"
 		printStackTrace
 		exit 9
