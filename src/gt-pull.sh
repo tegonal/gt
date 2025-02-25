@@ -259,7 +259,7 @@ function gt_pull() {
 					lastCheckDateInUserFormat=$(timestampToDateInUserFormat "$lastCheckTimestamp")
 
 					printf "==================================================\n"
-					logInfo "time to check if the signing key of remote \033[0;36m%s\033[0m, is still valid.\nLast check was on %s. Going to execute gt reset -r %s %s true" "$remote" "$lastCheckDateInUserFormat" "$remote" "$gpgOnlyParamPatternLong"
+					logInfo "time to check if the signing key of remote \033[0;36m%s\033[0m is still valid.\nLast check was on %s. Going to execute gt reset -r %s %s true" "$remote" "$lastCheckDateInUserFormat" "$remote" "$gpgOnlyParamPatternLong"
 					printf "==================================================\n"
 					if ! gt_reset "$remoteParamPatternLong" "$remote" \
 						"$workingDirParamPatternLong" "$workingDirAbsolute" \
