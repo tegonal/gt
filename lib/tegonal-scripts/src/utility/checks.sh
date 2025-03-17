@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.0
+#                                         Version: v4.4.1
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -93,7 +93,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function checkArgIsArray() {
 	if ! (($# == 2)); then
-		logError "Two arguments 			needs to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
+		logError "Two arguments needs to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array      		  name of the array to check'
 		echo >&2 '2: argNumberOrName  what argument do we check (used in error message)'
 		printStackTrace
