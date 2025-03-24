@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.1
+#                                         Version: v4.4.3
 #######  Description  #############
 #
 #  Functions which help in doing cleanup in e.g. scripts/cleanup-on-push-to-main.sh
