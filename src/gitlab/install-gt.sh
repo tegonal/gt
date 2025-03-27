@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.3.0-SNAPSHOT
+#                                         Version: v1.2.2
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
@@ -39,8 +39,8 @@ gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
 echo "public key trusted" && \
 mkdir ./gpg && \
 gpg --homedir ./gpg --import ./signing-key.public.asc && \
-wget "https://raw.githubusercontent.com/tegonal/gt/v1.2.1/install.sh" && \
-wget "https://raw.githubusercontent.com/tegonal/gt/v1.2.1/install.sh.sig" && \
+wget "https://raw.githubusercontent.com/tegonal/gt/v1.2.2/install.sh" && \
+wget "https://raw.githubusercontent.com/tegonal/gt/v1.2.2/install.sh.sig" && \
 gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
 chmod +x ./install.sh && \
 echo "verification successful" || (printf >&2 "\033[0;31mERROR\033[0m: verification failed, don't continue !!\n"; exit 1) && \
