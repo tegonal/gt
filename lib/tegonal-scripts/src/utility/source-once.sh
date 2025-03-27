@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
@@ -50,7 +50,7 @@ shopt -s inherit_errexit
 unset CDPATH
 
 function determineSourceOnceGuard() {
-	if ! (($# == 1)); then
+	if (($# != 1)); then
 		traceAndDie "you need to pass the file name, for which we shall calculate the guard, to determineSourceOnceGuard"
 	fi
 	local -r file="$1"

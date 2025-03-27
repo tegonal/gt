@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  Functions which help in doing cleanup in e.g. scripts/cleanup-on-push-to-main.sh
@@ -41,10 +41,9 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 function removeUnusedSignatures() {
-	if ! (($# == 1)); then
+	if (($# != 1)); then
 		logError "One argument needs to be passed to removeUnusedSignatures, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: projectDir	the path to the root directory of the project'
 		printStackTrace

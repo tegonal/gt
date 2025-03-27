@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  utility functions for dealing with arrays
@@ -84,7 +84,7 @@ joinByString() {
 }
 
 function arrFilter() {
-	if ! (($# == 3)); then
+	if (($# != 3)); then
 		logError "Three arguments needs to be passed to arrFilter, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: arrayIn    name of the array to filter'
 		echo >&2 '2: arrayOut   name of the array which will contain the result'
@@ -112,7 +112,7 @@ function arrFilter() {
 }
 
 function arrTakeEveryX() {
-	if ! (($# == 4)); then
+	if (($# != 4)); then
 		logError "Four arguments needs to be passed to arrTakeEveryX, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: arrayIn      name of the array to filter'
 		echo >&2 '2: arrayOut     name of the array which will contain the result'
@@ -139,7 +139,7 @@ function arrTakeEveryX() {
 }
 
 function arrStringEntryMaxLength() {
-	if ! (($# == 1)); then
+	if (($# != 1)); then
 		logError "One argument needs to be passed to arrStringEntryMaxLength, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array      name of the array which contains strings'
 		printStackTrace
