@@ -132,11 +132,11 @@ function install() {
 	local -r publicKey="$tmpDir/signing-key.public.asc"
 	local -r url="https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc"
 	if command -v wget >/dev/null; then
-  	wget -O "$publicKey" -q "$url" || die "could not fetch public key from main branch"
-  else
-  	# if wget does not exist, then we try it with curl
-  	curl -L -o "$publicKey" -s "$url" || die "could not fetch public key from main branch"
-  fi
+		wget -O "$publicKey" -q "$url" || die "could not fetch public key from main branch"
+	else
+		# if wget does not exist, then we try it with curl
+		curl -L -o "$publicKey" -s "$url" || die "could not fetch public key from main branch"
+	fi
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir "$gpgDir" --list-sig || true
 
@@ -230,28 +230,28 @@ function install() {
 	fi
 
 	if [[ -n $symbolicLink ]]; then
-  		echo ""
-  		logInfo "Testing the symbolic link, following the output of calling $projectName --help"
-  		echo ""
-  		if "$projectName" --help; then
-  			echo ""
-  			logSuccess "looks like it worked"
-  		else
-  			local symlinkDir homeLocalBin
-  			symlinkDir=$(dirname "$symbolicLink")
-  			homeLocalBin=$(readlink -m "$HOME/.local/bin")
-  			if [[ -n "$fpath_output" && $symlinkDir == "$homeLocalBin" ]]; then
-  				echo ""
-  				logError "looks like something went wrong. You seem using zsh and the symlink directory (%s) is in a typical BASH location.\nMake sure you have added it to your PATH in your .zshrc -- i.e. add the following:\nexport PATH=\"\$PATH:\$HOME/.local/bin\"" "$symlinkDir"
-  				echo ""
-  			else
-  				logError "looks like something is wrong, make sure %s is in your PATH" "$symlinkDir"
-  			fi
-  			exit 1
-  		fi
-  	fi
+		echo ""
+		logInfo "Testing the symbolic link, following the output of calling $projectName --help"
+		echo ""
+		if "$projectName" --help; then
+			echo ""
+			logSuccess "looks like it worked"
+		else
+			local symlinkDir homeLocalBin
+			symlinkDir=$(dirname "$symbolicLink")
+			homeLocalBin=$(readlink -m "$HOME/.local/bin")
+			if [[ -n "$fpath_output" && $symlinkDir == "$homeLocalBin" ]]; then
+				echo ""
+				logError "looks like something went wrong. You seem using zsh and the symlink directory (%s) is in a typical BASH location.\nMake sure you have added it to your PATH in your .zshrc -- i.e. add the following:\nexport PATH=\"\$PATH:\$HOME/.local/bin\"" "$symlinkDir"
+				echo ""
+			else
+				logError "looks like something is wrong, make sure %s is in your PATH" "$symlinkDir"
+			fi
+			exit 1
+		fi
+	fi
 
-		logSuccess "thank you for using gt, please report bugs"
+	logSuccess "thank you for using gt, please report bugs"
 }
 
 function exitIfValueMissing() {
