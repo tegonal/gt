@@ -47,13 +47,13 @@ if ! [[ -v dir_of_gt ]]; then
 	declare intermediateSource=${BASH_SOURCE[0]:-$0}
 	declare intermediateDir=""
 	while [[ -L $intermediateSource ]]; do
-		intermediateDir=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd)
+		intermediateDir=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd 2>/dev/null)
 		intermediateSource=$(readlink "$intermediateSource")
 		if [[ $intermediateSource != /* ]]; then
 			intermediateSource=$intermediateDir/$intermediateSource
 		fi
 	done
-	dir_of_gt=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd)
+	dir_of_gt=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd 2>/dev/null)
 	readonly dir_of_gt
 fi
 

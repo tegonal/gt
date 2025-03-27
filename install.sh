@@ -240,12 +240,14 @@ function install() {
 			local symlinkDir homeLocalBin
 			symlinkDir=$(dirname "$symbolicLink")
 			homeLocalBin=$(readlink -m "$HOME/.local/bin")
+
+			# trying to help the user why the installation failed
 			if [[ -n "$fpath_output" && $symlinkDir == "$homeLocalBin" ]]; then
 				echo ""
-				logError "looks like something went wrong. You seem using zsh and the symlink directory (%s) is in a typical BASH location.\nMake sure you have added it to your PATH in your .zshrc -- i.e. add the following:\nexport PATH=\"\$PATH:\$HOME/.local/bin\"" "$symlinkDir"
+				logError "looks like something went wrong. You seem using zsh and the parent directory of the symlink (%s) is a typical BASH location.\nMake sure you have added it to your PATH in your .zshrc -- i.e. add the following if it is missing:\nexport PATH=\"\$PATH:\$HOME/.local/bin\"\n\nFollowing the current PATH:\n%s" "$symlinkDir" "$PATH"
 				echo ""
 			else
-				logError "looks like something is wrong, make sure %s is in your PATH" "$symlinkDir"
+				logError "looks like something is wrong, make sure %s is in your PATH and " "$symlinkDir"
 			fi
 			exit 1
 		fi

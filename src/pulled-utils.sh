@@ -130,7 +130,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 
 function setEntryVariables() {
 	local -ra variableNames=(entryTag entryFile entryRelativePath entryTagFilter entrySha)
-	exitIfVariablesNotDeclared variableNames
+	exitIfVariablesNotDeclared "${variableNames[@]}"
 
 	# shellcheck disable=SC2034
 	IFS=$'\t' read -r "${variableNames[@]}" <<<"$1" || die "could not setEntryVariables for entry:\n%s" "$1"
