@@ -205,17 +205,10 @@ function install() {
 		logInfo "no symbolic link set up, please do manually if required"
 	fi
 	logSuccess "installation completed, %s %s set up in %s" "$projectName" "$tag" "$installDir"
-	if [[ -n $symbolicLink ]]; then
-		echo ""
-		logInfo "Testing the symbolic link, following the output of calling $projectName --help"
-		echo ""
-		"$projectName" --help
-		echo ""
-		logSuccess "looks like it worked"
-	fi
 
 	local fpath_output
-	fpath_output=$(zsh -c 'echo $fpath' 2> /dev/null) || echo ""
+	fpath_output=$(zsh -c 'echo $fpath' 2>/dev/null) || echo ""
+
 	if [[ -n "$fpath_output" ]]; then
 		local vendorPath
 		vendorPath=$(grep -oE "[^ ]+vendor-completions" <<<"$fpath_output")
@@ -232,7 +225,29 @@ function install() {
 		fi
 	fi
 
-	logSuccess "thank you for using gt, please report bugs"
+	if [[ -n $symbolicLink ]]; then
+  		echo ""
+  		logInfo "Testing the symbolic link, following the output of calling $projectName --help"
+  		echo ""
+  		if "$projectName" --help; then
+  			echo ""
+  			logSuccess "looks like it worked"
+  		else
+  			local symlinkDir homeLocalBin
+  			symlinkDir=$(dirname "$symbolicLink")
+  			homeLocalBin=$(readlink -m "$HOME/.local/bin")
+  			if [[ -n "$fpath_output" && $symlinkDir == "$homeLocalBin" ]]; then
+  				echo ""
+  				logError "looks like something went wrong. You seem using zsh and the symlink directory (%s) is in a typical BASH location.\nMake sure you have added it to your PATH in your .zshrc -- i.e. add the following:\nexport PATH=\"\$PATH:\$HOME/.local/bin\"" "$symlinkDir"
+  				echo ""
+  			else
+  				logError "looks like something is wrong, make sure %s is in your PATH" "$symlinkDir"
+  			fi
+  			exit 1
+  		fi
+  	fi
+
+		logSuccess "thank you for using gt, please report bugs"
 }
 
 function exitIfValueMissing() {
@@ -243,13 +258,15 @@ function parseError() {
 	die "unknown $1 $2\nHelp:
 	-t|--tag        (optional) the tag which shall be installed -- default: latest
 	-d|--directory  (optional) the installation directory -- default: \$HOME/.local/lib and
-	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gt if directory is not set otherwise nothing in which case no symbolic link is setup"
+	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gt if directory is not set otherwise nothing in which case no symbolic link is setup
+	--root				  (optional) if you explicitly want to run it as root"
 }
 
 function main() {
 	local tag=""
 	local installDir=""
 	local symbolicLink=""
+	local asRoot=false
 
 	while [[ $# -gt 0 ]]; do
 		case $1 in
@@ -265,11 +282,22 @@ function main() {
 			exitIfValueMissing "$@"
 			symbolicLink=$2 && shift
 			;;
+		--root)
+			asRoot=true
+			;;
 		-*) parseError "option" "$1" ;;
 		*) parseError "argument" "$1" ;;
 		esac
 		shift
 	done
+
+	if [[ $asRoot == true ]]; then
+		if [[ "$EUID" -ne 0 ]]; then
+			die "you specified --root but forgot to execute it as root"
+		fi
+	elif [[ "$EUID" -eq 0 ]]; then
+		die "don't run the installation as super user, use the option --root if you really want to install it for the root user"
+	fi
 
 	if [[ -z $tag ]]; then
 		echo "determine latest tag of $repoUrl"
@@ -300,7 +328,4 @@ function main() {
 
 	install "$tag" "$installDir" "$symbolicLink"
 }
-if [[ "$EUID" -eq 0 ]]; then
-	die "don't run the installation as super user"
-fi
 main "$@"
