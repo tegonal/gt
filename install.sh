@@ -127,12 +127,16 @@ function install() {
 	git checkout -b "$tag" FETCH_HEAD >/dev/null
 
 	echo "verifying the files against the current GPG key (in branch main) of $projectName"
-
 	# we will check the chosen version against the current gpg key,
 	# i.e. only if the signatures of the chosen version are still valid against the current key we are happy
 	local -r publicKey="$tmpDir/signing-key.public.asc"
-	wget -O "$publicKey" -q "https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc" || die "could not fetch public key from main branch"
-
+	local -r url="https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc"
+	if command -v wget >/dev/null; then
+  	wget -O "$publicKey" -q "$url" || die "could not fetch public key from main branch"
+  else
+  	# if wget does not exist, then we try it with curl
+  	curl -L -o "$publicKey" -s "$url" || die "could not fetch public key from main branch"
+  fi
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir "$gpgDir" --list-sig || true
 
