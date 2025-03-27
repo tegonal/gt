@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 # Intended to parse positional function parameters including assignment and check if there are enough arguments
@@ -114,7 +114,7 @@ function parseFnArgs() {
 		exit 9
 	fi
 
-	if [[ $parseFnArgs_withVarArgs == false ]] && ! (($# == ${#parseFnArgs_paramArr1[@]})); then
+	if [[ $parseFnArgs_withVarArgs == false ]] && (($# != ${#parseFnArgs_paramArr1[@]})); then
 		logError "more arguments supplied to \033[0m\033[0;36m%s\033[0m than expected\nExpected %s, given %s" \
 			"${FUNCNAME[1]}" "${#parseFnArgs_paramArr1[@]}" "$#"
 		echo >&2 "in case you wanted your last parameter to be a vararg parameter, then use 'varargs' as last variable name in your array containing the parameter names."

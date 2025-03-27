@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  Utility function which returns the `declare` statement of a variable with given name where it recursively calls
@@ -54,7 +54,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 
 function recursiveDeclareP() {
-	if ! (($# == 1)); then
+	if (($# != 1)); then
 		traceAndDie "you need to pass the variable name, whose declaration statement shall be determined, to recursiveDeclareP"
 	fi
 

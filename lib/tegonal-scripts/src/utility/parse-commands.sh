@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  Intended to parse command line arguments of a script which uses commands and delegates accordingly.
@@ -90,7 +90,7 @@ function parse_commands_describeParameterPair() {
 }
 
 function parse_commands_checkParameterDefinitionIsPair() {
-	if ! (($# == 1)); then
+	if (($# != 1)); then
 		logError "One parameter needs to be passed to parse_commands_checkParameterDefinitionIsPair, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: params   the name of an array which contains the command definitions'
 		printStackTrace
@@ -152,7 +152,7 @@ function parseCommands {
 }
 
 function parse_commands_printHelp() {
-	if ! (($# == 2)); then
+	if (($# != 2)); then
 		logError "Two arguments need to be passed to parse_commands_help, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: commands   the name of an array which contains the command definitions'
 		echo >&2 '2: version    the version which shall be shown if one uses --version'

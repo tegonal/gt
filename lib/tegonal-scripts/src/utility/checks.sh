@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -92,7 +92,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function checkArgIsArray() {
-	if ! (($# == 2)); then
+	if (($# != 2)); then
 		logError "Two arguments needs to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array      		  name of the array to check'
 		echo >&2 '2: argNumberOrName  what argument do we check (used in error message)'
@@ -133,7 +133,7 @@ function exitIfArgIsNotArrayOrIsEmpty() {
 }
 
 function checkArgIsArrayWithTuples() {
-	if ! (($# == 5)); then
+	if (($# != 5)); then
 		logError "Five arguments needs to be passed to checkArgIsArrayWithTuples, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array            name of the array to check'
 		echo >&2 '2: tupleNum         the number of values of each tuple'
@@ -281,7 +281,7 @@ function checkArgIsVersion() {
 }
 
 function checkCommandExists() {
-	if ! (($# == 1 || $# == 2)); then
+	if (($# != 1 && $# != 2)); then
 		traceAndDie "you need to pass the name of the command to check to checkCommandExists and optionally an additional hint (e.g. install via...)"
 	fi
 	local -r name=$1
@@ -306,7 +306,6 @@ function exitIfVarsNotAlreadySetBySource() {
 }
 
 function exitIfVariablesNotDeclared() {
-	shift 1 || traceAndDie "could not shift by 1"
 	for variableName in "$@"; do
 		if ! declare -p "$variableName" 2>/dev/null | grep -q 'declare --'; then
 			logError "you need to \`declare\` (\`local\`) the variable \033[0;36m%s\033[0m otherwise we write to the global scope (you can also \`declare\` it in the global scope)" "$variableName"
@@ -317,7 +316,7 @@ function exitIfVariablesNotDeclared() {
 }
 
 function checkPathIsInsideOf() {
-	if ! (($# == 2)); then
+	if (($# != 2)); then
 		logError "Two arguments needs to be passed to checkPathIsInsideOf, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: pathToCheck     the path which should be inside of rootDir'
 		echo >&2 '2: rootDir         the root directory'

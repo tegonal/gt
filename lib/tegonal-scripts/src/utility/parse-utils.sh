@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  Utility functions for argument parser like function such as parse-args and parse-fn-args
@@ -57,16 +57,30 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 function printVersion() {
-	if ! (($# == 1)) && ! (($# == 2)); then
-		logError "One argument needs to be passed to printVersion, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+	if (($# != 1)) && (($# != 2)); then
+		logError "Either one or two arguments needs to be passed to printVersion, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: version   		the version which shall be shown if one uses --version'
-		echo >&2 '2: stackFrame   number of frames to drop to determine the source of the call'
+		echo >&2 '2: stackFrame   number of frames to drop to determine the source of the call -- default 3'
 		printStackTrace
 		exit 9
 	fi
 	local version=$1
 	local stackFrame=${2:-3}
-	logInfo "Version of %s is:\n%s" "$(basename "${BASH_SOURCE[stackFrame]:-${BASH_SOURCE[((stackFrame-1))]}}")" "$version"
+	logInfo "Version of %s is:\n%s" "$(basename "${BASH_SOURCE[stackFrame]:-${BASH_SOURCE[((stackFrame - 1))]}}")" "$version"
+}
+
+function assignToVariableInOuterScope() {
+	if (($# != 2)); then
+		logError "Exactly two arguments needs to be passed to assignToOuterScopeVariable, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		echo >&2 '1: variableName   the name of the variable in the outer scope to which the given value shall be assigned'
+		echo >&2 '2: value   				the value which shall be assigned to the variable'
+		printStackTrace
+		exit 9
+	fi
+	exitIfVariablesNotDeclared "$1"
+	# that's where the black magic happens, we are assigning to global (not local to this function) variables here
+	printf -v "$1" "%s" "$2" || traceAndDie "could not assign value to %s" "$1"
 }

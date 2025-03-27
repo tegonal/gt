@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.4.3
+#                                         Version: v4.5.1
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -69,7 +69,7 @@ function runShellcheck() {
 		fi
 	done
 
-  shellcheck --version
+	shellcheck --version
 
 	local -i fileWithIssuesCounter=0
 	local -i fileCounter=0
@@ -81,7 +81,7 @@ function runShellcheck() {
 		else
 			((++fileCounter))
 			declare output
-			output=$(shellcheck -C -x -o all -P "$sourcePath" "$script"  2>&1 || true)
+			output=$(shellcheck --check-sourced --color=always --external-sources --enable=all --source-path="$sourcePath" "$script" 2>&1 || true)
 			if [[ $output != "" ]]; then
 				printf "%s\n" "$output"
 				((++fileWithIssuesCounter))
@@ -107,8 +107,26 @@ function runShellcheck() {
 	elif ((fileCounter == 0)); then
 		die "looks suspicious, no files where analysed (%s symlinks skipped), watch out for errors above" "$skipped"
 	else
-    local runShellcheck_paths_as_string
+		local runShellcheck_paths_as_string
 		runShellcheck_paths_as_string=$(joinByChar $'\n' "${runShellcheck_paths[@]}")
 		logSuccess "no shellcheck issues found, analysed %s files (%s symlinks skipped) in paths:\n%s" "$fileCounter" "$skipped" "$runShellcheck_paths_as_string"
 	fi
+}
+
+function runShellcheckPullHooks() {
+	if (($# != 1)); then
+		logError "Exactly one parameter needs to be passed to runShellcheckPullHooks, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		echo >&2 '1: gt_dir  working directory of gt'
+		printStackTrace
+		exit 9
+	fi
+	local -r gt_dir=$1
+
+	local -r gt_remote_dir="$gt_dir/remotes/"
+	logInfo "analysing $gt_remote_dir/**/pull-hook.sh"
+
+	# shellcheck disable=SC2034   # is passed by name to runShellcheck
+	local -ra dirs2=("$gt_remote_dir")
+	local sourcePath="$dir_of_tegonal_scripts"
+	runShellcheck dirs2 "$sourcePath" -name "pull-hook.sh"
 }
