@@ -128,7 +128,7 @@ function gt_remote_add() {
 			local gitIgnore="$currentDir/.gitignore"
 			if [[ -f "$gitIgnore" ]] && ! grep "$workingDir/" "$gitIgnore"; then
 				if askYesOrNo "Shall I add gt specific ignore patterns to %s" "$gitIgnore"; then
-					printf "%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore" || logWarning "was not able to write gpg ignore patterns to %s, please add them manually" "$gitIgnore"
+					printf "\n# gt (https://github.com/tegonal/gt)\n%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore" || logWarning "was not able to write gpg ignore patterns to %s, please add them manually" "$gitIgnore"
 				fi
 			fi
 		else
