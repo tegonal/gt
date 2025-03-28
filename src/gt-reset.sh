@@ -107,7 +107,7 @@ function gt_reset() {
 		exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
 		exitIfRepoBrokenAndReInitIfAbsent "$workingDirAbsolute" "$remote"
 
-		local publicKeysDir gpgDir repo pullArgsFile lastCheckFile
+		local publicKeysDir gpgDir repo pullArgsFile lastSigningKeyCheckFile
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 		if [[ -d $publicKeysDir ]]; then
 			logInfo "Going to re-establish gpg trust in remote \033[0;36m%s\033[0m, removing %s" "$remote" "$publicKeysDir"
@@ -164,7 +164,7 @@ function gt_reset() {
 				exitBecauseSigningKeyNotImported "$remote" "$publicKeysDir" "$gpgDir" "$unsecureParamPatternLong" "$signingKeyAsc"
 			fi
 		fi
-		date +"%Y-%m-%d" >"$lastCheckFile"
+		date +"%Y-%m-%d" >"$lastSigningKeyCheckFile"
 		logSuccess "re-established trust in remote \033[0;36m%s\033[0m" "$remote"
 	}
 
