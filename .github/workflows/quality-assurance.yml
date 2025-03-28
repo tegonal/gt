@@ -16,3 +16,35 @@ jobs:
 
       - name: before-pr.sh
         run: ./scripts/before-pr.sh
+  smoke_test:
+    name: smoke-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
+        run: |
+          gpg --import - <<< "${{ vars.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via vars.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || gpg --import - <<< "${{ secrets.PUBLIC_GPG_KEYS_WE_TRUST }}" && success=true \
+            || (echo "could not import GPG keys via secrets.PUBLIC_GPG_KEYS_WE_TRUST -- maybe it's not defined"; exit 1) && \
+          false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
+      - uses: actions/checkout@v4
+      - name: gt reset
+        run: ./src/gt.sh reset
+
+      - name: gt update
+        run: ./src/gt.sh update
+
+      - name: gt re-pull
+        run: ./src/gt.sh re-pull --only-missing false
+
+      - name: gt remote add
+        run: ./src/gt.sh remote add -r smoke-test -u https://github.com/tegonal/gt
+
+      - name: gt pull file
+        run: ./src/gt.sh pull -r smoke-test -p install.sh
+
+      - name: gt pull folder
+        run: ./src/gt.sh pull -r smoke-test -p .
+
+      - name: gt remote remove
+        run: ./src/gt.sh remote remove -r smoke-test
