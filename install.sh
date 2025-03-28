@@ -54,7 +54,7 @@ function logSuccess() {
 }
 
 function logInfo() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || die "could not shift by 1"
 	# shellcheck disable=SC2059
 	printf "\033[0;34mINFO\033[0m: $msg\n" "$@"
@@ -109,8 +109,6 @@ function install() {
 	if ! grep -Eq "$versionRegex" >/dev/null <<<"$tag"; then
 		die "tag needs to follow the regex %s -- given %s" "$versionRegex" "$tag"
 	fi
-
-	cleanup
 
 	mkdir -p "$gpgDir"
 	chmod 700 "$gpgDir"
