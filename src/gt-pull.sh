@@ -417,9 +417,13 @@ function gt_pull() {
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$repoFile" || echo "")
 		local -r relativeTarget sha entry currentEntry
 
-		local entryTag entrySha entryRelativePath
+		local entryTag entryFile entryRelativePath entryTagFilter entrySha
 		setEntryVariables "$currentEntry"
-		local -r entryTag entrySha entryRelativePath
+		local -r entryTag entryRelativePath entrySha
+
+		# they are currently unused but we need to define it, otherwise setEntryVariables would write into global variables
+		# shellcheck disable=SC2034
+		local -r entryFile entryTagFilter
 
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$repoFile" "$pulledTsv"

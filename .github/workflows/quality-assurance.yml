@@ -44,7 +44,7 @@ jobs:
         run: ./src/gt.sh pull -r smoke-test -p install.sh
 
       - name: gt pull folder
-        run: ./src/gt.sh pull -r smoke-test -p .
+        run: ./src/gt.sh pull -r smoke-test -p src/install --unsecure true
 
       - name: gt remote remove
         run: ./src/gt.sh remote remove -r smoke-test
