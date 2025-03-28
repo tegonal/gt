@@ -408,3 +408,25 @@ function exitIfRepoBrokenAndReInitIfAbsent() {
 function logWarningCouldNotWritePullArgs() {
 	logWarning "was not able to write %s %s into %s\nPlease do it manually or use %s when using 'gt pull' with the remote %s" "$@"
 }
+
+function doIfLastCheckMoreThanDaysAgo() {
+	local days lastCheckFile callback
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(days lastCheckFile callback)
+	parseFnArgs params "$@"
+
+	exitIfArgIsNotFunction "$callback" 2
+
+	local lastCheckTimestamp aMonthAgoTimestamp
+	lastCheckTimestamp=$(date -d "-$((days + 60)) day" +%s)
+
+	if [[ -f $lastCheckFile ]]; then
+		local currentLastCheckDate
+		currentLastCheckDate=$(cat "$lastCheckFile")
+		lastCheckTimestamp=$(dateToTimestamp "$currentLastCheckDate") || die "looks like the date \033[0;36m%s\033[0m in %s is not in format YYYY-mm-dd" "$currentLastCheckDate" "$lastCheckFile"
+	fi
+	aMonthAgoTimestamp=$(date -d "-$days day" +%s)
+	if ((lastCheckTimestamp < aMonthAgoTimestamp)); then
+		"$callback" "$lastCheckTimestamp"
+	fi
+}

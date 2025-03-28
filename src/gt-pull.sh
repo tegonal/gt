@@ -77,6 +77,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 fi
 
 sourceOnce "$dir_of_gt/gt-reset.sh"
+sourceOnce "$dir_of_gt/gt-self-update.sh"
 sourceOnce "$dir_of_gt/pulled-utils.sh"
 sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/date-utils.sh"
@@ -213,7 +214,7 @@ function gt_pull() {
 	local -r workingDirAbsolute pullDirAbsolute
 	checkPathNamedIsInsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
 
-	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastCheckFile
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile lastGtUpdateCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -244,18 +245,9 @@ function gt_pull() {
 			# if the signingKey exists, then we assume that it was fetched from the remote and in this case
 			# want to check periodically that it was not revoked
 			if [[ -f "$publicKeysDir/$signingKeyAsc" ]]; then
-				local lastCheckDate lastCheckTimestamp aMonthAgoTimestamp
-				lastCheckTimestamp=$(date -d "-2 month" +%s)
-
-				if [[ -f $lastCheckFile ]]; then
-					local lastCheckDate
-					lastCheckDate=$(cat "$lastCheckFile")
-					lastCheckTimestamp=$(dateToTimestamp "$lastCheckDate") || die "looks like the date \033[0;36m%s\033[0m in %s is not in format YYYY-mm-dd" "$lastCheckDate" "$lastCheckFile"
-				fi
-				aMonthAgoTimestamp=$(date -d "-1 month" +%s)
-				if ((lastCheckTimestamp < aMonthAgoTimestamp)); then
-					local lastCheckDateInUserFormat
-					lastCheckDate=$(timestampToDate "$lastCheckTimestamp")
+				function gt_pull_resetEachMonth_callback() {
+					local -r lastCheckTimestamp=$1
+					shift 1 || traceAndDie "could not shift by 1"
 					lastCheckDateInUserFormat=$(timestampToDateInUserFormat "$lastCheckTimestamp")
 
 					printf "==================================================\n"
@@ -265,10 +257,10 @@ function gt_pull() {
 						"$workingDirParamPatternLong" "$workingDirAbsolute" \
 						"$gpgOnlyParamPatternLong" "true"; then
 
-						die "was not able to update the signing key of remote \033[0;36m%s\033[0m, check if it is still valid and if not whether you can trust the already pulled files\n In case this happens due to connection problems or the like, you can defer this check by modifying the date in %s" "$remote" "$lastCheckFile"
+						die "was not able to update the signing key of remote \033[0;36m%s\033[0m, check if it is still valid and if not whether you can trust the already pulled files\n In case this happens due to connection problems or the like, you can defer this check by modifying the date in %s" "$remote" "$lastSigningKeyCheckFile"
 					fi
-				fi
-
+				}
+				doIfLastCheckMoreThanDaysAgo 30 "$lastSigningKeyCheckFile" gt_pull_resetEachMonth_callback
 			fi
 		else
 			if [[ -f $gpgDir ]]; then
@@ -525,6 +517,29 @@ function gt_pull() {
 	else
 		returnDying "0 files could be pulled from %s, most likely verification failed, see above." "$remote"
 	fi
+
+	function gt_pull_checkForSelfUpdate_callback() {
+		local -r lastCheckTimestamp=$1
+		shift 1 || traceAndDie "could not shift by 1"
+
+		lastCheckDateInUserFormat=$(timestampToDateInUserFormat "$lastCheckTimestamp")
+
+		echo ""
+		logInfo "Going to check if there is a new version of gt since the last check on %s" "$lastCheckDateInUserFormat"
+		local currentGtVersion latestGtVersion
+		currentGtVersion="$("$dir_of_gt/gt.sh" --version | tail -n 1)"
+		latestGtVersion="$(remoteTagsSorted 'https://github.com/tegonal/gt' | tail -n 1)"
+		date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
+		if [[ $currentGtVersion != latestGtVersion ]]; then
+			if askYesOrNo "a new version of gt is available \033[0;93m%s\033[0;36m  (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
+				gt_self_update
+			fi
+		else
+			logInfo "... gt up-to-date in version \033[0;36m%s\033[0m" "$currentGtVersion"
+		fi
+	}
+
+	doIfLastCheckMoreThanDaysAgo 15 "$lastGtUpdateCheckFile" gt_pull_checkForSelfUpdate_callback
 }
 
 ${__SOURCED__:+return}
