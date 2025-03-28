@@ -6,12 +6,12 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.3.0-SNAPSHOT
+#                                         Version: v1.3.0
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-GT_LATEST_VERSION="v1.2.2"
+GT_LATEST_VERSION="v1.3.0"
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../../../lib/tegonal-scripts/src"
