@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 
 if ! [[ -v dir_of_gt ]]; then
 	# Assumes copy-install-doc.sh was fetched with gt - adjust location accordingly

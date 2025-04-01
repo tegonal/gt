@@ -931,8 +931,8 @@ v1.4.0-SNAPSHOT
 
 Short version:
 
-- git submodules are intended to checkout a certain branch but not a certain tag and files need to reside in the
-  submodule
+- git submodules are intended for checking out a certain branch but not a certain tag and files need to reside in the
+  submodule directory.
 - gt only supports to pull files from a certain tag but not from a random branch or sha and allows to put files in any 
   directory.
 
@@ -941,11 +941,13 @@ Longer version:
 - gt also integrates file integrity and authenticity checks based on GPG
 - allows to fetch only parts of a repository (maybe possible for submodules via sparse checkout)
 - allows to place files at different places (also in the root of your repo)
+- allows to fetch different files from different tags
 - is not intended to push changes back to the remote
 
 ## 2. Does gt run on all linux distros?
 
-Most likely not, it was tested only on Ubuntu 22.04.  
+Most likely not, it was tested only on Ubuntu 22.04 and 24.04 with bash 5.x (it uses `shopt -s inherit_errexit` i.e. 
+requires at least bash 5).
 For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work
 (could be that executing other gt commands require more dependencies).
 
