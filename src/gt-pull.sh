@@ -530,8 +530,8 @@ function gt_pull() {
 		currentGtVersion="$("$dir_of_gt/gt.sh" --version | tail -n 1)"
 		latestGtVersion="$(remoteTagsSorted 'https://github.com/tegonal/gt' | tail -n 1)"
 		date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
-		if [[ $currentGtVersion != latestGtVersion ]]; then
-			if askYesOrNo "a new version of gt is available \033[0;93m%s\033[0;36m  (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
+		if [[ $currentGtVersion != "$latestGtVersion" ]]; then
+			if askYesOrNo "a new version of gt is available \033[0;93m%s\033[0;36m (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
 				gt_self_update
 			fi
 		else
