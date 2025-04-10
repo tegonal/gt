@@ -57,7 +57,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_re_pull() {
 	local startTimestampInMs elapsedInSeconds
-	startTimestampInMs="$(timestampInMs)"
+	startTimestampInMs="$(timestampInMs)" || true
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -191,7 +191,7 @@ function gt_re_pull() {
 		withCustomOutputInput 7 8 gt_re_pull_allRemotes
 	fi
 
-	elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs")"
+	elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs" || echo "<could not determine elapsed time>")"
 	if ((errors == 0)); then
 		logSuccess "%s files re-pulled in %s seconds, %s skipped" "$pulled" "$elapsedInSeconds" "$skipped"
 		if ((skipped > 0)) && [[ $onlyMissing == true ]]; then

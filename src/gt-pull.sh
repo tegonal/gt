@@ -107,7 +107,7 @@ function gt_pull_noop() {
 
 function gt_pull() {
 	local startTimestampInMs elapsedInSeconds
-	startTimestampInMs="$(timestampInMs)"
+	startTimestampInMs="$(timestampInMs)" || true
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -410,7 +410,7 @@ function gt_pull() {
 		local -r relativeTarget sha entry currentEntry
 
 		local entryTag entryFile entryRelativePath entryTagFilter entrySha
-		setEntryVariables "$currentEntry"
+		setEntryVariables "$currentEntry" || return $?
 		local -r entryTag entryRelativePath entrySha
 
 		# they are currently unused but we need to define it, otherwise setEntryVariables would write into global variables
@@ -422,7 +422,7 @@ function gt_pull() {
 		elif [[ $entryTag != "$tagToPull" ]]; then
 			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToPull" "$repoFile"
 			# we could warn about a version which was older
-			replacePulledEntry "$pulledTsv" "$repoFile" "$entry"
+			replacePulledEntry "$pulledTsv" "$repoFile" "$entry" || return $?
 		else
 			if [[ $entrySha != "$sha" ]]; then
 				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$repoFile" "$tagToPull"
@@ -508,7 +508,7 @@ function gt_pull() {
 		# `while read` will fail because there is no \0
 		true)
 
-	elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs")"
+	elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs" || echo "<could not determine elapsed time>")"
 	if ((numberOfPulledFiles > 1)); then
 		logSuccess "%s files pulled from %s %s in %s seconds" "$numberOfPulledFiles" "$remote" "$path" "$elapsedInSeconds"
 	elif ((numberOfPulledFiles == 1)); then
