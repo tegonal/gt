@@ -52,11 +52,12 @@ sourceOnce "$dir_of_gt/pulled-utils.sh"
 sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_gt/gt-pull.sh"
 sourceOnce "$dir_of_gt/gt-remote.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/date-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_re_pull() {
-	local startTime endTime elapsed
-	startTime=$(date +%s.%3N)
+	local startTimestampInMs elapsedInSeconds
+	startTimestampInMs="$(timestampInMs)"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -190,15 +191,14 @@ function gt_re_pull() {
 		withCustomOutputInput 7 8 gt_re_pull_allRemotes
 	fi
 
-	endTime=$(date +%s.%3N)
-	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
+	elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs")"
 	if ((errors == 0)); then
-		logSuccess "%s files re-pulled in %s seconds, %s skipped" "$pulled" "$elapsed" "$skipped"
+		logSuccess "%s files re-pulled in %s seconds, %s skipped" "$pulled" "$elapsedInSeconds" "$skipped"
 		if ((skipped > 0)) && [[ $onlyMissing == true ]]; then
 			logInfo "In case you want to re-fetch also existing files, then use: %s false" "$onlyMissingPattern"
 		fi
 	else
-		logWarning "%s files re-pulled in %s seconds, %s skipped, %s errors occurred, see above" "$pulled" "$elapsed" "$skipped" "$errors"
+		logWarning "%s files re-pulled in %s seconds, %s skipped, %s errors occurred, see above" "$pulled" "$elapsedInSeconds" "$skipped" "$errors"
 		return 1
 	fi
 }
