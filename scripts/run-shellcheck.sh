@@ -31,12 +31,7 @@ function customRunShellcheck() {
 	local sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
 	runShellcheck dirs "$sourcePath"
 
-	local -r gt_remote_dir="$scriptsDir/../.gt/remotes"
-	logInfo "analysing $gt_remote_dir/**/pull-hook.sh"
-
-	# shellcheck disable=SC2034   # is passed by name to runShellcheck
-	local -ra dirs2=("$gt_remote_dir")
-	runShellcheck dirs2 "$sourcePath" -name "pull-hook.sh"
+	runShellcheckPullHooks "$scriptsDir/../.gt"
 }
 
 ${__SOURCED__:+return}
