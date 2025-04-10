@@ -57,7 +57,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_update() {
 	local startTimestampInMs elapsedInSeconds
-	startTimestampInMs="$(timestampInMs)"
+	startTimestampInMs="$(timestampInMs)" || true
 
 	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
 	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
@@ -250,7 +250,7 @@ function gt_update() {
 			logInfo "%s updates available, see above." "$((updatable / 3))"
 		fi
 	else
-		elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs")"
+		elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs" || echo "<could not determine elapsed time>")"
 		if ((errors == 0)); then
 			logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsedInSeconds" "$skipped"
 		else
