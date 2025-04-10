@@ -32,7 +32,10 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || {
+	echo "please update to bash 5, see errors above"
+	exit 1
+}
 unset CDPATH
 export GT_VERSION='v1.4.0-SNAPSHOT'
 
@@ -53,8 +56,8 @@ sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_update() {
-	local startTime endTime elapsed
-	startTime=$(date +%s.%3N)
+	local startTimestampInMs elapsedInSeconds
+	startTimestampInMs="$(timestampInMs)"
 
 	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
 	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
@@ -247,12 +250,11 @@ function gt_update() {
 			logInfo "%s updates available, see above." "$((updatable / 3))"
 		fi
 	else
-		endTime=$(date +%s.%3N)
-		elapsed=$(bc <<<"scale=3; $endTime - $startTime" | awk "BEGIN { printf \"%.3f\n\", $endTime - $startTime }")
+		elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs")"
 		if ((errors == 0)); then
-			logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsed" "$skipped"
+			logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsedInSeconds" "$skipped"
 		else
-			logWarning "%s files updated in %s seconds (%s skipped), %s errors occurred, see above" "$pulled" "$elapsed" "$skipped" "$errors"
+			logWarning "%s files updated in %s seconds (%s skipped), %s errors occurred, see above" "$pulled" "$elapsedInSeconds" "$skipped" "$errors"
 			return 1
 		fi
 	fi

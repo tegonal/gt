@@ -106,8 +106,8 @@ function gt_pull_noop() {
 }
 
 function gt_pull() {
-	local startTime endTime elapsed
-	startTime=$(date +%s.%3N)
+	local startTimestampInMs elapsedInSeconds
+	startTimestampInMs="$(timestampInMs)"
 
 	local currentDir
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
@@ -508,12 +508,11 @@ function gt_pull() {
 		# `while read` will fail because there is no \0
 		true)
 
-	endTime=$(date +%s.%3N)
-	elapsed=$(bc <<<"scale=3; $endTime - $startTime")
+	elapsedInSeconds="$(elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs")"
 	if ((numberOfPulledFiles > 1)); then
-		logSuccess "%s files pulled from %s %s in %s seconds" "$numberOfPulledFiles" "$remote" "$path" "$elapsed"
+		logSuccess "%s files pulled from %s %s in %s seconds" "$numberOfPulledFiles" "$remote" "$path" "$elapsedInSeconds"
 	elif ((numberOfPulledFiles == 1)); then
-		logSuccess "file %s pulled from %s in %s seconds" "$path" "$remote" "$elapsed"
+		logSuccess "file %s pulled from %s in %s seconds" "$path" "$remote" "$elapsedInSeconds"
 	else
 		returnDying "0 files could be pulled from %s, most likely verification failed, see above." "$remote"
 	fi
