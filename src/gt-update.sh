@@ -248,7 +248,7 @@ function gt_update() {
 		fi
 	else
 		endTime=$(date +%s.%3N)
-		elapsed=$(bc <<<"scale=3; $endTime - $startTime")
+		elapsed=$(bc <<<"scale=3; $endTime - $startTime" | awk "BEGIN { printf \"%.3f\n\", $endTime - $startTime }")
 		if ((errors == 0)); then
 			logSuccess "%s files updated in %s seconds (%s skipped)" "$pulled" "$elapsed" "$skipped"
 		else

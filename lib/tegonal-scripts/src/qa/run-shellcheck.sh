@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -16,7 +16,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -32,9 +32,13 @@
 #    declare sourcePath="$dir_of_tegonal_scripts"
 #    runShellcheck dirs "$sourcePath"
 #
+#    # pass the working directory of gt which usually is .gt in the root of your repository
+#    # this will run shellcheck on all pull-hook.sh files
+#    runShellcheckPullHooks ".gt"
+#
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -122,11 +126,11 @@ function runShellcheckPullHooks() {
 	fi
 	local -r gt_dir=$1
 
-	local -r gt_remote_dir="$gt_dir/remotes/"
-	logInfo "analysing $gt_remote_dir/**/pull-hook.sh"
+	local -r gt_remote_dir="$gt_dir/remotes"
+	logInfo "analysing $gt_remote_dir/**/pull-hook*.sh"
 
 	# shellcheck disable=SC2034   # is passed by name to runShellcheck
-	local -ra dirs2=("$gt_remote_dir")
+	local -ra dirs=("$gt_remote_dir")
 	local sourcePath="$dir_of_tegonal_scripts"
-	runShellcheck dirs2 "$sourcePath" -name "pull-hook.sh"
+	runShellcheck dirs "$sourcePath" -name "pull-hook*.sh"
 }

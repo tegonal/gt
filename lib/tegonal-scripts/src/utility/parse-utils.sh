@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  Utility functions for argument parser like function such as parse-args and parse-fn-args
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #    MY_LIBRARY_VERSION="v1.0.3"
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -50,7 +50,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -61,7 +61,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 
 function printVersion() {
 	if (($# != 1)) && (($# != 2)); then
-		logError "Either one or two arguments needs to be passed to printVersion, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		logError "Either one or two arguments need to be passed to printVersion, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: version   		the version which shall be shown if one uses --version'
 		echo >&2 '2: stackFrame   number of frames to drop to determine the source of the call -- default 3'
 		printStackTrace
@@ -74,7 +74,7 @@ function printVersion() {
 
 function assignToVariableInOuterScope() {
 	if (($# != 2)); then
-		logError "Exactly two arguments needs to be passed to assignToOuterScopeVariable, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		logError "Exactly two arguments need to be passed to assignToOuterScopeVariable, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: variableName   the name of the variable in the outer scope to which the given value shall be assigned'
 		echo >&2 '2: value   				the value which shall be assigned to the variable'
 		printStackTrace

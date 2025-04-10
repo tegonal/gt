@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  script which should be sourced and sets up variables and functions for the scripts
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
 #    	# Assumes your script is in (root is project folder) e.g. /src or /scripts and
@@ -28,8 +28,13 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
+
+# shellcheck disable=SC2034		# global var used in log.sh
+declare -A TEGONAL_SCRIPTS_SUPPRESSED_DEPRECATION=()
+# shellcheck disable=SC2034		# global var used in log.sh
+declare TEGONAL_SCRIPTS_ERROR_ON_DEPRECATION=true
 
 #TODO 5.0.0 rename file to setup_tegonal_scripts.sh -- this way consumers will not run into shellcheck issues when they name a file setup.sh as well
 

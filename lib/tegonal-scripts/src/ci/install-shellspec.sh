@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  installs shellspec v0.28.1 into $HOME/.local/lib
@@ -27,7 +27,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 function logError() {

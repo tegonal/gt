@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #
 #######  Description  #############
 #
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #
 #    projectDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 #
@@ -38,9 +38,23 @@
 #    dateToTimestamp "2024-03-01" # outputs 1709247600
 #    dateToTimestamp "2022-09-12T13:18:44" # outputs 1662981524
 #
+#    # outputs a timestamp in ms
+#    startTimestampInMs="$(timestampInMs)"
+#
+#    formatMsToSeconds 12 		# outputs 0.012
+#    formatMsToSeconds 1234  # outputs 1.234
+#    formatMsToSeconds -123  # outputs -0.123
+#    # note that formatMsToSeconds does not check if you pass a number
+#
+#    # outputs the time passed since the given timestamp in ms formatted as seconds
+#    elapsedSecondsBasedOnTimestampInMs "$startTimestampInMs"
+#
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || {
+	echo "please update to bash 5, see errors above"
+	exit 1
+}
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -79,4 +93,63 @@ function dateToTimestamp() {
 	local -ra params=(dateAsString)
 	parseFnArgs params "$@"
 	date -d "$dateAsString" +%s
+}
+
+function timestampInMs() {
+	date +%s%3N 2>/dev/null || {
+		# on error date most likely does not refer to gnu date (but maybe bsd date)
+		# let's try to fallback to perl in such cases
+		if command -v perl >/dev/null; then
+			perl -MTime::HiRes=time -E 'printf("%.0f\n", time * 1000)' 2>/dev/null
+		else
+			# or to gdate
+			command -v gdate >/dev/null && gdate +%s%3N 2>/dev/null
+		fi
+	} || {
+		# ok... we give up we just get a timestamp in seconds and append 000
+		local timestampInSeconds
+		timestampInSeconds="$(date +%s)"
+		echo "${timestampInSeconds}000"
+	}
+}
+
+function elapsedSecondsBasedOnTimestampInMs() {
+	local startTimestampInMs
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(startTimestampInMs)
+	parseFnArgs params "$@"
+
+	if ((${#startTimestampInMs} != 13)); then
+		die "looks like the given start timestamp was not in milliseconds, should have length 13 but was %s -- consider using timestampInMs -- following the given startTimestampInMs: %s" " ${#startTimestampInMs}" "$startTimestampInMs"
+	fi
+
+	local endTimestampInMs
+	endTimestampInMs="$(timestampInMs)"
+	elapsedInMs="$((endTimestampInMs - startTimestampInMs))"
+	formatMillisToSeconds "$elapsedInMs"
+}
+
+function formatMsToSeconds() {
+	local millis
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(millis)
+	parseFnArgs params "$@"
+
+	local sign
+	if [[ $millis =~ ^- ]]; then
+		sign="-"
+		millis="${millis#-}"
+	else
+		sign=""
+	fi
+
+	local -r length=${#millis}
+
+	if ((length <= 3)); then
+		printf "%s0.%03d\n" "$sign" "$millis"
+	else
+		local intPart="${millis:0:-3}"
+		local fracPart="${millis: -3}"
+		echo "${sign}${intPart}${fracPart:+".$fracPart"}"
+	fi
 }

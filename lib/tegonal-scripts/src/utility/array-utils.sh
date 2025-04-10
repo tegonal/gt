@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  utility functions for dealing with arrays
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -52,7 +52,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -85,7 +85,7 @@ joinByString() {
 
 function arrFilter() {
 	if (($# != 3)); then
-		logError "Three arguments needs to be passed to arrFilter, given \033[0;36m%s\033[0m\n" "$#"
+		logError "Three arguments need to be passed to arrFilter, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: arrayIn    name of the array to filter'
 		echo >&2 '2: arrayOut   name of the array which will contain the result'
 		echo >&2 '3: predicate  function which what argument do we check (used in error message)'
@@ -113,7 +113,7 @@ function arrFilter() {
 
 function arrTakeEveryX() {
 	if (($# != 4)); then
-		logError "Four arguments needs to be passed to arrTakeEveryX, given \033[0;36m%s\033[0m\n" "$#"
+		logError "Four arguments need to be passed to arrTakeEveryX, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: arrayIn      name of the array to filter'
 		echo >&2 '2: arrayOut     name of the array which will contain the result'
 		echo >&2 '3: everyXEntry  e.g. 2, every second entry'

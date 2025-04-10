@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -16,7 +16,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -81,7 +81,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -93,7 +93,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
 
 function checkArgIsArray() {
 	if (($# != 2)); then
-		logError "Two arguments needs to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
+		logError "Two arguments need to be passed to checkArgIsArray, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array      		  name of the array to check'
 		echo >&2 '2: argNumberOrName  what argument do we check (used in error message)'
 		printStackTrace
@@ -134,7 +134,7 @@ function exitIfArgIsNotArrayOrIsEmpty() {
 
 function checkArgIsArrayWithTuples() {
 	if (($# != 5)); then
-		logError "Five arguments needs to be passed to checkArgIsArrayWithTuples, given \033[0;36m%s\033[0m\n" "$#"
+		logError "Five arguments need to be passed to checkArgIsArrayWithTuples, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array            name of the array to check'
 		echo >&2 '2: tupleNum         the number of values of each tuple'
 		echo >&2 '3: tupleRepresents  what does the tuple represent (used in error message)'
@@ -317,7 +317,7 @@ function exitIfVariablesNotDeclared() {
 
 function checkPathIsInsideOf() {
 	if (($# != 2)); then
-		logError "Two arguments needs to be passed to checkPathIsInsideOf, given \033[0;36m%s\033[0m\n" "$#"
+		logError "Two arguments need to be passed to checkPathIsInsideOf, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: pathToCheck     the path which should be inside of rootDir'
 		echo >&2 '2: rootDir         the root directory'
 		printStackTrace
