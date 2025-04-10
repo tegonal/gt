@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
@@ -17,7 +17,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -83,51 +83,79 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 function logInfo() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	logInfoWithoutNewline "$msg\n" "$@"
 }
 function logInfoWithoutNewline() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	printf "\033[0;34mINFO\033[0m: $msg" "$@"
 }
 
 function logWarning() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	logWarningWithoutNewline "$msg\n" "$@"
 }
 function logWarningWithoutNewline() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	printf "\033[0;93mWARNING\033[0m: $msg" "$@"
 }
 
 function logError() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	logErrorWithoutNewline "$msg\n" "$@"
 }
 function logErrorWithoutNewline() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	printf >&2 "\033[0;31mERROR\033[0m: $msg" "$@"
 }
 
 function logSuccess() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	logSuccessWithoutNewline "$msg\n" "$@"
 }
 function logSuccessWithoutNewline() {
-	local msg=$1
+	local -r msg=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	printf "\033[0;32mSUCCESS\033[0m: $msg" "$@"
+}
+
+function logDeprecation() {
+	if (($# != 2)); then
+		logError "Two arguments need to be passed to logDeprecation, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		echo >&2 '  1: id	 	    			the id of the deprecation -- used in reporting and one can use it to suppress the deprecation warning'
+		echo >&2 '  2: message    		the message to be printed (including replacement hint)'
+		printStackTrace
+		exit 9
+	fi
+	local -r id=$1
+	local -r msg=$2
+	shift 2 || traceAndDie "could not shift by 2"
+
+	if ! [[ -v TEGONAL_SCRIPTS_SUPPRESSED_DEPRECATION["$id"] ]]; then
+		printf >&2 "\033[0;93mDEPRECATION WARNING\033[0m id \033[0;36m%s\033[0m $msg\n" "$id" "$@"
+		printStackTrace >&2 2
+
+		if [[ -v TEGONAL_SCRIPTS_ERROR_ON_DEPRECATION && $TEGONAL_SCRIPTS_ERROR_ON_DEPRECATION = "true" ]]; then
+			die "found a deprecation and TEGONAL_SCRIPTS_ERROR_ON_DEPRECATION=true was specified, dying..."
+		fi
+	fi
+}
+
+function suppressDeprecation() {
+	local -r id=$1
+	# shellcheck disable=SC2034		# global var defined in setup.sh
+	TEGONAL_SCRIPTS_SUPPRESSED_DEPRECATION[id]=1
 }
 
 function die() {
@@ -165,12 +193,12 @@ function printStackTrace() {
 
 function traceAndDie() {
 	logError "$@"
-	printStackTrace 1
+	printStackTrace 1 >&2
 	exit 1
 }
 
 function traceAndReturnDying() {
 	logError "$@"
-	printStackTrace 1
+	printStackTrace 1 >&2
 	return 1
 }

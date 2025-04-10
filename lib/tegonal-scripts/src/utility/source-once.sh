@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.5.1
+#                                         Version: v4.6.0
 #######  Description  #############
 #
 #  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
@@ -17,7 +17,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit
+#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -46,7 +46,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit
+shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
 unset CDPATH
 
 function determineSourceOnceGuard() {
@@ -54,7 +54,7 @@ function determineSourceOnceGuard() {
 		traceAndDie "you need to pass the file name, for which we shall calculate the guard, to determineSourceOnceGuard"
 	fi
 	local -r file="$1"
-	(readlink -f "$file" || realpath "$file") | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@sourceOnceGuard_\$1__\$2@;" -pe "s/[-.]/_/g" || die "was not able to determine sourceOnce guard for %s" "$file"
+	(readlink -f "$file" || realpath "$file") | perl -0777 -pe "s@(?:.*/([^/]+)/)?([^/]+)\$@sourceOnceGuard_\$1__\$2@;" -pe "s/[-.]/_/g" || traceAndDie "was not able to determine sourceOnce guard for %s" "$file"
 }
 
 function sourceOnce_exitIfNotAtLeastOneArg() {
@@ -78,6 +78,7 @@ function sourceOnce() {
 	local -r sourceOnce_guard
 
 	if ! [[ -v "$sourceOnce_guard" ]]; then
+		# assigns to the outer scope
 		printf -v "$sourceOnce_guard" "%s" "true"
 		if ! [[ -f $sourceOnce_file ]]; then
 			if [[ -d $sourceOnce_file ]]; then
@@ -98,6 +99,7 @@ function sourceOnce() {
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 fi
+
 sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 
 # Use this function in case you want to source the given file even if it was previously sourced via sourceOnce
