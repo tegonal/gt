@@ -158,8 +158,8 @@ function gt_update() {
 					"$workingDirParamPatternLong" "$workingDirAbsolute" \
 					"$remoteParamPatternLong" "$remote" \
 					"$tagParamPatternLong" "tag-to-replace" \
-					"$pathParamPatternLong" "source-to-replace" \
 					"$pullDirParamPatternLong" "pull-dir-to-replace" \
+					"$pathParamPatternLong" "source-to-replace" \
 					"$chopPathParamPatternLong" true \
 					"$targetFileNamePatternLong" "target-to-replace" \
 					"$tagFilterParamPatternLong" "tag-filter-to-replace" \
@@ -170,6 +170,9 @@ function gt_update() {
 				return "$exitCode"
 			}
 			mapfile -t gt_pull_parsed_args <<<"$args"
+			local doVerification
+			doVerification=$(gt_pull_init_dirs_and_determine_verify "${gt_pull_parsed_args[@]:0:6}")
+			gt_pull_parsed_args+=("$doVerification")
 		fi
 
 		function gt_update_rePullInternal_callback() {
@@ -211,10 +214,10 @@ function gt_update() {
 				local startTimestampInMs elapsedInSeconds
 				startTimestampInMs="$(timestampInMs)" || true
 				gt_pull_parsed_args[2]=$tagToPull
-				gt_pull_parsed_args[3]=$entryFile
-				gt_pull_parsed_args[4]=$parentDir
-				gt_pull_parsed_args[6]=$entryTargetFileName
-				gt_pull_parsed_args[7]=$entryTagFilter
+				gt_pull_parsed_args[3]=$parentDir
+				gt_pull_parsed_args[6]=$entryFile
+				gt_pull_parsed_args[8]=$entryTargetFileName
+				gt_pull_parsed_args[9]=$entryTagFilter
 
 				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))

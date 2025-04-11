@@ -149,6 +149,9 @@ function gt_re_pull() {
 		}
 		local -a gt_pull_parsed_args
 		mapfile -t gt_pull_parsed_args <<<"$args"
+		local doVerification
+		doVerification=$(gt_pull_init_dirs_and_determine_verify "${gt_pull_parsed_args[@]:0:6}")
+		gt_pull_parsed_args+=("$doVerification")
 
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
@@ -167,10 +170,10 @@ function gt_re_pull() {
 				local startTimestampInMs elapsedInSeconds
 				startTimestampInMs="$(timestampInMs)" || true
 				gt_pull_parsed_args[2]=$entryTag
-				gt_pull_parsed_args[3]=$entryFile
-				gt_pull_parsed_args[4]=$parentDir
-				gt_pull_parsed_args[6]=$entryTargetFileName
-				gt_pull_parsed_args[7]=$entryTagFilter
+				gt_pull_parsed_args[3]=$parentDir
+				gt_pull_parsed_args[6]=$entryFile
+				gt_pull_parsed_args[8]=$entryTargetFileName
+				gt_pull_parsed_args[9]=$entryTagFilter
 
 				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))
