@@ -137,7 +137,7 @@ function askToDeleteAndReInitialiseGitDirIfRemoteIsBroken() {
 		logError "looks like the .git directory of remote \033[0;36m%s\033[0m is broken. There is no remote %s set up in its gitconfig. Following the remotes:" "$remote" "$remote"
 		git --git-dir="$repo/.git" remote
 		if [[ -f $gitconfig ]]; then
-			if askYesOrNo "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
+			if askYesOrNo >&2 "Shall I delete the repo and re-initialise it based on %s" "$gitconfig"; then
 				deleteDirChmod777 "$repo"
 				reInitialiseGitDir "$workingDirAbsolute" "$remote"
 			else
