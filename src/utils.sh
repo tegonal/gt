@@ -341,7 +341,7 @@ function importRemotesPulledSigningKey() {
 
 	exitIfArgIsNotFunction "$importRemotesPulledSigningKey_callback" 3
 
-	local gpgDir publicKeysDir repo
+	local gpgDir publicKeysDir repo lastSigningKeyCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	# shellcheck disable=SC2317   # called by name
@@ -355,7 +355,7 @@ function importRemotesPulledSigningKey() {
 		"$importRemotesPulledSigningKey_callback" "$publicKey" "$sig"
 	}
 	validateSigningKeyAndImport "$remote" "$repo/$defaultWorkingDir" "$gpgDir" "$publicKeysDir" importRemotesPublicKeys_importKeyCallback false
-
+	date +"%Y-%m-%d" >"$lastSigningKeyCheckFile"
 	deleteDirChmod777 "$repo/.gt" || logWarning "was not able to delete %s, please delete it manually" "$repo/.gt"
 }
 
