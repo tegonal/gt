@@ -139,9 +139,38 @@ function gt_update() {
 		local -r remote=$1
 		shift 1 || traceAndDie "could not shift by 1"
 
-		local -a updateablePerRemote=()
+		local -a updatablePerRemote=()
 		local previousTagFilter=""
 		local previousLatestTag=""
+
+		local currentDir
+		currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
+		local -r currentDir
+
+		local -a gt_pull_parsed_args
+		# we parse the arguments once so that we don't have to re-parse them for every file we might unless we only --list
+		# the updates
+		if [[ $list != true ]]; then
+			local args
+			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_pull_parse_args, we always use || in gt_pull_parse_args so all good
+			args=$(
+				gt_pull_parse_args "$currentDir" \
+					"$workingDirParamPatternLong" "$workingDirAbsolute" \
+					"$remoteParamPatternLong" "$remote" \
+					"$tagParamPatternLong" "tag-to-replace" \
+					"$pathParamPatternLong" "source-to-replace" \
+					"$pullDirParamPatternLong" "pull-dir-to-replace" \
+					"$chopPathParamPatternLong" true \
+					"$targetFileNamePatternLong" "target-to-replace" \
+					"$tagFilterParamPatternLong" "tag-filter-to-replace" \
+					"$autoTrustParamPatternLong" "$autoTrust"
+			) || {
+				local exitCode=$?
+				echo "$args"
+				return "$exitCode"
+			}
+			mapfile -t gt_pull_parsed_args <<<"$args"
+		fi
 
 		function gt_update_rePullInternal_callback() {
 			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512
@@ -170,24 +199,24 @@ function gt_update() {
 				previousTagFilter="$entryTagFilter"
 			fi
 
+			local parentDir
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
 			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
 
 			if [[ $list == true ]]; then
 				if [[ $entryTag != "$tagToPull" ]]; then
-					updateablePerRemote+=("$entryTag" "$tagToPull" "$entryFile")
+					updatablePerRemote+=("$entryTag" "$tagToPull" "$entryFile")
 				fi
 			else
-				if gt_pull \
-					"$workingDirParamPatternLong" "$workingDirAbsolute" \
-					"$remoteParamPatternLong" "$remote" \
-					"$tagParamPatternLong" "$tagToPull" \
-					"$pathParamPatternLong" "$entryFile" \
-					"$pullDirParamPatternLong" "$parentDir" \
-					"$chopPathParamPatternLong" true \
-					"$targetFileNamePatternLong" "$entryTargetFileName" \
-					"$autoTrustParamPatternLong" "$autoTrust" \
-					"$tagFilterParamPatternLong" "$entryTagFilter"; then
+				local startTimestampInMs elapsedInSeconds
+				startTimestampInMs="$(timestampInMs)" || true
+				gt_pull_parsed_args[2]=$tagToPull
+				gt_pull_parsed_args[3]=$entryFile
+				gt_pull_parsed_args[4]=$parentDir
+				gt_pull_parsed_args[6]=$entryTargetFileName
+				gt_pull_parsed_args[7]=$entryTagFilter
+
+				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))
 				else
 					gt_update_incrementError "$entryFile" "$remote"
@@ -197,15 +226,15 @@ function gt_update() {
 		readPulledTsv "$workingDirAbsolute" "$remote" gt_update_rePullInternal_callback 5 6
 
 		if [[ $list == true ]]; then
-			local -r updatablePerRemoteLength="${#updateablePerRemote[@]}"
+			local -r updatablePerRemoteLength="${#updatablePerRemote[@]}"
 			if ((updatablePerRemoteLength > 0)); then
 				((updatable += updatablePerRemoteLength))
 
 				logInfo "following the updates for remote \033[0;36m%s\033[0m:\nOld\tNew\tFile" "$remote"
 				for ((i = 0; i < updatablePerRemoteLength; i += 3)); do
-					local entryTag="${updateablePerRemote[i]}"
-					local tagToPull="${updateablePerRemote[i + 1]}"
-					local entryFile="${updateablePerRemote[i + 2]}"
+					local entryTag="${updatablePerRemote[i]}"
+					local tagToPull="${updatablePerRemote[i + 1]}"
+					local entryFile="${updatablePerRemote[i + 2]}"
 					printf "%s\t%s\t%s\n" "$entryTag" "$tagToPull" "$entryFile"
 				done
 			else
@@ -258,6 +287,8 @@ function gt_update() {
 			return 1
 		fi
 	fi
+
+	gt_checkForSelfUpdate
 }
 
 ${__SOURCED__:+return}

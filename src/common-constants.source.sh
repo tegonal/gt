@@ -39,6 +39,9 @@ local -r tagFilterParamDocu='(optional) define a regexp pattern (as supported by
 local -r unsecureParamPatternLong='--unsecure'
 local -r unsecureParamPattern="$unsecureParamPatternLong"
 
+local -r unsecureNoVerificationParamPatternLong='--unsecure-no-verification'
+local -r unsecureNoVerificationParamPattern="$unsecureNoVerificationParamPatternLong"
+
 local -r pulledTsvLatestVersion="1.1.0"
 local -r pulledTsvLatestVersionPragmaWithoutVersion='#@ Version: '
 local -r pulledTsvLatestVersionPragma="${pulledTsvLatestVersionPragmaWithoutVersion}$pulledTsvLatestVersion"
@@ -60,3 +63,5 @@ local -r gpgOnlyParamPattern="$gpgOnlyParamPatternLong"
 
 local -r listParamPatternLong="--list"
 local -r listParamPattern="$listParamPatternLong"
+
+local -r fakeTag="NOT_A_REAL_TAG_JUST_TEMPORARY"

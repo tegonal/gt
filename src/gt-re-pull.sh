@@ -129,6 +129,27 @@ function gt_re_pull() {
 		local repo
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
+		local args
+		#shellcheck disable=SC2310		# we know that set -e is disabled for gt_pull_parse_args, we always use || in gt_pull_parse_args so all good
+		args=$(
+			gt_pull_parse_args "$currentDir" \
+				"$workingDirParamPatternLong" "$workingDirAbsolute" \
+				"$remoteParamPatternLong" "$remote" \
+				"$tagParamPatternLong" "tag-to-replace" \
+				"$pathParamPatternLong" "source-to-replace" \
+				"$pullDirParamPatternLong" "pull-dir-to-replace" \
+				"$chopPathParamPatternLong" true \
+				"$targetFileNamePatternLong" "target-to-replace" \
+				"$tagFilterParamPatternLong" "tag-filter-to-replace" \
+				"$autoTrustParamPatternLong" "$autoTrust"
+		) || {
+			local exitCode=$?
+			echo "$args"
+			return "$exitCode"
+		}
+		local -a gt_pull_parsed_args
+		mapfile -t gt_pull_parsed_args <<<"$args"
+
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
 
@@ -139,19 +160,19 @@ function gt_re_pull() {
 			local entryTargetFileName
 			entryTargetFileName=$(basename "$entryRelativePath")
 
+			local parentDir
 			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_re_pull_incrementError due to ||
 			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
-				if gt_pull \
-					"$workingDirParamPatternLong" "$workingDirAbsolute" \
-					"$remoteParamPatternLong" "$remote" \
-					"$tagParamPatternLong" "$entryTag" \
-					"$pathParamPatternLong" "$entryFile" \
-					"$pullDirParamPatternLong" "$parentDir" \
-					"$chopPathParamPatternLong" true \
-					"$targetFileNamePatternLong" "$entryTargetFileName" \
-					"$autoTrustParamPatternLong" "$autoTrust" \
-					"$tagFilterParamPatternLong" "$entryTagFilter"; then
+				local startTimestampInMs elapsedInSeconds
+				startTimestampInMs="$(timestampInMs)" || true
+				gt_pull_parsed_args[2]=$entryTag
+				gt_pull_parsed_args[3]=$entryFile
+				gt_pull_parsed_args[4]=$parentDir
+				gt_pull_parsed_args[6]=$entryTargetFileName
+				gt_pull_parsed_args[7]=$entryTagFilter
+
+				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))
 				else
 					gt_re_pull_incrementError "$entryFile" "$remote"
@@ -201,6 +222,8 @@ function gt_re_pull() {
 		logWarning "%s files re-pulled in %s seconds, %s skipped, %s errors occurred, see above" "$pulled" "$elapsedInSeconds" "$skipped" "$errors"
 		return 1
 	fi
+
+	gt_checkForSelfUpdate
 }
 
 ${__SOURCED__:+return}
