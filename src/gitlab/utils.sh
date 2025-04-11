@@ -9,7 +9,7 @@
 #                                         Version: v1.4.0-SNAPSHOT
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 export GT_VERSION='v1.4.0-SNAPSHOT'
 
@@ -20,13 +20,13 @@ function exitIfEnvVarNotSet() {
 	declare error=false
 	for envName in "${exitIfEnvVarNotSet_arr[@]}"; do
 		if ! [[ -v "$envName" ]] || [[ -z ${!envName} ]]; then
-			echo "Looks like you forgot to define the variable $envName"
+			echo >&2 "Looks like you forgot to define the variable $envName"
 			error=true
 		fi
 	done
 	if [[ $error == true ]]; then
-		echo "In GitLab, go to Settings => CI/CD => Variables and define it/them there"
-		echo "See also https://github.com/tegonal/gt/tree/${GT_VERSION}#gitlab-job for further information"
+		echo >&2 "In GitLab, go to Settings => CI/CD => Variables and define it/them there"
+		echo >&2 "See also https://github.com/tegonal/gt/tree/${GT_VERSION}#gitlab-job for further information"
 		exit 1
 	fi
 }

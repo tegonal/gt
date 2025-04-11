@@ -9,7 +9,7 @@
 #                                         Version: v1.4.0-SNAPSHOT
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_gt_gitlab ]]; then
@@ -29,7 +29,7 @@ readonly GT_UPDATE_API_TOKEN CI_API_V4_URL CI_PROJECT_ID
 
 declare gitStatus
 gitStatus=$(git status --porcelain) || {
-	echo "the following command failed (see above): git status --porcelain"
+	echo >&2 "the following command failed (see above): git status --porcelain"
 	exit 1
 }
 
@@ -45,7 +45,7 @@ git checkout -b "gt/update"
 git add .
 git commit -m "Update files pulled via gt"
 git push -f --set-upstream origin gt/update || {
-	echo "could not force push gt/update to origin"
+	echo >&2 "could not force push gt/update to origin"
 	exit 1
 }
 
@@ -78,13 +78,13 @@ statusCode=$(
 		--output "$curlOutputFile" --write-out "%{response_code}" \
 		"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests"
 ) || {
-	echo "could not send the POST request for creating a merge request"
+	echo >&2 "could not send the POST request for creating a merge request"
 	exit 1
 }
 if [[ $statusCode = 409 ]] && grep "open merge request" "$curlOutputFile"; then
 	echo "There is already a merge request, no need to create another (we force pushed, so the MR is updated)"
 elif [[ ! "$statusCode" == 2* ]]; then
-	printf "curl return http status code %s, expected 2xx. Message body:\n" "$statusCode"
-	cat "$curlOutputFile"
+	printf >&2 "curl return http status code %s, expected 2xx. Message body:\n" "$statusCode"
+	cat >&2 "$curlOutputFile"
 	exit 1
 fi
