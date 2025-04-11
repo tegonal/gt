@@ -123,11 +123,11 @@ function gt_remote_add() {
 	local -r workingDirAbsolute
 
 	if ! checkWorkingDirExists "$workingDirAbsolute"; then
-		if askYesOrNo "Shall I create the work directory for you and continue?"; then
+		if askYesOrNo >&2 "Shall I create the work directory for you and continue?"; then
 			mkdir -p "$workingDirAbsolute" || die "was not able to create the workingDir %s" "$workingDirAbsolute"
 			local gitIgnore="$currentDir/.gitignore"
 			if [[ -f "$gitIgnore" ]] && ! grep "$workingDir/" "$gitIgnore"; then
-				if askYesOrNo "Shall I add gt specific ignore patterns to %s" "$gitIgnore"; then
+				if askYesOrNo >&2 "Shall I add gt specific ignore patterns to %s" "$gitIgnore"; then
 					printf "\n# gt (https://github.com/tegonal/gt)\n%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore" || logWarning "was not able to write gpg ignore patterns to %s, please add them manually" "$gitIgnore"
 				fi
 			fi
@@ -148,7 +148,7 @@ function gt_remote_add() {
 			returnDying "remote \033[0;36m%s\033[0m already exists with pulled files" "$remote" || return $?
 		else
 			logError "remote \033[0;36m%s\033[0m already exists but without pulled files" "$remote"
-			if askYesOrNo "Shall I remove the remote for you and continue?"; then
+			if askYesOrNo >&2 "Shall I remove the remote for you and continue?"; then
 				gt_remote_remove "$workingDirParamPatternLong" "$workingDirAbsolute" "$remoteParamPatternLong" "$remote"
 			else
 				return 1
