@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.6.1
+#                                         Version: v4.7.0
 #######  Description  #############
 #
 #  utility functions for dealing with gpg
@@ -93,7 +93,10 @@ function trustGpgKey() {
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(gpgDir keyId)
 	parseFnArgs params "$@"
-	echo -e "5\ny\n" | gpg --homedir "$gpgDir" --no-tty --command-fd 0 --edit-key "$keyId" trust
+
+	local fingerprint
+	fingerprint="$(gpg --homedir "$gpgDir" --with-colons --fingerprint "$keyId" | grep '^fpr:' | cut -d: -f10 | head -n1)"
+	echo "$fingerprint:5:" | gpg --homedir "$gpgDir" --import-ownertrust
 }
 
 function importGpgKey() {
@@ -123,14 +126,26 @@ function importGpgKey() {
 	fi
 
 	if [[ $isTrusting == y ]]; then
+		local maybeSymlinkedGpgDir
+		maybeSymlinkedGpgDir="$(getSaveGpgHomedir "$gpgDir")"
+
 		echo "importing key $file"
-		gpg --homedir "$gpgDir" --batch --no-tty --import "$file" || die "failed to import $file"
+		gpg --homedir "$maybeSymlinkedGpgDir" --batch --no-tty --import "$file" || {
+			cleanupMaybeSymlinkedGpgDir "$gpgDir" "$maybeSymlinkedGpgDir"
+			die "failed to import $file"
+		}
+
 		local keyId
 		grep pub <<<"$outputKey" | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
 			while read -r keyId; do
 				echo "establishing trust for key $keyId"
-				trustGpgKey "$gpgDir" "$keyId"
-			done
+				# shellcheck disable=SC2310   # we are aware of that set -e has no effect for trustGpgKey that's why we use || return $?
+				trustGpgKey "$maybeSymlinkedGpgDir" "$keyId" || return $?
+			done || {
+			local exitCode=$?
+			cleanupMaybeSymlinkedGpgDir "$gpgDir" "$maybeSymlinkedGpgDir"
+			return "$exitCode"
+		}
 	else
 		return 1
 	fi
@@ -219,7 +234,7 @@ function getRevocationData() {
 		--list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids \
 		--with-colons "$keyId") || returnDying "could not list signatures for key %s" "$keyId" || return $?
 	revData=$(perl -0777 -ne 'while (/(sub|pub):r:.*?:'"$keyId"':[\S\s]+?(rev:.*)/g) { print "$2\n"; }' <<<"$sigs")
-	[[ -n $revData ]] || returnDying "was not able to extract the revocation data from the signatures (maybe it was not revoked?):\n%" "$sigs" || return $?
+	[[ -n $revData ]] || returnDying "was not able to extract the revocation data from the signatures (maybe it was not revoked?):\n%s" "$sigs" || return $?
 	echo "$revData"
 }
 
@@ -254,4 +269,32 @@ function listSignaturesAndHighlightKey() {
 	# hence we use sed and ignore SC2001
 	# shellcheck disable=SC2001
 	sed "s/$keyId/\x1b[0;31m&\x1b[0m/g" <<<"$signatures"
+}
+
+function getSaveGpgHomedir() {
+	local gpgDir
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(gpgDir)
+	parseFnArgs params "$@"
+
+	if ((${#gpgDir} < 100)); then
+		echo "$gpgDir"
+	else
+		local tmpDir
+		tmpDir=$(mktemp -d -t gpg-homedir-XXXXXXXXXX)
+		ln -s "$gpgDir" "$tmpDir/gpg"
+		echo "$tmpDir/gpg"
+	fi
+}
+
+function cleanupMaybeSymlinkedGpgDir() {
+	local gpgDir maybeSymlinkedGpgDir
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(gpgDir maybeSymlinkedGpgDir)
+	parseFnArgs params "$@"
+
+	if [[ $maybeSymlinkedGpgDir != "$gpgDir" ]]; then
+		# if cleanup fails then well... let's hope the system cleans it up at some point
+		rm -r "$maybeSymlinkedGpgDir" || true
+	fi
 }
