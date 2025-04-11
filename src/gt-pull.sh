@@ -103,6 +103,9 @@ function gt_pull() {
 	}
 	local -a gt_pull_parsed_args
 	mapfile -t gt_pull_parsed_args <<<"$args"
+	local doVerification
+	doVerification=$(gt_pull_init_dirs_and_determine_verify "${gt_pull_parsed_args[@]:0:6}")
+	gt_pull_parsed_args+=("$doVerification")
 
 	gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"
 
@@ -213,21 +216,25 @@ function gt_pull_parse_args() {
 
 	# if you should change the order here then you need change gt_pull_internal_without_arg_checks
 	# as well as gt_update and gt_checkForSelfUpdate in gt_pull
-	printf "%s\n" "$workingDirAbsolute" "$remote" "$tag" "$path" "$pullDirAbsolute" "$chopPath" "$targetFileName" \
-		"$tagFilter" "$autoTrust" "$unsecure" "$forceNoVerification"
+	printf "%s\n" "$workingDirAbsolute" "$remote" "$tag" "$pullDirAbsolute" "$unsecure" "$forceNoVerification" "$path" "$chopPath" "$targetFileName" \
+		"$tagFilter" "$autoTrust"
 }
 
-function gt_pull_internal_without_arg_checks() {
-	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc fakeTag
-	local unsecureNoVerificationParamPatternLong
-	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+function gt_pull_init_dirs_and_determine_verify() {
+	local -r \
+		workingDirAbsolute=$1 \
+		remote=$2 \
+		tag=$3 \
+		pullDirAbsolute=$4 \
+		unsecure=$5 \
+		forceNoVerification=$6
+	local -r maxParams=6
+	shift "$maxParams" || traceAndDie "was not able to shift by %s" "$maxParams"
+	if (($# != 0)); then
+		traceAndDie "%s arguments expected, given: $(($# + maxParams))" "$maxParams"
+	fi
 
-	local currentDir startTimestampInMs workingDirAbsolute remote tag path pullDirAbsolute chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification
-	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(currentDir startTimestampInMs workingDirAbsolute remote tag path pullDirAbsolute chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification)
-	parseFnArgs params "$@"
-
-	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile
+	local publicKeysDir gpgDir pulledTsv lastSigningKeyCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -303,6 +310,7 @@ function gt_pull_internal_without_arg_checks() {
 				initialiseGpgDir "$gpgDir"
 
 				local -i numberOfImportedKeys=0
+				# shellcheck disable=SC2317  # called by name via validateSigningKeyAndImport
 				function gt_pull_importKeyCallback() {
 					((++numberOfImportedKeys))
 				}
@@ -328,13 +336,45 @@ function gt_pull_internal_without_arg_checks() {
 		fi
 	fi
 
+	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
+	echo "$doVerification"
+}
+
+function gt_pull_internal_without_arg_checks() {
+
+	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc fakeTag
+	local unsecureNoVerificationParamPatternLong
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+
+	local -r \
+		currentDir=$1 \
+		startTimestampInMs=$2 \
+		workingDirAbsolute=$3 \
+		remote=$4 \
+		tagToPull=$5 \
+		pullDirAbsolute=$6 \
+		unsecure=$7 \
+		forceNoVerification=$8 \
+		path=$9 \
+		chopPath=${10} \
+		targetFileName=${11} \
+		tagFilter=${12} \
+		autoTrust=${13} \
+		doVerification=${14}
+	local -r maxParams=14
+	shift "$maxParams" || traceAndDie "was not able to shift by %s" "$maxParams"
+	if (($# != 0)); then
+		traceAndDie "%s arguments expected, given: $(($# + maxParams))" "$maxParams"
+	fi
+
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile
+	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
+
 	# we want to expand $repo here and not when signal happens (as $repo might be out of scope)
 	# shellcheck disable=SC2064
 	# note, this replaces the previous EXIT trap gt_pull_cleanupGpgDir which is intentional, we want to keep the gpg dir
 	# now that it was established
 	trap "gt_pull_cleanupRepo '$repo'" EXIT
-
-	askToDeleteAndReInitialiseGitDirIfRemoteIsBroken "$workingDirAbsolute" "$remote"
 
 	local tags
 	tags=$(git -C "$repo" tag) || die "The following command failed (see above): git tag"
