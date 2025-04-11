@@ -86,25 +86,6 @@ sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
-function gt_pull_cleanupGpgDir() {
-	local -r gpgDir=$1
-	if [[ -d $gpgDir ]]; then
-		deleteDirChmod777 "$gpgDir" &>/dev/null
-	fi
-}
-
-function gt_pull_cleanupRepo() {
-	# note, we want to cleanup also for normal exits, so no need to check for $?
-	local -r repository=$1
-	if [[ -d $repository ]]; then
-		find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
-	fi
-}
-
-function gt_pull_noop() {
-	true
-}
-
 function gt_pull() {
 	local startTimestampInMs elapsedInSeconds
 	startTimestampInMs="$(timestampInMs)" || true
@@ -113,10 +94,27 @@ function gt_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc
-	local remoteParamPatternLong targetFileNamePatternLong workingDirParamPatternLong gpgOnlyParamPatternLong
+	local args
+	#shellcheck disable=SC2310		# we know that set -e is disabled for gt_pull_parse_args, we always use || in gt_pull_parse_args so all good
+	args=$(gt_pull_parse_args "$currentDir" "$@") || {
+		local exitCode=$?
+		echo "$args"
+		return "$exitCode"
+	}
+	local -a gt_pull_parsed_args
+	mapfile -t gt_pull_parsed_args <<<"$args"
+
+	gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"
+
+	gt_checkForSelfUpdate
+}
+
+function gt_pull_parse_args() {
+	local currentDir=$1
+	shift 1 || traceAndDie "could not shift by 1"
+
+	local remoteParamPatternLong targetFileNamePatternLong workingDirParamPatternLong gpgOnlyParamPatternLong fakeTag
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
-	local -r UNSECURE_NO_VERIFY_PATTERN='--unsecure-no-verification'
 
 	local remote tag path pullDir chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
@@ -130,7 +128,7 @@ function gt_pull() {
 		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at $defaultWorkingDir/<remote>/*.asc -- default: false"
-		forceNoVerification "$UNSECURE_NO_VERIFY_PATTERN" "(optional) if set to true, implies $unsecureParamPatternLong true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
+		forceNoVerification "$unsecureNoVerificationParamPattern" "(optional) if set to true, implies $unsecureParamPatternLong true and does not verify even if gpg keys are in store or at $defaultWorkingDir/<remote>/*.asc -- default: false"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 
@@ -181,7 +179,6 @@ function gt_pull() {
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v forceNoVerification ]]; then forceNoVerification=false; fi
 	if ! [[ -v unsecure ]]; then unsecure="$forceNoVerification"; fi
-	local fakeTag="NOT_A_REAL_TAG_JUST_TEMPORARY"
 	if ! [[ -v tag ]]; then tag="$fakeTag"; fi
 	if ! [[ -v tagFilter ]]; then tagFilter=".*"; fi
 	if ! [[ -v targetFileName ]]; then targetFileName=""; fi
@@ -214,7 +211,23 @@ function gt_pull() {
 	local -r workingDirAbsolute pullDirAbsolute
 	checkPathNamedIsInsideOf "$pullDirAbsolute" "pull directory" "$currentDir" || return $?
 
-	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile lastGtUpdateCheckFile
+	# if you should change the order here then you need change gt_pull_internal_without_arg_checks
+	# as well as gt_update and gt_checkForSelfUpdate in gt_pull
+	printf "%s\n" "$workingDirAbsolute" "$remote" "$tag" "$path" "$pullDirAbsolute" "$chopPath" "$targetFileName" \
+		"$tagFilter" "$autoTrust" "$unsecure" "$forceNoVerification"
+}
+
+function gt_pull_internal_without_arg_checks() {
+	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc fakeTag
+	local unsecureNoVerificationParamPatternLong
+	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+
+	local currentDir startTimestampInMs workingDirAbsolute remote tag path pullDirAbsolute chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(currentDir startTimestampInMs workingDirAbsolute remote tag path pullDirAbsolute chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification)
+	parseFnArgs params "$@"
+
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if ! [[ -d $pullDirAbsolute ]]; then
@@ -245,6 +258,8 @@ function gt_pull() {
 			# if the signingKey exists, then we assume that it was fetched from the remote and in this case
 			# want to check periodically that it was not revoked
 			if [[ -f "$publicKeysDir/$signingKeyAsc" ]]; then
+
+				# shellcheck disable=SC2317		# gt_pull_resetEachMonth_callback is called by name
 				function gt_pull_resetEachMonth_callback() {
 					local -r lastCheckTimestamp=$1
 					shift 1 || traceAndDie "could not shift by 1"
@@ -342,7 +357,7 @@ function gt_pull() {
 		if [[ $unsecure != true ]]; then
 			printf " -- you can disable this check via: %s true\n" "$unsecureParamPatternLong"
 		else
-			printf " -- you can disable this check via: %s true\n" "$UNSECURE_NO_VERIFY_PATTERN"
+			printf " -- you can disable this check via: %s true\n" "$unsecureNoVerificationParamPatternLong"
 		fi
 	}
 
@@ -516,29 +531,25 @@ function gt_pull() {
 	else
 		returnDying "0 files could be pulled from %s, most likely verification failed, see above." "$remote"
 	fi
+}
 
-	function gt_pull_checkForSelfUpdate_callback() {
-		local -r lastCheckTimestamp=$1
-		shift 1 || traceAndDie "could not shift by 1"
+function gt_pull_cleanupGpgDir() {
+	local -r gpgDir=$1
+	if [[ -d $gpgDir ]]; then
+		deleteDirChmod777 "$gpgDir" &>/dev/null
+	fi
+}
 
-		lastCheckDateInUserFormat=$(timestampToDateInUserFormat "$lastCheckTimestamp")
+function gt_pull_cleanupRepo() {
+	# note, we want to cleanup also for normal exits, so no need to check for $?
+	local -r repository=$1
+	if [[ -d $repository ]]; then
+		find "$repository" -maxdepth 1 -type d -not -path "$repository" -not -name ".git" -exec rm -r {} \;
+	fi
+}
 
-		echo ""
-		logInfo "Going to check if there is a new version of gt since the last check on %s" "$lastCheckDateInUserFormat"
-		local currentGtVersion latestGtVersion
-		currentGtVersion="$("$dir_of_gt/gt.sh" --version | tail -n 1)"
-		latestGtVersion="$(remoteTagsSorted 'https://github.com/tegonal/gt' | tail -n 1)"
-		date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
-		if [[ $currentGtVersion != "$latestGtVersion" ]]; then
-			if askYesOrNo "a new version of gt is available \033[0;93m%s\033[0;36m (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
-				gt_self_update
-			fi
-		else
-			logInfo "... gt up-to-date in version \033[0;36m%s\033[0m" "$currentGtVersion"
-		fi
-	}
-
-	doIfLastCheckMoreThanDaysAgo 15 "$lastGtUpdateCheckFile" gt_pull_checkForSelfUpdate_callback
+function gt_pull_noop() {
+	true
 }
 
 ${__SOURCED__:+return}

@@ -430,3 +430,32 @@ function doIfLastCheckMoreThanDaysAgo() {
 		"$callback" "$lastCheckTimestamp"
 	fi
 }
+
+function gt_checkForSelfUpdate() {
+	local -r lastGtUpdateCheckFile="$dir_of_gt/last-update-check.txt"
+
+	# shellcheck disable=SC2317 # gt_checkForSelfUpdate_callback is called by name
+	function gt_checkForSelfUpdate_callback() {
+
+		local -r lastCheckTimestamp=$1
+		shift 1 || traceAndDie "could not shift by 1"
+
+		lastCheckDateInUserFormat=$(timestampToDateInUserFormat "$lastCheckTimestamp")
+
+		echo ""
+		logInfo "Going to check if there is a new version of gt since the last check on %s" "$lastCheckDateInUserFormat"
+		local currentGtVersion latestGtVersion
+		currentGtVersion="$("$dir_of_gt/gt.sh" --version | tail -n 1)"
+		latestGtVersion="$(remoteTagsSorted 'https://github.com/tegonal/gt' | tail -n 1)"
+		date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
+		if [[ $currentGtVersion != "$latestGtVersion" ]]; then
+			if askYesOrNo "a new version of gt is available \033[0;93m%s\033[0;36m (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
+				gt_self_update
+			fi
+		else
+			logInfo "... gt up-to-date in version \033[0;36m%s\033[0m" "$currentGtVersion"
+		fi
+	}
+
+	doIfLastCheckMoreThanDaysAgo 15 "$lastGtUpdateCheckFile" gt_checkForSelfUpdate_callback
+}
