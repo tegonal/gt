@@ -129,26 +129,17 @@ function gt_re_pull() {
 		local repo
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
-		local args
-		#shellcheck disable=SC2310		# we know that set -e is disabled for gt_pull_parse_args, we always use || in gt_pull_parse_args so all good
-		args=$(
-			gt_pull_parse_args "$currentDir" \
-				"$workingDirParamPatternLong" "$workingDirAbsolute" \
-				"$remoteParamPatternLong" "$remote" \
-				"$tagParamPatternLong" "tag-to-replace" \
-				"$pathParamPatternLong" "source-to-replace" \
-				"$pullDirParamPatternLong" "pull-dir-to-replace" \
-				"$chopPathParamPatternLong" true \
-				"$targetFileNamePatternLong" "target-to-replace" \
-				"$tagFilterParamPatternLong" "tag-filter-to-replace" \
-				"$autoTrustParamPatternLong" "$autoTrust"
-		) || {
-			local exitCode=$?
-			echo "$args"
-			return "$exitCode"
-		}
 		local -a gt_pull_parsed_args
-		mapfile -t gt_pull_parsed_args <<<"$args"
+		gt_pull_parse_args gt_pull_parsed_args "$currentDir" \
+			"$workingDirParamPatternLong" "$workingDirAbsolute" \
+			"$remoteParamPatternLong" "$remote" \
+			"$tagParamPatternLong" "tag-to-replace" \
+			"$pathParamPatternLong" "source-to-replace" \
+			"$pullDirParamPatternLong" "pull-dir-to-replace" \
+			"$chopPathParamPatternLong" true \
+			"$targetFileNamePatternLong" "target-to-replace" \
+			"$tagFilterParamPatternLong" "tag-filter-to-replace" \
+			"$autoTrustParamPatternLong" "$autoTrust" || return $?
 
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
