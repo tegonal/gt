@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 #  Utility functions to ask the user something via input.
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -37,19 +37,19 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-utils.sh"
 
 function askYesOrNo() {
 	if (($# == 0)); then
 		logError "At least one argument needs to be passed to askYesOrNo, given \033[0;36m%s\033[0m\n" "$#"
-		echo >&2 '1: question   the question which the user should answer with y or n'
+		echo >&2 '1: question   the question which the user should answer with y/yes or n/no'
 		echo >&2 '2... args...  arguments for the question (question is printed with printf)'
 		printStackTrace
 		exit 9
@@ -68,12 +68,13 @@ function askYesOrNo() {
 
 	# shellcheck disable=SC2059			# the question itself can have %s thus we use it in the format string
 	askWithTimeout "\033[0;36m$question\033[0m y/[n]:" "$askYesOrNo_timeout" askYesOrNo_noAnswerCallback answer "" "$@"
+	unset askYesOrNo_noAnswerCallback
 	if [[ $answer == y ]] || [[ $answer == Y ]] || [[ $answer == yes ]]; then
 		return 0
 	elif [[ $answer == n ]] || [[ $answer == N ]] || [[ $answer == no ]]; then
 		return 1
 	else
-		logWarning "got \033[0;36m%s\033[0m as answer (instead of y for yes or n for no), interpreting it as a n, i.e. as a no" "$answer"
+		logWarning "got \033[0;36m%s\033[0m as answer (instead of y/yes or n/no), interpreting it as a no" "$answer"
 		return 1
 	fi
 }
@@ -117,8 +118,7 @@ function askWithTimeout() {
 	if ((askWithTimeout_lastResult > 128)); then
 		"$askWithTimeout_noAnswerFn"
 	elif [[ $askWithTimeout_lastResult -eq 0 ]]; then
-		# that's where the black magic happens, we are assigning to a global (not local to this function) variable here
-		printf -v "$askWithTimeout_outVarName" "%s" "$askWithTimeout_answer" || die "could not assign value to $askWithTimeout_outVarName"
+		assignToVariableInOuterScope "$askWithTimeout_outVarName" "$askWithTimeout_answer" || die "could not to assign a value to variable in outer scope named %s" "$askWithTimeout_outVarName"
 	else
 		return "$askWithTimeout_lastResult"
 	fi

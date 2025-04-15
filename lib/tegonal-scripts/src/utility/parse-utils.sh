@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 #  Utility functions for argument parser like function such as parse-args and parse-fn-args
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    MY_LIBRARY_VERSION="v1.0.3"
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -50,7 +50,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -69,7 +69,9 @@ function printVersion() {
 	fi
 	local version=$1
 	local stackFrame=${2:-3}
-	logInfo "Version of %s is:\n%s" "$(basename "${BASH_SOURCE[stackFrame]:-${BASH_SOURCE[((stackFrame - 1))]}}")" "$version"
+	local name
+	name=$(basename "${BASH_SOURCE[stackFrame]:-${BASH_SOURCE[((stackFrame - 1))]}}" || echo "<unknown>")
+	logInfo "Version of %s is:\n%s" "$name" "$version"
 }
 
 function assignToVariableInOuterScope() {

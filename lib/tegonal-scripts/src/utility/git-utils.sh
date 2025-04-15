@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #
 #######  Description  #############
 #
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -65,7 +65,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -98,7 +98,7 @@ function countCommits() {
 	local from to
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(from to)
-	parseFnArgs params "$@"
+	parseFnArgs params "$@" || return $?
 	git rev-list --count "$from..$to" || die "could not count commits for $from..$to, see above"
 }
 
@@ -135,7 +135,7 @@ function hasRemoteTag() {
 	shift 1 || traceAndDie "could not shift by 1"
 	local output literalTag
 	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"$remote\""
-	literalTag=$(escapeRegex "refs/tags/$tag")
+	literalTag=$(escapeRegex "refs/tags/$tag") || die "was not able to escape the following for regex: %s" "refs/tags/$tag"
 	grep -q -E "$literalTag\$" <<<"$output"
 }
 

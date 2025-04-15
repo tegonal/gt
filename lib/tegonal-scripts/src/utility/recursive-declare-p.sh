@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 #  Utility function which returns the `declare` statement of a variable with given name where it recursively calls
@@ -18,7 +18,7 @@
 #    #!/usr/bin/env bash
 #    # shellcheck disable=SC2034
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
@@ -45,7 +45,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -62,6 +62,6 @@ function recursiveDeclareP() {
 	local -r reg='^declare -n(r)? [^=]+=\"([^\"]+)\"$'
 	while [[ $definition =~ $reg ]]; do
 		definition=$(declare -p "${BASH_REMATCH[2]}" || echo "executing 'declare -p ${BASH_REMATCH[2]}' failed, see previous error message further above")
-	done
+	done || return $?
 	echo "$definition"
 }
