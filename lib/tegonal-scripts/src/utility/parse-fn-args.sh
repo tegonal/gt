@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 # Intended to parse positional function parameters including assignment and check if there are enough arguments
@@ -15,7 +15,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #
 #    if ! [[ -v dir_of_tegonal_scripts ]]; then
 #    	# Assumes tegonal's scripts were fetched with gt - adjust location accordingly
@@ -30,7 +30,7 @@
 #
 #    	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 #    	local -ra params=(command dir)
-#    	parseFnArgs params "$@"
+#    	parseFnArgs params "$@" || return $?
 #
 #    	# pass your variables storing the arguments to other scripts
 #    	echo "command: $command, dir: $dir"
@@ -42,7 +42,7 @@
 #    	local command dir varargs
 #    	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 #    	local -ra params=(command dir varargs)
-#    	parseFnArgs params "$@"
+#    	parseFnArgs params "$@" || return $?
 #
 #    	# use varargs in another script
 #    	echo "command: $command, dir: $dir, varargs: ${varargs*}"
@@ -54,7 +54,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then

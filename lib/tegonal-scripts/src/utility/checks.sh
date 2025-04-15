@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -16,7 +16,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -45,6 +45,7 @@
 #
 #    	exitIfArgIsNotArray arr 1
 #    	exitIfArgIsNotArrayOrIsEmpty arr 1
+#    	exitIfArgIsNotArrayOrIsNonEmpty arr 1
 #    	exitIfArgIsNotFunction "$fn" 2
 #    	exitIfArgIsNotBoolean "$bool" 3
 #    	exitIfArgIsNotVersion "$version" 4
@@ -55,6 +56,9 @@
 #    	}
 #    	# check array with 2-tuples
 #    	exitIfArgIsNotArrayWithTuples arr 2 "names" 1 describePair
+#
+#    	# returns 0 if the array was initialised (i.e. a value assigned) and non-0 otherwise
+#    	checkIsInitialisedArray arr
 #    }
 #
 #    if checkCommandExists "cat"; then
@@ -81,7 +85,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -112,6 +116,10 @@ function checkArgIsArray() {
 		if [[ $funcName == "exitIfArgIsNotArray" ]]; then
 			funcName=${FUNCNAME[2]}
 		fi
+		if [[ $funcName == "exitIfArgIsNotArrayOrIsEmpty" ]] ||
+			[[ $funcName == "exitIfArgIsNotArrayOrIsNonEmpty" ]]; then
+			funcName=${FUNCNAME[3]}
+		fi
 		traceAndReturnDying "the passed array \033[0;36m%s\033[0m is broken.\nThe %s argument to %s needs to be a non-associative array, given:\n%s" \
 			"${!checkArgIsArray_arr}" "$argNumberOrName" "$funcName" "$arrayDefinition"
 	fi
@@ -125,11 +133,28 @@ function exitIfArgIsNotArray() {
 function exitIfArgIsNotArrayOrIsEmpty() {
 	exitIfArgIsNotArray "$@"
 	local -rn exitIfArgIsNotArrayOrIsEmpty_arr=$1
-	local -r argNumberOrName=$2
-	shift 2 || traceAndDie "could not shift by 2"
-	if [[ ${#exitIfArgIsNotArrayOrIsEmpty_arr[@]} -lt 1 ]]; then
-		traceAndDie "the passed argument \033[0;36m%s\033[0m is an empty array" "${!checkArgIsArray_arr}"
+	# shellcheck disable=SC2310		# we are aware of that if and ! will disable set -e for checkIsInitialisedArray
+	if ! checkIsInitialisedArray exitIfArgIsNotArrayOrIsEmpty_arr; then
+		traceAndDie "the passed argument \033[0;36m%s\033[0m is an uninitialised array" "${!exitIfArgIsNotArrayOrIsEmpty_arr}"
+	elif [[ ${#exitIfArgIsNotArrayOrIsEmpty_arr[@]} -lt 1 ]]; then
+		traceAndDie "the passed argument \033[0;36m%s\033[0m is an empty array" "${!exitIfArgIsNotArrayOrIsEmpty_arr}"
 	fi
+}
+
+function exitIfArgIsNotArrayOrIsNonEmpty() {
+	exitIfArgIsNotArray "$@"
+	local -rn exitIfArgIsNotArrayOrIsNonEmpty_arr=$1
+	# shellcheck disable=SC2310		# we are aware of that if and ! will disable set -e for checkIsInitialisedArray
+	if checkIsInitialisedArray exitIfArgIsNotArrayOrIsNonEmpty_arr && [[ ${#exitIfArgIsNotArrayOrIsNonEmpty_arr[@]} -gt 0 ]]; then
+		traceAndDie "the passed argument \033[0;36m%s\033[0m is a non empty array" "${!exitIfArgIsNotArrayOrIsNonEmpty_arr}"
+	fi
+}
+
+function checkIsInitialisedArray() {
+	if (($# != 1)); then
+		traceAndDie "One argument needs to be passed to checkIsInitialisedArray, the array name, given \033[0;36m%s\033[0m\n" "$#"
+	fi
+	recursiveDeclareP "$1" | grep '(' >/dev/null
 }
 
 function checkArgIsArrayWithTuples() {
@@ -151,8 +176,6 @@ function checkArgIsArrayWithTuples() {
 	local -r describeTupleFn=$5
 	shift 5 || traceAndDie "could not shift by 5"
 
-	local -r arrLength=${#checkArgIsArrayWithTuples_paramArr[@]}
-
 	exitIfArgIsNotFunction "$describeTupleFn" "$argNumberOrName"
 
 	local funcName=${FUNCNAME[1]}
@@ -172,6 +195,8 @@ function checkArgIsArrayWithTuples() {
 		printStackTrace
 		exit 9
 	fi
+
+	local -r arrLength=${#checkArgIsArrayWithTuples_paramArr[@]}
 
 	if ((arrLength == 0)); then
 		logError "the passed array \033[0;36m%s\033[0m is broken, length was 0\033[0m" "${!checkArgIsArrayWithTuples_paramArr}"
@@ -268,7 +293,7 @@ function checkArgIsVersion() {
 	local value argNumberOrName
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(value argNumberOrName)
-	parseFnArgs params "$@"
+	parseFnArgs params "$@" || return $?
 
 	if ! [[ "$value" =~ $versionRegex ]]; then
 		local funcName=${FUNCNAME[1]}

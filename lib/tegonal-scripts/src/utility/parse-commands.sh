@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 #  Intended to parse command line arguments of a script which uses commands and delegates accordingly.
@@ -19,7 +19,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    MY_LIB_VERSION="v1.1.0"
 #
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
@@ -63,7 +63,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -89,7 +89,7 @@ function parse_commands_describeParameterPair() {
 	EOM
 }
 
-function parse_commands_checkParameterDefinitionIsPair() {
+function parse_commands_exitIfParameterDefinitionIsNotPair() {
 	if (($# != 1)); then
 		logError "One parameter needs to be passed to parse_commands_checkParameterDefinitionIsPair, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: params   the name of an array which contains the command definitions'
@@ -125,15 +125,15 @@ function parseCommands {
 		exit 9
 	fi
 
-	parse_commands_checkParameterDefinitionIsPair parseCommands_paramArr
+	parse_commands_exitIfParameterDefinitionIsNotPair parseCommands_paramArr
 	exitIfArgIsNotFunction "$sourceFn" 3
 
 	local -r command=$1
 	shift 1 || traceAndDie "could not shift by 1"
 	local -a commandNames=()
-	arrTakeEveryX parseCommands_paramArr commandNames 2 0
+	arrTakeEveryX parseCommands_paramArr commandNames 2 0 || return $?
 	local tmpRegex regex
-	tmpRegex=$(joinByChar "|" "${commandNames[@]}")
+	tmpRegex=$(joinByChar "|" "${commandNames[@]}") || die "could not join commands by |, command names are %s" "${commandNames*}"
 	regex="^($tmpRegex)\$"
 	local -r tmpRegex regex
 
@@ -165,7 +165,7 @@ function parse_commands_printHelp() {
 	local -r version=$2
 
 	local -a commandNames=()
-	arrTakeEveryX parse_commands_printHelp_paramArr commandNames 2 0
+	arrTakeEveryX parse_commands_printHelp_paramArr commandNames 2 0 || return $?
 	local -i maxLength=$(($(arrStringEntryMaxLength commandNames) + 2))
 	local -ri arrLength="${#parseCommands_paramArr[@]}"
 

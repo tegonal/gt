@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.7.0
+#                                         Version: v4.8.0
 #######  Description  #############
 #
 #  Helper script do capture the `--help` output of a script and replace a snippet in HTML based scripts (e.g. in a Markdown script).
@@ -16,7 +16,7 @@
 #
 #    #!/usr/bin/env bash
 #    set -euo pipefail
-#    shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
 #    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
@@ -44,7 +44,7 @@
 #
 ###################################
 set -euo pipefail
-shopt -s inherit_errexit || { echo "please update to bash 5, see errors above"; exit 1; }
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
@@ -59,7 +59,7 @@ function replaceHelpSnippet() {
 	local script id dir pattern varargs
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(script id dir pattern varargs)
-	parseFnArgs params "$@"
+	parseFnArgs params "$@" || return $?
 
 	if ! [[ -f $script ]] && ! checkCommandExists "$script" >/dev/null; then
 		logError "$script is neither a file nor a command"
