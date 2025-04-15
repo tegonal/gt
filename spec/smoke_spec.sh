@@ -33,6 +33,7 @@ Describe 'smoke specs /'
 
 	Parameters:value pull re-pull reset update self-update 'remote add' 'remote remove' 'remote list'
 	It "gt $1 --help"
+		# shellcheck disable=SC2086  # we want that e.g. 'remote add' is split
 		When call gt $1 --help
 		The status should be successful
 		The output should include 'Parameters'

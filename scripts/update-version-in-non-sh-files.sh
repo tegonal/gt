@@ -39,7 +39,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 function updateVersionInNonShFiles() {
 	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local version projectsRootDir additionalPattern
-	parseArguments afterVersionHookParams "" "$GT_VERSION" "$@"
+	parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
 
 	local -ra additionalScripts=(
 		"$projectsRootDir/install.sh"

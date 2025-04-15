@@ -43,13 +43,13 @@ function prepareNextDevCycle() {
 		additionalPattern "$additionalPatternParamPattern" "is ignored as additional pattern is specified internally, still here as release-files uses this argument"
 		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
 	)
-	parseArguments params "" "$GT_VERSION" "$@"
+	parseArguments params "" "$GT_VERSION" "$@" || return $?
 	# we don't check if all args are set (and neither set default values) as we currently don't use
 	# any param in here but just delegate to prepareFilesNextDevCycle.
 
 	function prepare_next_afterVersionHook() {
 		local version projectsRootDir additionalPattern
-		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@"
+		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
 
 		updateVersionInNonShFiles -v "$version-SNAPSHOT" --project-dir "$projectsRootDir" --pattern "$additionalPattern"
 	}
