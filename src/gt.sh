@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.5.0-SNAPSHOT
+#                                         Version: v1.4.1
 #######  Description  #############
 #
 #  Utility to pull a file or a directory from a git repository.
@@ -41,7 +41,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export GT_VERSION='v1.5.0-SNAPSHOT'
+export GT_VERSION='v1.4.1'
 
 if ! [[ -v dir_of_gt ]]; then
 	declare intermediateSource=${BASH_SOURCE[0]:-$0}
