@@ -211,10 +211,6 @@ function gt_pull_parse_args() {
 	local publicKeysDir gpgDir pulledTsv lastSigningKeyCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
-	if ! [[ -d $pullDirAbsolute ]]; then
-		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"
-	fi
-
 	if ! [[ -f $pulledTsv ]]; then
 		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader" >"$pulledTsv" || die "failed to initialise the pulled.tsv file at \033[0;36m%s\033[0m" "$pulledTsv"
 	else
@@ -355,6 +351,10 @@ function gt_pull_internal_without_arg_checks() {
 	shift "$maxParams" || traceAndDie "was not able to shift by %s" "$maxParams"
 	if (($# != 0)); then
 		traceAndDie "%s arguments expected, given: $(($# + maxParams))" "$maxParams"
+	fi
+
+	if ! [[ -d $pullDirAbsolute ]]; then
+		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"
 	fi
 
 	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile
