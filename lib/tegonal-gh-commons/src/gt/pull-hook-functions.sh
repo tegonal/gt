@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.8.2
+#                                         Version: v3.0.0
 #######  Description  #############
 #
 #  functions which can be used to update the placeholders in the templates in a gt pull-hook.sh
