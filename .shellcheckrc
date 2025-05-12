@@ -5,9 +5,15 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.8.2
+#                                         Version: v3.0.0
 ###################################
 
-# Prefer putting braces around variable references even when not strictly required.
-# ==> IMO without braces reads nicer if not necessary
+# SC2250 = Prefer putting braces around variable references even when not strictly required.
+# disable because = IMO without braces reads nicer if not necessary
 disable=SC2250
+
+# SC2310 = warn if own function is called in a context which disables set -e
+# disable because = we know that set -e is disabled in various scenarios (condition, left of ||, function which calls
+# function was used in condition, left of || etc.). We use set -e as a maybe safety net in the sense of, if one
+# forgets to handle the error case via `|| ...` (e.g. `|| return $?`) then set -e might do it.... maybe :)
+disable=SC2310
