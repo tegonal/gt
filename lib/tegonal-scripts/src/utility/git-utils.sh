@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #
 #######  Description  #############
 #
@@ -86,7 +86,6 @@ function hasGitChanges() {
 }
 
 function exitIfGitHasChanges() {
-	# shellcheck disable=SC2310		# we are aware of that `if` will disable set -e for hasGitChanges
 	if hasGitChanges; then
 		logError "you have uncommitted changes, please commit/stash first, following the output of git status:"
 		git status || exit $?
@@ -109,7 +108,6 @@ function localGitIsAhead() {
 	local -r branch=$1
 	local -r remote=${2:-"origin"}
 	local -i count
-	# shellcheck disable=SC2310		# we know that set -e is disabled for countCommits, that OK
 	count=$(countCommits "$remote/$branch" "$branch") || die "the following command failed (see above): countCommits \"$remote/$branch\" \"$branch\""
 	! ((count == 0))
 }
@@ -121,7 +119,6 @@ function localGitIsBehind() {
 	local -r branch=$1
 	local -r remote=${2:-"origin"}
 	local -i count
-	# shellcheck disable=SC2310			# we know that set -e is disabled for countCommits, that OK
 	count=$(countCommits "$branch" "$remote/$branch") || die "the following command failed (see above): countCommits \"$branch\" \"$remote/$branch\""
 	! ((count == 0))
 }
@@ -161,7 +158,6 @@ function latestRemoteTag() {
 	local -r remote=${1:-"origin"}
 	local -r tagFilter=${2:-".*"}
 	local tag
-	#shellcheck disable=SC2310			# we are aware of that || will disable set -e for remoteTagsSorted
 	tag=$(remoteTagsSorted "$remote" | grep -E "$tagFilter" | tail -n 1) || die "could not get remote tags sorted for remote %s, see above" "$remote"
 	if [[ -z $tag ]]; then
 		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet." "$remote"

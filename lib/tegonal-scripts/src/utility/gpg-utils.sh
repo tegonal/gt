@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #######  Description  #############
 #
 #  utility functions for dealing with gpg
@@ -139,7 +139,6 @@ function importGpgKey() {
 		grep pub <<<"$outputKey" | perl -0777 -pe "s#pub\s+[^/]+/([0-9A-Z]+).*#\$1#g" |
 			while read -r keyId; do
 				echo "establishing trust for key $keyId"
-				# shellcheck disable=SC2310   # we are aware of that set -e has no effect for trustGpgKey that's why we use || return $?
 				trustGpgKey "$maybeSymlinkedGpgDir" "$keyId" || return $?
 			done || {
 			local exitCode=$?

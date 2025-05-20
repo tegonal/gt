@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #######  Description  #############
 #
 #  Utility functions to ask the user something via input.
@@ -82,19 +82,17 @@ function askYesOrNo() {
 function askWithTimeout() {
 	if (($# < 5)); then
 		logError "At least five arguments need to be passed to askWithTimeout, given \033[0;36m%s\033[0m\n" "$#"
-		echo >&2 '1: question   	the question which the user should answer'
-		echo >&2 '2: timeout			timeout in seconds after which we will call noAnswerFn'
-		echo >&2 '3: noAnswerFn		callback used in case we did not get an answer from the user'
-		echo >&2 '4: outVarName		name of output variable used to pass back the result'
-		echo >&2 '5: readArgs 		additional args passed to read'
-		echo >&2 '6... args...  	arguments for the question (question is printed with printf)'
+		echo >&2 '1: question     the question which the user should answer'
+		echo >&2 '2: timeout      timeout in seconds after which we will call noAnswerFn'
+		echo >&2 '3: noAnswerFn   callback used in case we did not get an answer from the user'
+		echo >&2 '4: outVarName   name of output variable used to pass back the result'
+		echo >&2 '5: readArgs     additional args passed to read'
+		echo >&2 '6... args...    arguments for the question (question is printed with printf)'
 		printStackTrace
 		exit 9
 	fi
-	# prefixing all variables here as plan to write the answer to an variable which is not in scope of this function
-	# i.e. if we don't prefix and one using the same name for outVarName as a variable local to this function, then we
-	# would just assign a value to the local function instead of the variable defined outside this function. The prefix
-	# prevents such a clash in most likely all cases -- otherwise the user is to blame ;)
+	# prefixing all variables here as we plan to assignToVariableInOuterScope which only works if there is no local
+	# variable with the same name. The prefix should prevent a clash -- otherwise the user is to blame ;)
 	local -r askWithTimeout_question=$1
 	local -r askWithTimeout_timeout=$2
 	local -r askWithTimeout_noAnswerFn=$3

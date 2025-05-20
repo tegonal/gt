@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #######  Description  #############
 #
 #  utility functions for dealing with arrays
@@ -69,7 +69,7 @@ joinByChar() {
 
 joinByString() {
 	if (($# < 1)); then
-		logError "At least one arguments need to be passed to joinByString, given \033[0;36m%s\033[0m\n" "$#"
+		logError "At least one argument needs to be passed to joinByString, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: separator  separator used to separate the args'
 		echo >&2 '2... args...  args as such'
 		printStackTrace
@@ -89,7 +89,7 @@ function arrFilter() {
 		logError "Three arguments need to be passed to arrFilter, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: arrayIn    name of the array to filter'
 		echo >&2 '2: arrayOut   name of the array which will contain the result'
-		echo >&2 '3: predicate  function which what argument do we check (used in error message)'
+		echo >&2 '3: predicate  name of the function which serves as predicate, passing the entry and index as arguments'
 		printStackTrace
 		exit 9
 	fi
@@ -118,7 +118,7 @@ function arrTakeEveryX() {
 		echo >&2 '1: arrayIn      name of the array to filter'
 		echo >&2 '2: arrayOut     name of the array which will contain the result'
 		echo >&2 '3: everyXEntry  e.g. 2, every second entry'
-		echo >&2 '3: offset  			e.g. 0, starting by entry 0 (in combination with everyXEntry 2 would mean entry 0, 2, 4...'
+		echo >&2 '4: offset       e.g. 0, starting by entry 0 (in combination with everyXEntry 2 would mean entry 0, 2, 4...'
 		printStackTrace
 		exit 9
 	fi
