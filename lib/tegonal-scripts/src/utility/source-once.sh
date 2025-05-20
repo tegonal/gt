@@ -7,11 +7,11 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #######  Description  #############
 #
-#  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
-#  logError writes to stderr and logWarning and logInfo to stdout
+#  Utility functions to source files but only if a certain guard is not defined. Sourcing happens inside the functions
+#  which also means defining global variables are prevented via declare.
 #
 #######  Usage  ###################
 #
@@ -74,7 +74,6 @@ function sourceOnce() {
 	shift 1 || traceAndDie "could not shift by 1"
 
 	local sourceOnce_guard
-	# shellcheck disable=SC2310   # we know that set -e will not have an effect for determineSourceOnceGuard
 	sourceOnce_guard=$(determineSourceOnceGuard "$sourceOnce_file") || die "was not able to determine sourceOnce guard for %s" "$sourceOnce_file"
 	local -r sourceOnce_guard
 

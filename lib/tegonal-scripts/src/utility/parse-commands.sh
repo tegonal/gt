@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #######  Description  #############
 #
 #  Intended to parse command line arguments of a script which uses commands and delegates accordingly.
@@ -101,11 +101,13 @@ function parse_commands_exitIfParameterDefinitionIsNotPair() {
 }
 
 function parseCommands {
+	# we only check that at least 4 arguments are passed here and not at least 5 because we want to print help if 4 are
+	# passed, i.e. if the command is missing (see check after shift 4 below)
 	if (($# < 4)); then
 		logError "At least five arguments need to be passed to parseCommands, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
 		echo >&2 '1: commands   the name of an array which contains the command definitions'
 		echo >&2 '2: version    the version which shall be shown if one uses --version'
-		echo >&2 '3: sourceFn   the function which sources the necessary files for a particular command, the commandName will be passed to this function'
+		echo >&2 '3: sourceFn   the function which sources the necessary files for a particular command, the command will be passed to this function'
 		echo >&2 '4: fnPrefix   prefix for the function representing a command'
 		echo >&2 '5: command    the command name'
 		echo >&2 '6... args...  arguments for the command, typically "$@"'

@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.0
+#                                         Version: v4.8.1
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -126,14 +126,12 @@ function checkArgIsArray() {
 }
 
 function exitIfArgIsNotArray() {
-	# shellcheck disable=SC2310		# we are aware of that || will disable set -e for checkArgIsArray
 	checkArgIsArray "$@" || exit $?
 }
 
 function exitIfArgIsNotArrayOrIsEmpty() {
 	exitIfArgIsNotArray "$@"
 	local -rn exitIfArgIsNotArrayOrIsEmpty_arr=$1
-	# shellcheck disable=SC2310		# we are aware of that if and ! will disable set -e for checkIsInitialisedArray
 	if ! checkIsInitialisedArray exitIfArgIsNotArrayOrIsEmpty_arr; then
 		traceAndDie "the passed argument \033[0;36m%s\033[0m is an uninitialised array" "${!exitIfArgIsNotArrayOrIsEmpty_arr}"
 	elif [[ ${#exitIfArgIsNotArrayOrIsEmpty_arr[@]} -lt 1 ]]; then
@@ -144,7 +142,6 @@ function exitIfArgIsNotArrayOrIsEmpty() {
 function exitIfArgIsNotArrayOrIsNonEmpty() {
 	exitIfArgIsNotArray "$@"
 	local -rn exitIfArgIsNotArrayOrIsNonEmpty_arr=$1
-	# shellcheck disable=SC2310		# we are aware of that if and ! will disable set -e for checkIsInitialisedArray
 	if checkIsInitialisedArray exitIfArgIsNotArrayOrIsNonEmpty_arr && [[ ${#exitIfArgIsNotArrayOrIsNonEmpty_arr[@]} -gt 0 ]]; then
 		traceAndDie "the passed argument \033[0;36m%s\033[0m is a non empty array" "${!exitIfArgIsNotArrayOrIsNonEmpty_arr}"
 	fi
@@ -233,7 +230,6 @@ function checkArgIsArrayWithTuples() {
 }
 
 function exitIfArgIsNotArrayWithTuples() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsArrayWithTuples
 	checkArgIsArrayWithTuples "$@" || exit $?
 }
 
@@ -256,7 +252,6 @@ function checkArgIsFunction() {
 }
 
 function exitIfArgIsNotFunction() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsFunction
 	checkArgIsFunction "$@" || exit $?
 }
 
@@ -277,12 +272,10 @@ function checkArgIsBoolean() {
 }
 
 function exitIfArgIsNotBoolean() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsBoolean
 	checkArgIsBoolean "$@" || exit $?
 }
 
 function exitIfArgIsNotVersion() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkArgIsVersion
 	checkArgIsVersion "$@" || exit $?
 }
 
@@ -318,7 +311,6 @@ function checkCommandExists() {
 }
 
 function exitIfCommandDoesNotExist() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkCommandExists
 	checkCommandExists "$@" || exit $?
 }
 
@@ -363,13 +355,11 @@ function checkPathNamedIsInsideOf() {
 	local -ra params=(path name rootDir)
 	parseFnArgs params "$@" || return $?
 
-	# shellcheck disable=SC2310			# we are aware of that ! will disable set -e for checkPathIsInsideOf
 	if ! checkPathIsInsideOf "$path" "$rootDir"; then
 		returnDying "the given \033[0;36m%s\033[0m %s not inside of %s" "$name" "$pathAbsolute" "$rootDir" || return $?
 	fi
 }
 
 function exitIfPathNamedIsOutsideOf() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkPathNamedIsInsideOf
 	checkPathNamedIsInsideOf "$@" || exit $?
 }
