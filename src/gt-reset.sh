@@ -137,11 +137,9 @@ function gt_reset() {
 			fi
 		fi
 
-
 		if ! [[ -f "$repo/$defaultWorkingDir/$signingKeyAsc" ]]; then
 			if [[ -n $unsecureArgs ]]; then
 				logWarning "remote \033[0;36m%s\033[0m has a directory \033[0;36m%s\033[0m but no %s in it. Ignoring it because %s was specified in %s" "$remote" "$defaultWorkingDir" "$signingKeyAsc" "$unsecureArgs" "$pullArgsFile"
-				echo "$unsecureParamPatternLong true" >>"$workingDirAbsolute/pull.args" || logWarningCouldNotWritePullArgs "$unsecureParamPatternLong" "true" "$pullArgsFile" "$remote"
 				return 0
 			else
 				logError "remote \033[0;36m%s\033[0m has a directory \033[0;36m%s\033[0m but no %s in it." "$remote" "$defaultWorkingDir" "$signingKeyAsc"
