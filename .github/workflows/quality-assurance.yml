@@ -18,6 +18,10 @@ jobs:
         run: ./scripts/before-pr.sh
   smoke_test:
     name: smoke-tests
+    # e.g. tegonal-bot doesn't have access to vars and secrets
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
