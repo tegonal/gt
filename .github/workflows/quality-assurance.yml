@@ -29,19 +29,29 @@ jobs:
           false || "${success:-false}" && echo "was able to import GPGs either via vars or secrets (or via both -- see above)"
       - uses: actions/checkout@v4
       - name: gt reset
-        run: ./src/gt.sh reset
+        run: |
+          ./src/gt.sh reset
+          ./src/gt.sh reset --gpg-only true
+          ./src/gt.sh reset -r tegonal-gh-commons
 
       - name: gt update
-        run: ./src/gt.sh update
+        run: |
+          ./src/gt.sh update
+          ./src/gt.sh update -r tegonal-gh-commons
 
       - name: gt re-pull
-        run: ./src/gt.sh re-pull --only-missing false
+        run: |
+          ./src/gt.sh re-pull
+          ./src/gt.sh re-pull --only-missing false
+          ./src/gt.sh re-pull -r tegonal-gh-commons
 
       - name: gt remote add
         run: ./src/gt.sh remote add -r smoke-test -u https://github.com/tegonal/gt
 
       - name: gt pull file
-        run: ./src/gt.sh pull -r smoke-test -p install.sh
+        run: |
+          ./src/gt.sh pull -r smoke-test -p install.sh --directory ./ --chop-path true
+          ./src/gt.sh pull -r smoke-test -p .github/workflows/gt-update.yml --directory ./
 
       - name: gt pull folder
         run: ./src/gt.sh pull -r smoke-test -p src/install --unsecure true
