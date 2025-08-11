@@ -48,7 +48,7 @@ jobs:
           ./install.sh && result=true || (echo >&2 "installation failed"; exit 1) && \
           false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: set-matrix
         run: |
           (readarray -t REMOTES; IFS=','; echo "matrix={ 'remote': [ ${REMOTES[*]} ] }" >> "$GITHUB_OUTPUT") < <( gt remote list | sed -E "s/(.*)/'\1'/")
@@ -87,7 +87,7 @@ jobs:
           ./install.sh && result=true || (echo >&2 "installation failed"; exit 1) && \
           false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: reset gpg keys
         run: gt reset --gpg-only true -r "${{ matrix.remote }}"
       - name: gt update
@@ -135,7 +135,7 @@ jobs:
     name: "Check signing-key"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: check if signing key already are or will expire within the next 3 months
         run: |
           set -euo pipefail
