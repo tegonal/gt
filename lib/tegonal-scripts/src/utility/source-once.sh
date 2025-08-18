@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.1
+#                                         Version: v4.9.0
 #######  Description  #############
 #
 #  Utility functions to source files but only if a certain guard is not defined. Sourcing happens inside the functions

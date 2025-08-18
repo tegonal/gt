@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.1
+#                                         Version: v4.9.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -36,7 +36,7 @@
 #    	checkArgIsBoolean "$bool" 3   	# same as exitIfArgIsNotBoolean if set -e has an effect on this line
 #    	checkArgIsVersion "$version" 4  # same as exitIfArgIsNotVersion if set -e has an effect on this line
 #
-#    	# shellcheck disable=SC2317   # is passed by name to checkArgIsArrayWithTuples
+#    	# shellcheck disable=SC2329   # is passed by name to checkArgIsArrayWithTuples
 #    	function describeTriple() {
 #    		echo >&2 "array contains 3-tuples with names where the first value is the first-, the second the middle- and the third the lastname"
 #    	}
@@ -50,7 +50,7 @@
 #    	exitIfArgIsNotBoolean "$bool" 3
 #    	exitIfArgIsNotVersion "$version" 4
 #
-#    	# shellcheck disable=SC2317   # is passed by name to exitIfArgIsNotArrayWithTuples
+#    	# shellcheck disable=SC2329   # is passed by name to exitIfArgIsNotArrayWithTuples
 #    	function describePair() {
 #    		echo >&2 "array contains 2-tuples with names where the first value is the first-, and the second the last name"
 #    	}
@@ -356,7 +356,7 @@ function checkPathNamedIsInsideOf() {
 	parseFnArgs params "$@" || return $?
 
 	if ! checkPathIsInsideOf "$path" "$rootDir"; then
-		returnDying "the given \033[0;36m%s\033[0m %s not inside of %s" "$name" "$pathAbsolute" "$rootDir" || return $?
+		returnDying "the given \033[0;36m%s\033[0m %s is not inside of %s" "$name" "$path" "$rootDir" || return $?
 	fi
 }
 

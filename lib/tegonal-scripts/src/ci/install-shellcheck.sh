@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.1
+#                                         Version: v4.9.0
 #######  Description  #############
 #
 #  installs shellcheck v0.10.0 into $HOME/.local/lib
@@ -42,17 +42,18 @@ function die() {
 	exit 1
 }
 
-declare currentDir
 currentDir=$(pwd)
 tmpDir=$(mktemp -d -t download-shellcheck-XXXXXXXXXX) || die "could not create a temp directory"
 cd "$tmpDir"
-shellcheckVersion="v0.10.0"
+shellcheckVersion="v0.11.0"
 tarFile="shellcheck-$shellcheckVersion.linux.x86_64.tar.xz"
-expectedSha="6c881ab0698e4e6ea235245f22832860544f17ba386442fe7e9d629f8cbedf87 $tarFile"
+expectedSha="8c3be12b05d5c177a04c29e3c78ce89ac86f1595681cab149b65b97c4e227198 $tarFile"
 echo "$expectedSha" >"$tarFile.sha256"
 
+url="https://github.com/koalaman/shellcheck/releases/download/$shellcheckVersion/$tarFile"
+echo "going to download shellcheck $shellcheckVersion from: $url"
 if command -v curl >/dev/null; then
-	curl -L -O "https://github.com/koalaman/shellcheck/releases/download/$shellcheckVersion/$tarFile"
+	curl --fail -L -O "$url" || die "could not download shellcheck"
 else
 	# if curl does not exist, then we try it with wget
 	wget --no-verbose "https://github.com/koalaman/shellcheck/releases/download/$shellcheckVersion/$tarFile"
