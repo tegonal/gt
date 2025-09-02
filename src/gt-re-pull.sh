@@ -141,6 +141,7 @@ function gt_re_pull() {
 			"$tagFilterParamPatternLong" "tag-filter-to-replace" \
 			"$autoTrustParamPatternLong" "$autoTrust" || return $?
 
+		# shellcheck disable=SC2329 # gt_re_pull_rePullInternal_callback is called by name
 		function gt_re_pull_rePullInternal_callback() {
 			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
 

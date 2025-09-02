@@ -83,7 +83,7 @@ statusCode=$(
 }
 if [[ $statusCode = 409 ]] && grep "open merge request" "$curlOutputFile"; then
 	echo "There is already a merge request, no need to create another (we force pushed, so the MR is updated)"
-elif [[ ! "$statusCode" == 2* ]]; then
+elif [[ "$statusCode" != 2* ]]; then
 	printf >&2 "curl return http status code %s, expected 2xx. Message body:\n" "$statusCode"
 	cat >&2 "$curlOutputFile"
 	exit 1

@@ -165,7 +165,7 @@ function gt_remote_add() {
 
 	echo "$pullDirParamPatternLong \"$pullDir\"" >"$pullArgsFile" || logWarningCouldNotWritePullArgs "the pull directory" "$pullDir" "$pullArgsFile" "$pullDirParamPatternLong" "$remote"
 
-	if ! [[ $tagFilter == ".*" ]]; then
+	if [[ $tagFilter != ".*" ]]; then
 		echo "$tagFilterParamPattern \"$tagFilter\"" >>"$pullArgsFile" || logWarningCouldNotWritePullArgs "the tag filter" "$tagFilter" "$pullArgsFile" "$tagFilterParamPatternLong" "$remote"
 	fi
 
@@ -207,7 +207,8 @@ function gt_remote_add() {
 	# end of checks, can start importing keys
 
 	local -i numberOfImportedKeys=0
-	# shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2329   # called by name
+	# shellcheck disable=SC2317   # for intellij
 	function gt_remote_importKeyCallback() {
 		((++numberOfImportedKeys))
 	}
@@ -351,7 +352,8 @@ function gt_remote_remove() {
 		fi
 	fi
 
-	# shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2329   # called by name
+	# shellcheck disable=SC2317   # for intellij
 	function gt_remote_remove_read() {
 		local -i numberOfDeletedFiles=0
 
