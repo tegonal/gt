@@ -344,7 +344,8 @@ function importRemotesPulledSigningKey() {
 	local gpgDir publicKeysDir repo lastSigningKeyCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
-	# shellcheck disable=SC2317   # called by name
+	# shellcheck disable=SC2329   # called by name
+	# shellcheck disable=SC2317   # for intellij
 	function importRemotesPublicKeys_importKeyCallback() {
 		local -r publicKey=$1
 		local -r sig=$2
@@ -434,7 +435,8 @@ function doIfLastCheckMoreThanDaysAgo() {
 function gt_checkForSelfUpdate() {
 	local -r lastGtUpdateCheckFile="$dir_of_gt/last-update-check.txt"
 
-	# shellcheck disable=SC2317 # gt_checkForSelfUpdate_callback is called by name
+	# shellcheck disable=SC2329 # gt_checkForSelfUpdate_callback is called by name
+	# shellcheck disable=SC2317 # for intellij
 	function gt_checkForSelfUpdate_callback() {
 
 		local -r lastCheckTimestamp=$1

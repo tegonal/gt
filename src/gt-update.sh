@@ -164,6 +164,7 @@ function gt_update() {
 				"$autoTrustParamPatternLong" "$autoTrust" || return $?
 		fi
 
+		# shellcheck disable=SC2329 # gt_update_rePullInternal_callback is called by name
 		function gt_update_rePullInternal_callback() {
 			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs

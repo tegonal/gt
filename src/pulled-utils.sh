@@ -78,7 +78,8 @@ function migratePulledTsvFormat() {
 
 
 
-		# shellcheck disable=SC2317		# is called by name
+		# shellcheck disable=SC2329		# is called by name
+		# shellcheck disable=SC2317		# for intellij
 		function migrate_pulledTsv_1_0_0_to_1_1_0() {
 			# start from line 3, i.e. skip the version pragma + header in pulled.tsv
 			eval "tail -n +3 \"$pulledTsv\" >&$migrationFileDescriptorOut" || die "could not tail %s" "$pulledTsv"
