@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.8.1
+#                                         Version: v4.9.1
 #######  Description  #############
 #
 #  Releasing files based on conventions:
@@ -40,13 +40,13 @@
 #    "$dir_of_tegonal_scripts/releasing/release-files.sh" -v v0.1.0 -k "0x945FE615904E5C85" --sign-fn findScripts
 #
 #    # releases version v0.1.0 using the key 0x945FE615904E5C85 for signing and function findScripts to find the files which
-#     ## should be signed (and thus released). Moreover, searches for additional occurrences where the version should be
+#    # should be signed (and thus released). Moreover, searches for additional occurrences where the version should be
 #    # replaced via the specified pattern
 #    "$dir_of_tegonal_scripts/releasing/release-files.sh" \
 #    	-v v0.1.0 -k "0x945FE615904E5C85" --sign-fn findScripts \
 #    	-p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])"
 #
-#    function specialBeforePr(){
+#    function specialBeforePr() {
 #    	beforePr && echo "imagine some additional work"
 #    }
 #    # make the function visible to release-files.sh / not necessary if you source prepare-files-next-dev-cycle.sh
@@ -57,7 +57,6 @@
 #    "$dir_of_tegonal_scripts/releasing/release-files.sh" \
 #    	-v v0.1.0 -k "0x945FE615904E5C85" --sign-fn findScripts \
 #    	--before-pr-fn specialBeforePr
-#
 #
 #    # in case you want to provide your own release.sh and only want to do some pre-configuration
 #    # then you might want to source it instead
@@ -76,7 +75,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.8.1'
+export TEGONAL_SCRIPTS_VERSION='v4.9.1'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
