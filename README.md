@@ -957,7 +957,7 @@ Yes, however different things to consider. In order that [`gt re-pull`](#re-pull
 you need to make a few adjustments. 
 
 If the rename is static, then simply rename the file and adjust the entry in
-.gt/remotes/<REMOTE>/pulled.tsv
+`.gt/remotes/<REMOTE>/pulled.tsv`
 
 If your rename is dynamic (i.e. incorporates some logic), then create a [pull-hook](#pull-hook) and implement your logic
 there.
