@@ -369,11 +369,14 @@ function determineDefaultBranch() {
 	local repo
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
-	git --git-dir "$repo/.git" remote show "$remote" | sed -n '/HEAD branch/s/.*: //p' ||
-		(
-			logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" "$remote"
-			echo "main"
-		)
+	local defaultBranch
+	defaultBranch=$(git --git-dir "$repo/.git" ls-remote --symref "$remote" HEAD 2>/dev/null | sed -n 's|^ref: refs/heads/\(.*\)\tHEAD$|\1|p' || echo "")
+	if [[ -n $defaultBranch ]]; then
+		echo "$defaultBranch"
+	else
+		logWarning >&2 "was not able to determine default branch for remote \033[0;36m%s\033[0m, going to use main" "$remote"
+		echo "main"
+	fi
 }
 
 function checkoutGtDir() {
