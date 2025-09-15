@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.4.4
+#                                         Version: v1.5.0-SNAPSHOT
 #######  Description  #############
 #
 #  installation script which downloads and set ups the latest or a specific tag of gt
