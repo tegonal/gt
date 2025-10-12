@@ -22,7 +22,7 @@
 #    	# Assumes include-install-doc.sh was fetched with gt - adjust location accordingly
 #    	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/gt/src"
 #    fi
-#    sourceOnce  "$dir_of_gt/install/include-install-doc.sh"
+#    sourceOnce "$dir_of_gt/install/include-install-doc.sh"
 #
 #    # e.g. could be used in cleanup-on-push-to-main.sh
 #
