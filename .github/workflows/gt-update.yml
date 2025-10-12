@@ -13,6 +13,9 @@ on:
     - cron: '0 4 * * MON'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   determine_remotes:
     name: Determine Remotes

@@ -1,5 +1,8 @@
 name: Quality Assurance
-on: [push, pull_request]
+on: [ push, pull_request ]
+
+permissions:
+  contents: read
 
 jobs:
   before_pr:
