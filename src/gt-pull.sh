@@ -465,7 +465,7 @@ function gt_pull_internal_without_arg_checks() {
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$repoFile" "$pulledTsv"
 		elif [[ $entryTag != "$tagToPull" ]]; then
-			logInfo "the file was pulled before in version %s, going to override with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToPull" "$repoFile"
+			logInfo "the file was pulled before in version %s, going to overwrite with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToPull" "$repoFile"
 			# we could warn about a version which was older
 			replacePulledEntry "$pulledTsv" "$repoFile" "$entry" || return $?
 		else
@@ -493,7 +493,7 @@ function gt_pull_internal_without_arg_checks() {
 				rm "$source"
 				return
 			elif [[ -f $absoluteTarget ]]; then
-				logInfo "the file was pulled before to the same location, going to override \033[0;36m%s\033[0m" "$absoluteTarget"
+				logInfo "the file was pulled before to the same location, going to overwrite \033[0;36m%s\033[0m" "$absoluteTarget"
 			fi
 		fi
 
