@@ -149,7 +149,6 @@ function replacePulledEntry() {
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
 	local -ra params=(pulledTsv file entry)
 	parseFnArgs params "$@"
-	# shellcheck disable=SC2310 	# we are aware of that the || disables set -e for grepPulledEntryByFile but we want to be sure we die in case this file is sourced where set -e is not applied
 	grepPulledEntryByFile "$pulledTsv" "$file" -v >"$pulledTsv.new" || die "could not find entry for file \033[0;36m%s\033[0m, thus cannot replace" "$file"
 	mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override %s with the new content (which does not contain the entry for file \033[0;36m%s\033[0m)" "$pulledTsv" "$file"
 	echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file \033[0;36m%s\033[0m to %s" "$file" "$pulledTsv"
@@ -178,7 +177,6 @@ function readPulledTsv() {
 		local entryTag entryFile entryRelativePath entryTagFilter entrySha
 		setEntryVariables "$entry"
 		local localAbsolutePath
-		#shellcheck disable=SC2310		# we know that set -e is disabled for readlink due to ||
 		localAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
 		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$localAbsolutePath" "$entryTagFilter" "$entrySha" || return $?
 	done

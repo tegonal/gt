@@ -193,7 +193,6 @@ function gt_update() {
 			fi
 
 			local parentDir
-			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_update_incrementError due to ||
 			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
 
 			if [[ $list == true ]]; then

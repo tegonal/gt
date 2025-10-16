@@ -70,7 +70,6 @@ function checkCommandExists() {
 }
 
 function exitIfCommandDoesNotExist() {
-	# shellcheck disable=SC2310 	# we are aware of that || will disable set -e for checkCommandExists
 	checkCommandExists "$@" || exit $?
 }
 
@@ -95,7 +94,6 @@ declare repoDir="$tmpDir/repo"
 function cleanup() {
 	# necessary because .git files are sometime 700 and would require sudo to delete
 
-	#shellcheck disable=SC2310		# we are aware of that || will disable set -e for deleteDirChmod777
 	deleteDirChmod777 "$tmpDir" >/dev/null 2>&1 || true
 }
 
@@ -166,11 +164,9 @@ function install() {
 							--with-colons "$keyId" | grep -E "^(pub|sub).*$keyId"
 					) || returnDying "was not able to extract the key data for %s" "$keyId" || return $?
 					if grep -E '^(sub|pub):r:' <<<"$keyData" >/dev/null; then
-						#shellcheck disable=SC2310		# kind of false positive, we return afterwards with an error anyway
 						logError "key %s which signed the files of tag %s was revoked, aborting installation" "$keyId" "$tag"
 						return 3
 					else
-						#shellcheck disable=SC2310		# we don't care that we don't exit if the logInfo fails (should not anyway)
 						logInfo "verified that key %s which signed files is not revoked" "$keyId"
 					fi
 				fi
