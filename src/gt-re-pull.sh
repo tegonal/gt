@@ -153,7 +153,6 @@ function gt_re_pull() {
 			entryTargetFileName=$(basename "$entryRelativePath")
 
 			local parentDir
-			#shellcheck disable=SC2310		# we know that set -e is disabled for gt_re_pull_incrementError due to ||
 			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
 			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
 				local startTimestampInMs elapsedInSeconds

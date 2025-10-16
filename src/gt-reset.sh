@@ -180,7 +180,6 @@ function gt_reset() {
 	}
 
 	if [[ -n $remote ]]; then
-		#shellcheck disable=SC2310		# we know that set -e is disabled for gt_reset_resetRemote due to ||
 		gt_reset_resetRemote "$remote" || die "could not remove gpg directory for remote \033[0;36m%s\033[0m, see above" "$remote"
 		if [[ $gpgOnly != true ]]; then
 			gt_re_pull -w "$workingDirAbsolute" --only-missing false -r "$remote"

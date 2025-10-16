@@ -64,7 +64,6 @@ function checkWorkingDirExists() {
 }
 
 function exitIfWorkingDirDoesNotExist() {
-	# shellcheck disable=SC2310			# we are aware of that || will disable set -e for checkWorkingDirExists
 	checkWorkingDirExists "$@" || exit $?
 }
 

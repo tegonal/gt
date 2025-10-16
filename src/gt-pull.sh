@@ -95,9 +95,7 @@ function gt_pull() {
 	local -r currentDir
 
 	local -a gt_pull_parsed_args
-	# shellcheck disable=SC2310   # we know that || will disable set -e for gt_pull_parse_args
 	gt_pull_parse_args gt_pull_parsed_args "$currentDir" "$@" || return $?
-	# shellcheck disable=SC2310   # we know that || will disable set -e for gt_pull_internal_without_arg_checks
 	gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}" || return $?
 
 	gt_checkForSelfUpdate
@@ -408,7 +406,6 @@ function gt_pull_internal_without_arg_checks() {
 	local pullHookBefore="gt_pull_noop"
 	local pullHookAfter="gt_pull_noop"
 	if [[ -f $pullHookFile ]]; then
-		# shellcheck disable=SC2310		# we are aware of that || will disable set -e for sourceOnce
 		sourceOnce "$pullHookFile" || traceAndDie "could not source %s" "$pullHookFile"
 		pullHookBefore="gt_pullHook_${remote//-/_}_before"
 		pullHookAfter="gt_pullHook_${remote//-/_}_after"
@@ -531,10 +528,6 @@ function gt_pull_internal_without_arg_checks() {
 			# or true as we will try to cleanup the repo on exit
 			rm "$sigFile" || true
 
-			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
-			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
-			# the function
-			# shellcheck disable=SC2310
 			gt_pull_moveFile "$repoFile" || return $?
 
 		elif [[ $doVerification == true ]]; then
@@ -543,10 +536,6 @@ function gt_pull_internal_without_arg_checks() {
 			# or true as we will try to cleanup the repo on exit
 			rm "$absoluteFile" || true
 		else
-			# we are aware of that || will disable set -e for gt_pull_moveFile, we need it as gt_pull is used in gt_update
-			# and gt_re-pull in an if, i.e. set -e is disabled anyway, hence we return here to make sure we actually exit
-			# the function
-			# shellcheck disable=SC2310
 			gt_pull_moveFile "$repoFile" || return $?
 		fi
 	done < <(find "$repo/$path" -type f -not -name "*.$sigExtension" -print0 ||
