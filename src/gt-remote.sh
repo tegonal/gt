@@ -63,8 +63,6 @@ function gt_remote_cleanupRemoteOnUnexpectedExit() {
 }
 
 function gt_remote_add() {
-	local pullDirParamPatternLong unsecureParamPatternLong tagFilterParamPatternLong
-	local workingDirParamPatternLong remoteParamPatternLong signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir
@@ -208,7 +206,6 @@ function gt_remote_add() {
 
 	local -i numberOfImportedKeys=0
 	# shellcheck disable=SC2329   # called by name
-	# shellcheck disable=SC2317   # for intellij
 	function gt_remote_importKeyCallback() {
 		((++numberOfImportedKeys))
 	}
@@ -352,7 +349,6 @@ function gt_remote_remove() {
 	fi
 
 	# shellcheck disable=SC2329   # called by name
-	# shellcheck disable=SC2317   # for intellij
 	function gt_remote_remove_read() {
 		local -i numberOfDeletedFiles=0
 

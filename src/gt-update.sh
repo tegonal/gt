@@ -59,9 +59,6 @@ function gt_update() {
 	local startTimestampInMs elapsedInSeconds
 	startTimestampInMs="$(timestampInMs)" || true
 
-	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
-	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
-	local tagFilterParamPatternLong listParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote workingDir list autoTrust tag

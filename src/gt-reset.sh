@@ -57,7 +57,6 @@ sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function gt_reset() {
-	local defaultWorkingDir unsecureParamPatternLong signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentDir

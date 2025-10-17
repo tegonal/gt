@@ -63,9 +63,6 @@ function gt_re_pull() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local defaultWorkingDir remoteParamPatternLong workingDirParamPatternLong tagParamPatternLong pathParamPatternLong
-	local pullDirParamPatternLong chopPathParamPatternLong targetFileNamePatternLong autoTrustParamPatternLong
-	local tagFilterParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r onlyMissingPattern="--only-missing"

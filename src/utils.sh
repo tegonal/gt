@@ -53,7 +53,6 @@ function checkWorkingDirExists() {
 	local workingDirAbsolute=$1
 	shift 1 || traceAndDie "could not shift by 1"
 
-	local workingDirParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	if ! [[ -d $workingDirAbsolute ]]; then
@@ -183,8 +182,6 @@ function latestRemoteTagIncludingChecks() {
 
 	local repo
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
-
-	local tagParamPattern
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	logInfo >&2 "no tag provided via argument %s, will determine latest and use it instead" "$tagParamPattern"
@@ -203,7 +200,6 @@ function validateSigningKeyAndImport() {
 
 	exitIfArgIsNotFunction "$validateSigningKeyAndImport_callback" 4
 
-	local autoTrustParamPatternLong signingKeyAsc
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r publicKey="$sourceDir/$signingKeyAsc"
@@ -330,7 +326,6 @@ function validateSigningKeyAndImport() {
 }
 
 function importRemotesPulledSigningKey() {
-	local defaultWorkingDir
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local workingDirAbsolute remote importRemotesPulledSigningKey_callback
@@ -344,7 +339,6 @@ function importRemotesPulledSigningKey() {
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	# shellcheck disable=SC2329   # called by name
-	# shellcheck disable=SC2317   # for intellij
 	function importRemotesPublicKeys_importKeyCallback() {
 		local -r publicKey=$1
 		local -r sig=$2
@@ -438,7 +432,6 @@ function gt_checkForSelfUpdate() {
 	local -r lastGtUpdateCheckFile="$dir_of_gt/last-update-check.txt"
 
 	# shellcheck disable=SC2329 # gt_checkForSelfUpdate_callback is called by name
-	# shellcheck disable=SC2317 # for intellij
 	function gt_checkForSelfUpdate_callback() {
 
 		local -r lastCheckTimestamp=$1

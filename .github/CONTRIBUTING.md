@@ -49,8 +49,14 @@ Fantastic, thanks for your effort!
 The following are a few guidelines on how we suggest you start.
  
 1. Fork the repository to your repositories (see [Fork a repo](https://help.github.com/en/articles/fork-a-repo) for help). 
-2. Use an IDE which supports bash coding and shellcheck (min. v0.9.0)
-   e.g. [visual studio code](https://code.visualstudio.com) with the [shellcheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck) plugin.
+2. Use an IDE which supports bash coding and shellcheck (min. v0.11.0)
+   e.g. [visual studio code](https://code.visualstudio.com) with the [shellcheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck) plugin,
+   or [Intellij's IDEA](https://www.jetbrains.com/idea/download) which has a bundled shellcheck plugin.
+   Add the following arguments to shellcheck to stay par with scripts/run-shellcheck.sh:  
+   `--check-sourced --color=always --external-sources --enable=all --source-path="./lib/tegonal-scripts/src:./scripts"`
+   (e.g. by creating a shellcheck_custom.sh in ~/.local/bin which points to your shellcheck and passes the above parameters and `$@` additionally.)
+   Without passing the arguments you might see warnings such as unassigned variables due to the missing source paths.
+
 3. Read up the [Coding Conventions](#coding-conventions) (there are only 5 points).
 
 Perfect, you are setup and ready to go. 
