@@ -108,7 +108,6 @@ function gt_pull_parse_args() {
 
 	exitIfArgIsNotArrayOrIsNonEmpty gt_pull_parse_args_outArr 1
 
-	local remoteParamPatternLong targetFileNamePatternLong workingDirParamPatternLong gpgOnlyParamPatternLong fakeTag
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local remote tag path pullDir chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification workingDir
@@ -325,9 +324,6 @@ function gt_pull_parse_args() {
 }
 
 function gt_pull_internal_without_arg_checks() {
-
-	local pulledTsvLatestVersionPragma pulledTsvHeader signingKeyAsc fakeTag
-	local unsecureNoVerificationParamPatternLong
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local -r \

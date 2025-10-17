@@ -41,7 +41,6 @@ function pulledTsvEntry() {
 }
 
 function migratePulledTsvFormat() {
-	local pulledTsvLatestVersionPragma pulledTsvLatestVersionPragmaWithoutVersion
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 	local -r pulledTsv=$1
 	local -r fromVersion=$2
@@ -76,10 +75,7 @@ function migratePulledTsvFormat() {
 		writeVersionPragma "1.1.0"
 		echo $'tag\tfile\trelativeTarget\ttagFilter\tsha512' >>"$pulledTsv.new"
 
-
-
 		# shellcheck disable=SC2329		# is called by name
-		# shellcheck disable=SC2317		# for intellij
 		function migrate_pulledTsv_1_0_0_to_1_1_0() {
 			# start from line 3, i.e. skip the version pragma + header in pulled.tsv
 			eval "tail -n +3 \"$pulledTsv\" >&$migrationFileDescriptorOut" || die "could not tail %s" "$pulledTsv"

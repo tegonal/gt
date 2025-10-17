@@ -87,6 +87,7 @@ Now you are ready to execute the following commands which download and verify th
 and of course execute the `install.sh` as such.
 
 
+<!--suppress HtmlUnknownTag -->
 <install>
 
 <!-- auto-generated, do not modify here but in install.sh.doc -->
