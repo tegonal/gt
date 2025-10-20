@@ -211,7 +211,7 @@ function gt_pull_parse_args() {
 	if ! [[ -f $pulledTsv ]]; then
 		echo "$pulledTsvLatestVersionPragma"$'\n'"$pulledTsvHeader" >"$pulledTsv" || die "failed to initialise the pulled.tsv file at \033[0;36m%s\033[0m" "$pulledTsv"
 	else
-		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
+		exitIfHeaderOfPulledTsvIsWrong "$workingDirAbsolute" "$pulledTsv"
 	fi
 
 	exitIfRepoBrokenAndReInitIfAbsent "$workingDirAbsolute" "$remote"
@@ -439,15 +439,16 @@ function gt_pull_internal_without_arg_checks() {
 
 		local source="$repo/$repoFile"
 
-		local relativeTarget sha entry currentEntry
+		local relativeTarget hasPlaceholder sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
 		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
-		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
+		hasPlaceholder=$(hasGtPlaceholder "$workingDirAbsolute" "$relativeTarget")
+		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$repoFile" || echo "")
-		local -r relativeTarget sha entry currentEntry
+		local -r relativeTarget hasPlaceholder sha entry currentEntry
 
-		local entryTag entryFile entryRelativePath entryTagFilter entrySha
+		local entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entrySha
 		setEntryVariables "$currentEntry" || return $?
 		local -r entryTag entryRelativePath entrySha
 
@@ -491,6 +492,9 @@ function gt_pull_internal_without_arg_checks() {
 		fi
 
 		"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
+		if [[ $entryHasPlaceholder == true ]]; then
+			replaceGtPlaceholdersDuringUpdate "$absoluteTarget" "$source"
+		fi
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
 		"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
 

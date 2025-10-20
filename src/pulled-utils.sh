@@ -32,20 +32,21 @@ sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function pulledTsvEntry() {
-	local tag file relativeTarget tagFilter sha512
+	local tag file relativeTarget tagFilter hasPlaceholder sha512
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(tag file relativeTarget tagFilter sha512)
+	local -ra params=(tag file relativeTarget tagFilter hasPlaceholder sha512)
 	parseFnArgs params "$@"
-	printf "%s\t" "$tag" "$file" "$relativeTarget" "$tagFilter"
+	printf "%s\t" "$tag" "$file" "$relativeTarget" "$tagFilter" "$hasPlaceholder"
 	printf "%s\n" "$sha512"
 }
 
 function migratePulledTsvFormat() {
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
-	local -r pulledTsv=$1
-	local -r fromVersion=$2
-	local -r toVersion=$3
-	shift 3 || traceAndDie "could not shift by 2"
+	local -r workingDirAbsolute=$1
+	local -r pulledTsv=$2
+	local -r fromVersion=$3
+	local -r toVersion=$4
+	shift 4 || traceAndDie "could not shift by 4"
 
 	function logMigrationAvailable() {
 		logInfo "Format migration available, going to rewrite %s automatically from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m" "$pulledTsv" "$fromVersion" "$toVersion"
@@ -82,10 +83,33 @@ function migratePulledTsvFormat() {
 			while read -u "$migrationFileDescriptorIn" -r entry; do
 				local entryTag entryFile entryRelativePath entrySha
 				IFS=$'\t' read -r entryTag entryFile entryRelativePath entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
-				pulledTsvEntry "$entryTag" "$entryFile" "$entryRelativePath" ".*" "$entrySha" >>"$pulledTsv.new"
+				(
+					printf "%s\t" "$entryTag" "$entryFile" "$entryRelativePath" ".*"
+					printf "%s\n" "$sha512"
+				) >>"$pulledTsv.new"
 			done
 		}
 		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_0_0_to_1_1_0 "$remote"
+		switchNewPulledTsv
+		migratePulledTsvFormat "$pulledTsv" "1.1.0" "$toVersion"
+	elif [[ $fromVersion == "1.1.0" ]]; then
+		logMigrationAvailable
+		writeVersionPragma "1.2.0"
+		echo $'tag\tfile\trelativeTarget\ttagFilter\thasPlaceholder\tsha512' >>"$pulledTsv.new"
+
+		# shellcheck disable=SC2329		# is called by name
+		function migrate_pulledTsv_1_1_0_to_1_2_0() {
+			# start from line 3, i.e. skip the version pragma + header in pulled.tsv
+			eval "tail -n +3 \"$pulledTsv\" >&$migrationFileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+			while read -u "$migrationFileDescriptorIn" -r entry; do
+				local entryTag entryFile entryRelativePath tagFiler entrySha
+				IFS=$'\t' read -r entryTag entryFile entryRelativePath tagFiler entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
+				local hasPlaceholder
+				hasPlaceholder=$(hasGtPlaceholder "$workingDirAbsolute" "$entryRelativePath")
+				pulledTsvEntry "$entryTag" "$entryFile" "$entryRelativePath" "$tagFiler" "$hasPlaceholder" "$entrySha" >>"$pulledTsv.new"
+			done
+		}
+		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_1_0_to_1_2_0 "$remote"
 		switchNewPulledTsv
 	else
 		die "no automatic migration available from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m\nIn case you updated gt, then check the release notes for migration hints:\n%s" "$fromVersion" "$toVersion" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
@@ -93,10 +117,10 @@ function migratePulledTsvFormat() {
 }
 
 function exitIfHeaderOfPulledTsvIsWrong() {
-	local -r pulledTsv=$1
-	shift 1 || traceAndDie "could not shift by 1"
+	local -r workingDirAbsolute=$1
+	local -r pulledTsv=$2
+	shift 2 || traceAndDie "could not shift by 2"
 
-	local pulledTsvLatestVersion pulledTsvLatestVersionPragma pulledTsvHeader
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local currentVersionPragma currentHeader
@@ -110,7 +134,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 			currentVersion="unspecified"
 		fi
 		logInfo "Format of \033[0;36m%s\033[0m changed\nLatest format version is: %s\nCurrent format version is: %s" "$pulledTsv" "$pulledTsvLatestVersion" "$currentVersion"
-		migratePulledTsvFormat "$pulledTsv" "$currentVersion" "$pulledTsvLatestVersion"
+		migratePulledTsvFormat "$workingDirAbsolute" "$pulledTsv" "$currentVersion" "$pulledTsvLatestVersion"
 	fi
 
 	currentHeader="$(head -n 2 "$pulledTsv" | tail -n 1)" || die "could not read the current pulled.tsv at %s" "$pulledTsv"
@@ -126,7 +150,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 }
 
 function setEntryVariables() {
-	local -ra variableNames=(entryTag entryFile entryRelativePath entryTagFilter entrySha)
+	local -ra variableNames=(entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entrySha)
 	exitIfVariablesNotDeclared "${variableNames[@]}"
 
 	# shellcheck disable=SC2034
@@ -164,16 +188,85 @@ function readPulledTsv() {
 		logWarning "Looks like remote \033[0;36m%s\033[0m is broken or no file has been fetched so far, there is no pulled.tsv, skipping it" "$remote"
 		return 0
 	else
-		exitIfHeaderOfPulledTsvIsWrong "$pulledTsv"
+		exitIfHeaderOfPulledTsvIsWrong "$workingDirAbsolute" "$pulledTsv"
 	fi
 
 	# start from line 3, i.e. skip the version pragma + header in pulled.tsv
 	eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || traceAndDie "could not tail %s" "$pulledTsv"
 	while read -u "$fileDescriptorIn" -r entry; do
-		local entryTag entryFile entryRelativePath entryTagFilter entrySha
+		local entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entrySha
 		setEntryVariables "$entry"
 		local localAbsolutePath
 		localAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
-		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$localAbsolutePath" "$entryTagFilter" "$entrySha" || return $?
+		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$localAbsolutePath" "$entryTagFilter" "$entryHasPlaceholder" "$entrySha" || return $?
 	done
+}
+
+function hasGtPlaceholder() {
+	local -r workingDirAbsolute=$1
+	local -r relativeTarget=$2
+	shift 2 || traceAndDie "could not shift by 2"
+	grep -q "gt-placeholder" "$workingDirAbsolute/$entryRelativePath" && echo "true" || echo "false"
+}
+
+function replaceGtPlaceholdersDuringUpdate() {
+	local -r currentFile=$1
+	local -r updatedFile=$2
+	shift 2 || traceAndDie "could not shift by 2"
+
+	if [[ ! -f "$currentFile" ]]; then
+		die "the given current file %s does not exist" "$currentFile"
+	fi
+	if [[ ! -f "$updatedFile" ]]; then
+		die "the given updated file %s does not exist" "$currentFile"
+	fi
+
+	declare -A placeholders=()
+
+	local line key block inner
+	while IFS= read -r line; do
+		if [[ $line =~ gt-placeholder-(.*)-start ]]; then
+			key="${BASH_REMATCH[1]}"
+			block="$line"$'\n'
+			while IFS= read -r inner; do
+				block+="$inner"$'\n'
+				[[ $inner =~ gt-placeholder-$key-end ]] && break
+			done
+			placeholders["$key"]="$block"
+		fi
+	done <"$currentFile"
+
+	declar -p placeholders
+
+	key=""
+	(
+		while IFS= read -r line; do
+			if [[ $line =~ gt-placeholder-([0-9]+)-start ]]; then
+				key="${BASH_REMATCH[1]}"
+				# insert the previous content if defined
+				if [[ -v placeholders[$key] ]]; then
+					printf "%s" "${placeholders[$key]}"
+					unset 'placeholder["'"$key"'"]'
+					while IFS= read -r inner; do
+						[[ $inner =~ gt-placeholder-$key-end ]] && break
+					done
+				else
+					while IFS= read -r inner; do
+						echo "$line"
+						[[ $inner =~ gt-placeholder-$key-end ]] && break
+					done
+				fi
+			else
+				echo "$line"
+			fi
+		done <"$updatedFile"
+	) >"$updatedFile.tmp"
+	mv "$updatedFile.tmp" "$updatedFile"
+
+	if ((${#placeholders[@]} > 0)); then
+		logWarning "looks like the following placeholders no longer exists in the file %s" "$updatedFile"
+		for key in "${!placeholders[@]}"; do
+			echo "gt-placeholder-$key"
+		done
+	fi
 }
