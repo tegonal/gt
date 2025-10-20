@@ -42,10 +42,10 @@ local -r unsecureParamPattern="$unsecureParamPatternLong"
 local -r unsecureNoVerificationParamPatternLong='--unsecure-no-verification'
 local -r unsecureNoVerificationParamPattern="$unsecureNoVerificationParamPatternLong"
 
-local -r pulledTsvLatestVersion="1.1.0"
+local -r pulledTsvLatestVersion="1.2.0"
 local -r pulledTsvLatestVersionPragmaWithoutVersion='#@ Version: '
 local -r pulledTsvLatestVersionPragma="${pulledTsvLatestVersionPragmaWithoutVersion}$pulledTsvLatestVersion"
-local -r pulledTsvHeader=$'tag\tfile\trelativeTarget\ttagFilter\tsha512'
+local -r pulledTsvHeader=$'tag\tfile\trelativeTarget\ttagFilter\thasPlaceholder\tsha512'
 
 local -r pathParamPatternLong='--path'
 local -r pathParamPattern="-p|$pathParamPatternLong"

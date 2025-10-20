@@ -163,9 +163,9 @@ function gt_update() {
 
 		# shellcheck disable=SC2329 # gt_update_rePullInternal_callback is called by name
 		function gt_update_rePullInternal_callback() {
-			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512
+			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder _entrySha512)
 			parseFnArgs params "$@"
 
 			local entryTargetFileName

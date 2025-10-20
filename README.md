@@ -790,30 +790,12 @@ that this workflow can update the workflow itself.
 You need to change one condition in the workflow which we added in order that this workflow does not run in forks:
 
 ```yml
-if: github.repository_owner == 'tegonal'
+    # gt-placeholder-owner-start
+	if: github.repository_owner == 'tegonal'
+	# gt-placeholder-owner-end
 ```
 
-Which means you should rewrite that part it in the [pull-hook.sh](#pull-hook) of the gt remote, i.e.
-in `.gt/remotes/gt/pull-hook.sh`. It could look as follows:
-
-```bash
-set -eu -o pipefail
-
-function gt_pullHook_gt_before(){
-  local -r _tag=$1 source=$2 _target=$3
-  
-  if [[ $source =~ .*/.github/workflows/gt-update.yml ]]; then
-    perl -0777 -i -pe "s/(if: github.repository_owner == )'tegonal'/\${1}'YOUR_SLUG'/" "$source"
-  fi  
-}
-
-function gt_pullHook_gt_after(){
-  # no op, nothing to do
-  true
-}
-```
-
-Just make sure you replace YOUR_SLUG with your actual slug.
+Most likely you also do not need that it is run in forks, so just replace `tegonal` with your organisation/user-slug.
 
 ### Gitlab Job
 

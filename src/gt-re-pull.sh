@@ -140,10 +140,10 @@ function gt_re_pull() {
 
 		# shellcheck disable=SC2329 # gt_re_pull_rePullInternal_callback is called by name
 		function gt_re_pull_rePullInternal_callback() {
-			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512
+			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder _entrySha512
 
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder _entrySha512)
 			parseFnArgs params "$@"
 
 			local entryTargetFileName
