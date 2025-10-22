@@ -6,12 +6,12 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.5.2
+#                                         Version: v1.6.0-SNAPSHOT
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-GT_VERSION="v1.5.2"
+GT_VERSION="v1.6.0-SNAPSHOT"
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
