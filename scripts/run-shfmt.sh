@@ -21,18 +21,17 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$scriptsDir/../lib/tegonal-scripts/src"
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
-sourceOnce "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
+sourceOnce "$dir_of_tegonal_scripts/qa/run-shfmt.sh"
 
-function customRunShellcheck() {
-	local srcDir="$scriptsDir/../src"
+function customRunShfmt() {
+	local -r srcDir="$scriptsDir/../src"
 
-	# shellcheck disable=SC2034   # is passed by name to runShellcheck
+	# shellcheck disable=SC2034   # is passed by name to runShfmt
 	local -ra dirs=("$srcDir" "$scriptsDir" "$scriptsDir/../install.sh" "$scriptsDir/../install.doc.sh")
-	local sourcePath="$srcDir:$scriptsDir:$dir_of_tegonal_scripts"
-	runShellcheck dirs "$sourcePath" || return $?
+	runShfmt dirs || return $?
 
-	runShellcheckPullHooks "$scriptsDir/../.gt"
+	runShfmtPullHooks "$scriptsDir/../.gt"
 }
 
 ${__SOURCED__:+return}
-customRunShellcheck "$@"
+customRunShfmt "$@"

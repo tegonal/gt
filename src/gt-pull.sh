@@ -48,7 +48,7 @@
 #    # then checks.sh will still be verified against it.
 #    # (you might want to add --unsecure true to .gt/tegonal-scripts/pull.args if you never intend to
 #    # set up gpg -- this way you don't have to repeat this option)
-#    gt pull -r tegonal-scripts --unsecure true  -p src/utility/checks.sh
+#    gt pull -r tegonal-scripts --unsecure true -p src/utility/checks.sh
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
 #    # without verifying its signature (if defined) against the remotes gpg store

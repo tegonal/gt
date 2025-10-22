@@ -29,9 +29,9 @@
 #    function cleanupOnPushToMain() {
 #    	# shellcheck disable=SC2034   # is passed by name to copyInstallDoc
 #    	local -ar includeInstallDocInFiles=(
-#    	  # file_name indent
+#    		# file_name indent
 #    		".github/workflows/gt-update.yml" '          '
-#      	"src/gitlab/install-gt.sh" ''
+#    		"src/gitlab/install-gt.sh" ''
 #    	)
 #    	includeInstallDoc "$dir_of_gt/../install.doc.sh" includeInstallDocInFiles
 #    }
@@ -81,7 +81,7 @@ function includeInstallDoc() {
 	exitIfArgIsNotArrayWithTuples includeInstallDoc_files 2 "files" 2 describePair
 
 	local installScript
-	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' <"$installDocSh")
+	installScript=$(perl -0777 -pe 's/(@|\$|\\)/\\$1/g;' <"$installDocSh" | tail -n +2)
 
 	local -r arrLength="${#includeInstallDoc_files[@]}"
 	local -i i

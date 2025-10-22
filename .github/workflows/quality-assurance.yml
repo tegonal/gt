@@ -17,6 +17,9 @@ jobs:
       - name: Install shellspec
         run: ./lib/tegonal-scripts/src/ci/install-shellspec.sh
 
+      - name: install shfmt
+        run: ./lib/tegonal-scripts/src/ci/install-shfmt.sh
+
       - name: before-pr.sh
         run: ./scripts/before-pr.sh
   smoke_test:

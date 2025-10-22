@@ -39,3 +39,5 @@ v4.10.0	src/ci/install-shellspec.sh	../lib/tegonal-scripts/src/ci/install-shells
 v4.10.0	src/qa/run-shellspec-if-installed.sh	../lib/tegonal-scripts/src/qa/run-shellspec-if-installed.sh	.*	c93cf9b3de01a203d87176a6bb008ab71ca05027eb7826e2b4f594a573e8f4d5d813c85178cfab774efa5f4467a45d064788704180663adb5c7ab246f71babf3
 v4.10.0	src/utility/date-utils.sh	../lib/tegonal-scripts/src/utility/date-utils.sh	.*	c9c92ff8c344c7dc17cb863090f288261f714e2a2953165becccf6cf9788ecd531f986208c65c9919e04a0c72da04ebbb10e05a747cb71ebaa193abc257d6c1b
 v4.10.0	src/utility/string-utils.sh	../lib/tegonal-scripts/src/utility/string-utils.sh	.*	df49edead4db5f39c9197b9544343564723880d2be851656718f528c0fe92a5c378315be67836dad70c094c4beabd5428beafe9d6693391d1718b9f8b14db73e
+v4.10.0	src/ci/install-shfmt.sh	../lib/tegonal-scripts/src/ci/install-shfmt.sh	.*	da23a78283267d8c3e0ff30ef2d3dad0b8d9b82da0b5fe9a273ece62039b9cc2dffcf89132632ce32bacae6987f659a7e9f91216416274e69818717e2b5b5e2a
+v4.10.0	src/qa/run-shfmt.sh	../lib/tegonal-scripts/src/qa/run-shfmt.sh	.*	6dbb462e88c764d1905f8e6179169942da5035dee74f89df1d83011216ddc6bfa6c4fe556c79c3f92c7f7cadb09ab1b8945304b822930ba4c6137e04a063265c

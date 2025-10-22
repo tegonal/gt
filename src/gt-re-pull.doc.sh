@@ -17,5 +17,3 @@ gt pull -r tegonal-scripts --auto-trust true
 
 # uses a custom working directory and re-pulls files of remote tegonal-scripts which are missing locally
 gt re-pull -w .github/.gt -r tegonal-scripts
-
-

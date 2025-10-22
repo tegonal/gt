@@ -92,21 +92,28 @@ and of course execute the `install.sh` as such.
 
 <!-- auto-generated, do not modify here but in install.sh.doc -->
 ```bash
-currentDir=$(pwd) && \
-tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" && \
-wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc" && \
-wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc.sig" && \
-gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc && \
-echo "public key trusted" && \
-mkdir ./gpg && \
-gpg --homedir ./gpg --import ./signing-key.public.asc && \
-wget "https://raw.githubusercontent.com/tegonal/gt/v1.4.4/install.sh" && \
-wget "https://raw.githubusercontent.com/tegonal/gt/v1.4.4/install.sh.sig" && \
-gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh && \
-chmod +x ./install.sh && \
-echo "verification successful" || (printf >&2 "\033[0;31mERROR\033[0m: verification failed, don't continue !!\n"; exit 1) && \
-./install.sh && result=true || (echo >&2 "installation failed"; exit 1) && \
-false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
+#!/usr/bin/env bash
+currentDir=$(pwd) &&
+	tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc.sig" &&
+	gpg --verify ./signing-key.public.asc.sig ./signing-key.public.asc &&
+	echo "public key trusted" &&
+	mkdir ./gpg &&
+	gpg --homedir ./gpg --import ./signing-key.public.asc &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v1.4.4/install.sh" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v1.4.4/install.sh.sig" &&
+	gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh &&
+	chmod +x ./install.sh &&
+	echo "verification successful" ||
+	{
+		printf >&2 "\033[0;31mERROR\033[0m: verification failed, don't continue !!\n"
+		exit 1
+	} && ./install.sh && result=true ||
+	{
+		echo >&2 "installation failed"
+		exit 1
+	} && false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
 ```
 
 </install>
@@ -505,7 +512,7 @@ gt pull -r tegonal-scripts --auto-trust true -p src/utility/checks.sh
 # then checks.sh will still be verified against it.
 # (you might want to add --unsecure true to .gt/tegonal-scripts/pull.args if you never intend to
 # set up gpg -- this way you don't have to repeat this option)
-gt pull -r tegonal-scripts --unsecure true  -p src/utility/checks.sh
+gt pull -r tegonal-scripts --unsecure true -p src/utility/checks.sh
 
 # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
 # without verifying its signature (if defined) against the remotes gpg store

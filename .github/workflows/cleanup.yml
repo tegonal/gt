@@ -24,6 +24,8 @@ jobs:
       - uses: actions/checkout@v5
 
       #gt-placeholder-install-dependencies-start
+      - name: install shfmt
+        run: ./lib/tegonal-scripts/src/ci/install-shfmt.sh
       #gt-placeholder-install-dependencies-end
 
       - name: Cleanup Sources

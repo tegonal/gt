@@ -30,11 +30,13 @@ fi
 sourceOnce "$projectDir/src/install/include-install-doc.sh"
 
 sourceOnce "$dir_of_tegonal_scripts/utility/cleanups.sh"
-sourceOnce "$dir_of_tegonal_scripts/utility/log.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/replace-help-snippet.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
+sourceOnce "$scriptsDir/run-shfmt.sh"
 
 function cleanupOnPushToMain() {
+	customRunShfmt || die "was not able to format"
+
 	find "$projectDir/src" -maxdepth 1 -type f \
 		-name "*.sh" \
 		-not -name "*.doc.sh" \
