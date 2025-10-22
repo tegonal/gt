@@ -105,7 +105,7 @@ function migratePulledTsvFormat() {
 				local entryTag entryFile entryRelativePath tagFiler entrySha
 				IFS=$'\t' read -r entryTag entryFile entryRelativePath tagFiler entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
 				local hasPlaceholder
-				hasPlaceholder=$(hasGtPlaceholder "$workingDirAbsolute" "$entryRelativePath")
+				hasPlaceholder=$(hasGtPlaceholder "$workingDirAbsolute/$entryRelativePath")
 				pulledTsvEntry "$entryTag" "$entryFile" "$entryRelativePath" "$tagFiler" "$hasPlaceholder" "$entrySha" >>"$pulledTsv.new"
 			done
 		}
@@ -203,10 +203,9 @@ function readPulledTsv() {
 }
 
 function hasGtPlaceholder() {
-	local -r workingDirAbsolute=$1
-	local -r relativeTarget=$2
-	shift 2 || traceAndDie "could not shift by 2"
-	grep -q "gt-placeholder" "$workingDirAbsolute/$entryRelativePath" && echo "true" || echo "false"
+	local -r file=$1
+	shift 1 || traceAndDie "could not shift by 1"
+	grep -q "gt-placeholder" "$file" && echo "true" || echo "false"
 }
 
 function replaceGtPlaceholdersDuringUpdate() {
