@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  utility functions for dealing with arrays
@@ -130,7 +130,7 @@ function arrTakeEveryX() {
 	local -ri offset=$4
 	shift 4 || traceAndDie "could not shift by 4"
 
-  # shellcheck disable=SC2329   # is passed by name to arrFilter
+	# shellcheck disable=SC2329   # is passed by name to arrFilter
 	function arrFilterMod_fn() {
 		local -r index=$2
 		(((index - offset) % modulo == 0))

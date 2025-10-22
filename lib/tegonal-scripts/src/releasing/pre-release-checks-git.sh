@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 # Checks that releasing a certain version (creating a corresponding git tag) makes sense: We check:
@@ -34,7 +34,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.9.1'
+export TEGONAL_SCRIPTS_VERSION='v4.10.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -64,7 +64,7 @@ function preReleaseCheckGit() {
 
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
-	if grep -q --fixed-strings "$version" <<< "$tags"; then
+	if grep -q --fixed-strings "$version" <<<"$tags"; then
 		logError "tag %s already exists locally, adjust version or delete it with git tag -d %s" "$version" "$version"
 		if hasRemoteTag "$version"; then
 			printf >&2 "Note, it also exists on the remote which means you also need to delete it there -- e.g. via git push origin :%s\n" "$version"

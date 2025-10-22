@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  Helper script do replace a snippet in HTML based files (e.g. in a Markdown file).
@@ -24,7 +24,7 @@
 #
 #    declare file
 #    file=$(mktemp)
-#    echo "<my-script></my-script>" > "$file"
+#    echo "<my-script></my-script>" >"$file"
 #
 #    declare dir fileName output
 #    dir=$(dirname "$file")

@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -53,8 +53,8 @@ function runShellcheck() {
 	exitIfCommandDoesNotExist "shellcheck" "execute $dir_of_tegonal_scripts/ci/install-shellcheck.sh (if pulled) or see https://github.com/koalaman/shellcheck#installing"
 
 	if (($# < 2)); then
-		logError "At least two parameters need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1: dirs         name of array which contains paths in which *.sh files are searched'
+		logError "At least two arguments need to be passed to runShellcheck, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		echo >&2 '1: paths        name of array which contains paths in which *.sh files are searched'
 		echo >&2 "2: sourcePath   equivalent to shellcheck's -P, path to search for sourced files, separated by :"
 		echo >&2 '3... args       additional args which are passed to the find command'
 		printStackTrace

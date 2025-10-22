@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  utility function dealing with Input/Output
@@ -34,7 +34,6 @@
 #    # creates file descriptors 3 (output) and 4 (input) based on temporary files
 #    # executes readFile and closes the file descriptors again
 #    withCustomOutputInput 3 4 readFile "my-file.txt"
-#
 #
 #    # First tries to set chmod 777 to the directory and all files within it and then deletes the directory
 #    deleteDirChmod777 ".git"

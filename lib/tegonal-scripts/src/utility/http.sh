@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  utility function dealing with fetching files via http
@@ -29,7 +29,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.9.1'
+export TEGONAL_SCRIPTS_VERSION='v4.10.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -49,7 +49,7 @@ function wgetAndVerify() {
 		# shellcheck disable=SC2312		# cat shouldn't fail for a constant string hence fine to ignore exit code
 		cat <<-EOM
 			# downloads https://.../signing-key.public.asc and https://.../signing-key.public.asc.sig and verifies it with gpg
-      wgetAndVerify "https://github.com/tegonal/gt/.gt/signing-key.public.asc"
+			wgetAndVerify "https://github.com/tegonal/gt/.gt/signing-key.public.asc"
 		EOM
 	)
 	parseArguments params "$examples" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
@@ -62,9 +62,9 @@ function wgetAndVerify() {
 	currentDir=$(pwd) || die "could not determine currentDir via pwd"
 
 	for name in "$fileName" "$fileName.sig"; do
-	if [[ -f $name ]]; then
-  		logInfo "there is already a file named %s in %s, going to override" "$name" "$currentDir"
-  	fi
+		if [[ -f $name ]]; then
+			logInfo "there is already a file named %s in %s, going to override" "$name" "$currentDir"
+		fi
 	done
 
 	wget -O "$url" || die "could not download %s" "$url"

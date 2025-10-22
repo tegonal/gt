@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  Utility functions wrapping printf and prefixing the message with a coloured INFO, WARNING or ERROR.
@@ -58,11 +58,11 @@ sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 function executeIfFunctionNameDefined() {
 	if (($# < 2)); then
 		logError "At least two arguments need to be passed to executeIfFunctionNameDefined, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-			echo >&2 '1: functionName     the function which shall be executed if defined'
-			echo >&2 '2: argNumberOrName  via which arg (number or name) was the function name defined (used in the error messages)'
-			echo >&2 '3... args...        arguments passed to the function'
-			printStackTrace
-			exit 9
+		echo >&2 '1: functionName     the function which shall be executed if defined'
+		echo >&2 '2: argNumberOrName  via which arg (number or name) was the function name defined (used in the error messages)'
+		echo >&2 '3... args...        arguments passed to the function'
+		printStackTrace
+		exit 9
 	fi
 	local functionName=$1
 	local argNumberOrName=$2
