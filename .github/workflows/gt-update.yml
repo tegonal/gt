@@ -144,7 +144,6 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           branch: 'gt/update/${{ matrix.remote }}'
-          base: main
           title: 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt'
           commit-message: 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt'
           body: "following the changes after running `gt update -r \"${{ matrix.remote }}\"` and reset gpg keys"
