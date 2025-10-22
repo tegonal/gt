@@ -238,23 +238,23 @@ function replaceGtPlaceholdersDuringUpdate() {
 
 	key=""
 	while IFS= read -r line; do
-		if [[ $line =~ gt-placeholder-([0-9]+)-start ]]; then
+		if [[ $line =~ $gtPlaceholderRegex ]]; then
 			key="${BASH_REMATCH[1]}"
 			# insert the previous content if defined
 			if [[ -v placeholders[$key] ]]; then
-				printf "%s" "${placeholders[$key]}" >"$updatedFile.tmp"
+				printf "%s" "${placeholders[$key]}" >>"$updatedFile.tmp"
 				unset 'placeholders["'"$key"'"]'
 				while IFS= read -r inner; do
 					[[ $inner =~ gt-placeholder-$key-end ]] && break
 				done
 			else
 				while IFS= read -r inner; do
-					echo "$line" >"$updatedFile.tmp"
+					echo "$line" >>"$updatedFile.tmp"
 					[[ $inner =~ gt-placeholder-$key-end ]] && break
 				done
 			fi
 		else
-			echo "$line" >"$updatedFile.tmp"
+			echo "$line" >>"$updatedFile.tmp"
 		fi
 	done <"$updatedFile"
 
