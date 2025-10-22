@@ -13,9 +13,9 @@ sourceOnce "$dir_of_gt/install/include-install-doc.sh"
 function cleanupOnPushToMain() {
 	# shellcheck disable=SC2034   # is passed by name to copyInstallDoc
 	local -ar includeInstallDocInFiles=(
-	  # file_name indent
+		# file_name indent
 		".github/workflows/gt-update.yml" '          '
-  	"src/gitlab/install-gt.sh" ''
+		"src/gitlab/install-gt.sh" ''
 	)
 	includeInstallDoc "$dir_of_gt/../install.doc.sh" includeInstallDocInFiles
 }
