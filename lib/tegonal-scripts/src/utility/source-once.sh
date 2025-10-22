@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  Utility functions to source files but only if a certain guard is not defined. Sourcing happens inside the functions
@@ -24,10 +24,10 @@
 #
 #    source "$dir_of_tegonal_scripts/utility/source-once.sh"
 #
-#    sourceOnce "foo.sh"    # creates a variable named sourceOnceGuard_foo__sh which acts as guard and sources foo.sh
-#    sourceOnce "foo.sh"    # will source nothing as sourceOnceGuard_foo__sh is already defined
-#    unset sourceOnceGuard_foo__sh          # unsets the guard
-#    sourceOnce "foo.sh"    # is sourced again and the guard established
+#    sourceOnce "foo.sh"           # creates a variable named sourceOnceGuard_foo__sh which acts as guard and sources foo.sh
+#    sourceOnce "foo.sh"           # will source nothing as sourceOnceGuard_foo__sh is already defined
+#    unset sourceOnceGuard_foo__sh # unsets the guard
+#    sourceOnce "foo.sh"           # is sourced again and the guard established
 #    # you can also use sourceAlways instead of unsetting and using sourceOnce.
 #    sourceAlways "foo.sh"
 #

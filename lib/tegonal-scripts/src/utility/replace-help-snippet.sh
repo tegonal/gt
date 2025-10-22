@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.9.1
+#                                         Version: v4.10.0
 #######  Description  #############
 #
 #  Helper script do capture the `--help` output of a script and replace a snippet in HTML based scripts (e.g. in a Markdown script).
@@ -25,7 +25,7 @@
 #
 #    declare file
 #    file=$(mktemp)
-#    echo "<my-script-help></my-script-help>" > "$file"
+#    echo "<my-script-help></my-script-help>" >"$file"
 #
 #    # replaceHelpSnippet script id dir pattern
 #    replaceHelpSnippet my-script.sh my-script-help "$(dirname "$file")" "$(basename "$file")"
