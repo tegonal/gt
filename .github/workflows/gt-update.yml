@@ -8,10 +8,13 @@
 #                                         Version: v1.6.0-SNAPSHOT
 ###################################
 name: "gt update"
+
+#gt-placeholder-trigger-start
 on:
   schedule:
     - cron: '0 4 * * MON'
   workflow_dispatch:
+#gt-placeholder-trigger-end
 
 permissions:
   contents: read
