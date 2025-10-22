@@ -61,8 +61,8 @@ function migratePulledTsvFormat() {
 		mv "$pulledTsv.new" "$pulledTsv" || die "was not able to override \033[0;36m%s\033[0m with the new content from %s" "$pulledTsv" "$pulledTsv.new"
 	}
 
-	local migrationFileDescriptorOut=20
-	local migrationFileDescriptorIn=21
+	local -r migrationFileDescriptorOut=20
+	local -r migrationFileDescriptorIn=21
 
 	if [[ $fromVersion == "unspecified" ]]; then
 		# pulled.tsv without version pragma, convert to 1.0.0
@@ -217,14 +217,15 @@ function replaceGtPlaceholdersDuringUpdate() {
 		die "the given current file %s does not exist" "$currentFile"
 	fi
 	if [[ ! -f "$updatedFile" ]]; then
-		die "the given updated file %s does not exist" "$currentFile"
+		die "the given updated file %s does not exist" "$updatedFile"
 	fi
 
 	declare -A placeholders=()
+	local -r gtPlaceholderRegex="gt-placeholder-(.*)-start"
 
 	local line key block inner
 	while IFS= read -r line; do
-		if [[ $line =~ gt-placeholder-(.*)-start ]]; then
+		if [[ $line =~ $gtPlaceholderRegex ]]; then
 			key="${BASH_REMATCH[1]}"
 			block="$line"$'\n'
 			while IFS= read -r inner; do
@@ -235,31 +236,28 @@ function replaceGtPlaceholdersDuringUpdate() {
 		fi
 	done <"$currentFile"
 
-	declar -p placeholders
-
 	key=""
-	(
-		while IFS= read -r line; do
-			if [[ $line =~ gt-placeholder-([0-9]+)-start ]]; then
-				key="${BASH_REMATCH[1]}"
-				# insert the previous content if defined
-				if [[ -v placeholders[$key] ]]; then
-					printf "%s" "${placeholders[$key]}"
-					unset 'placeholder["'"$key"'"]'
-					while IFS= read -r inner; do
-						[[ $inner =~ gt-placeholder-$key-end ]] && break
-					done
-				else
-					while IFS= read -r inner; do
-						echo "$line"
-						[[ $inner =~ gt-placeholder-$key-end ]] && break
-					done
-				fi
+	while IFS= read -r line; do
+		if [[ $line =~ gt-placeholder-([0-9]+)-start ]]; then
+			key="${BASH_REMATCH[1]}"
+			# insert the previous content if defined
+			if [[ -v placeholders[$key] ]]; then
+				printf "%s" "${placeholders[$key]}" >"$updatedFile.tmp"
+				unset 'placeholders["'"$key"'"]'
+				while IFS= read -r inner; do
+					[[ $inner =~ gt-placeholder-$key-end ]] && break
+				done
 			else
-				echo "$line"
+				while IFS= read -r inner; do
+					echo "$line" >"$updatedFile.tmp"
+					[[ $inner =~ gt-placeholder-$key-end ]] && break
+				done
 			fi
-		done <"$updatedFile"
-	) >"$updatedFile.tmp"
+		else
+			echo "$line" >"$updatedFile.tmp"
+		fi
+	done <"$updatedFile"
+
 	mv "$updatedFile.tmp" "$updatedFile"
 
 	if ((${#placeholders[@]} > 0)); then
