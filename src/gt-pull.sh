@@ -442,7 +442,7 @@ function gt_pull_internal_without_arg_checks() {
 		local relativeTarget hasPlaceholder sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
 		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
-		hasPlaceholder=$(hasGtPlaceholder "$workingDirAbsolute" "$relativeTarget")
+		hasPlaceholder=$(hasGtPlaceholder "$source")
 		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$repoFile" || echo "")
@@ -469,10 +469,10 @@ function gt_pull_internal_without_arg_checks() {
 				printf "Won't pull the file, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pulledTsv"
 				rm "$source"
 				return
-			elif ! grep -x -F "$entry" "$pulledTsv" >/dev/null; then
+			elif ! grep --line-regexp --fixed-strings "$entry" "$pulledTsv" >/dev/null; then
 				local currentLocation newLocation
 				currentLocation=$(realpath --relative-to="$currentDir" "$workingDirAbsolute/$entryRelativePath" || echo "$workingDirAbsolute/$entryRelativePath")
-				newLocation=$(realpath --relative-to="$currentDir" "$pullDir/$targetFile" || echo "$pullDir/$targetFile")
+				newLocation=$(realpath --relative-to="$currentDir" "$pullDirAbsolute/$targetFile" || echo "$pullDirAbsolute/$targetFile")
 				local -r currentLocation newLocation
 				if [[ "$currentLocation" != "$newLocation" ]]; then
 					logWarning "the file was previously pulled to a different location"
@@ -480,7 +480,7 @@ function gt_pull_internal_without_arg_checks() {
 					echo "    new location: $newLocation"
 					printf "Won't pull the file again, you have several alternatives:\n- remove the entry from %s and pull it again\n- move the file manually and adjust the relativeTarget of the entry (and pull again)\n" "$pulledTsv"
 				else
-					logWarning "the file was pulled previously but with a different tag-filter (see difference between new and old entry):"
+					logWarning "the file was pulled previously but with a different tag-filter or manual change was carried out (see difference between new and old entry):"
 					gitDiffChars "$currentEntry" "$entry"
 					printf "Won't pull the file again, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pulledTsv"
 				fi
