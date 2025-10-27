@@ -5,21 +5,27 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.1.0
+#                                         Version: v4.2.0
 ###################################
 name: Cleanup
 
+#gt-placeholder-trigger-start
 on:
   push:
     branches:
       - main
+#gt-placeholder-trigger-end
 
+#gt-placeholder-permissions-start
 permissions:
   contents: read
+#gt-placeholder-permissions-end
 
 jobs:
   build:
+    #gt-placeholder-runs-on-start
     runs-on: ubuntu-latest
+    #gt-placeholder-runs-on-end
     steps:
       - uses: actions/checkout@v5
 
@@ -32,7 +38,7 @@ jobs:
         run: ./scripts/cleanup-on-push-to-main.sh
 
       - name: Check if actor is collaborator
-        id: check-collab
+        id: check-collaborator
         run: |
           user="${{ github.actor }}"
           repo="${{ github.repository }}"
@@ -59,4 +65,4 @@ jobs:
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
-          reviewers: ${{ steps.check-collab.outputs.reviewer }}
+          reviewers: ${{ steps.check-collaborator.outputs.reviewer }}
