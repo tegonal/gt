@@ -109,3 +109,95 @@ jobs:
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
           reviewers: ${{ steps.check-collaborator.outputs.reviewer }}
+
+#gt-placeholder-permissions-start
+#gt-placeholder-permissions-start
+#gt-placeholder-permissions-start
+
+jobs:
+  build:
+    #gt-placeholder-runs-on-start
+    #gt-placeholder-runs-on-start
+    steps:
+      - uses: actions/checkout@v5
+
+      #gt-placeholder-install-dependencies-start
+
+      - name: Cleanup Sources
+        run: ./scripts/cleanup-on-push-to-main.sh
+
+      - name: Check if actor is collaborator
+        id: check-collaborator
+        run: |
+          user="${{ github.actor }}"
+          repo="${{ github.repository }}"
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$repo/collaborators/$user")
+          echo "status $status for user $user"
+          if [ "$status" = "204" ]; then
+            echo "reviewer=$user" >> $GITHUB_OUTPUT
+          else
+            echo "reviewer=" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request if necessary
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto-cleanup
+          title: Auto Cleanup
+          commit-message: auto cleanup sources
+          body: Looks like someone forgot to run ./scripts/cleanup-on-push-to-main.sh before committing. I did it for them :)
+          delete-branch: true
+          token: ${{ secrets.AUTO_PR_TOKEN }}
+          push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
+          reviewers: ${{ steps.check-collaborator.outputs.reviewer }}
+
+#gt-placeholder-permissions-start
+#gt-placeholder-permissions-start
+#gt-placeholder-permissions-start
+
+jobs:
+  build:
+    #gt-placeholder-runs-on-start
+    #gt-placeholder-runs-on-start
+    steps:
+      - uses: actions/checkout@v5
+
+      #gt-placeholder-install-dependencies-start
+
+      - name: Cleanup Sources
+        run: ./scripts/cleanup-on-push-to-main.sh
+
+      - name: Check if actor is collaborator
+        id: check-collaborator
+        run: |
+          user="${{ github.actor }}"
+          repo="${{ github.repository }}"
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$repo/collaborators/$user")
+          echo "status $status for user $user"
+          if [ "$status" = "204" ]; then
+            echo "reviewer=$user" >> $GITHUB_OUTPUT
+          else
+            echo "reviewer=" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request if necessary
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto-cleanup
+          title: Auto Cleanup
+          commit-message: auto cleanup sources
+          body: Looks like someone forgot to run ./scripts/cleanup-on-push-to-main.sh before committing. I did it for them :)
+          delete-branch: true
+          token: ${{ secrets.AUTO_PR_TOKEN }}
+          push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
+          reviewers: ${{ steps.check-collaborator.outputs.reviewer }}
