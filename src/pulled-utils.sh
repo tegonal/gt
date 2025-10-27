@@ -248,8 +248,9 @@ function replaceGtPlaceholdersDuringUpdate() {
 					[[ $inner =~ gt-placeholder-$key-end ]] && break
 				done
 			else
+				echo "$line" >>"$updatedFile.tmp"
 				while IFS= read -r inner; do
-					echo "$line" >>"$updatedFile.tmp"
+					echo "$inner" >>"$updatedFile.tmp"
 					[[ $inner =~ gt-placeholder-$key-end ]] && break
 				done
 			fi
