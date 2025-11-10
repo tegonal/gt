@@ -28,6 +28,7 @@ if ! [[ -v dir_of_tegonal_scripts ]]; then
 	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
 fi
 
+sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
@@ -209,10 +210,14 @@ function hasGtPlaceholder() {
 }
 
 function replaceGtPlaceholdersDuringUpdate() {
-	local -r currentFile=$1
-	local -r updatedFile=$2
-	shift 2 || traceAndDie "could not shift by 2"
+	local remote repo repoPath currentFile updatedFile entryTag tagToPull
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(remote repo repoPath currentFile updatedFile entryTag tagToPull)
+	parseFnArgs params "$@"
 
+	if [[ ! -f "$repo/$repoPath" ]]; then
+		die "the given repo path %s does not exist" "$repo/$repoPath"
+	fi
 	if [[ ! -f "$currentFile" ]]; then
 		die "the given current file %s does not exist" "$currentFile"
 	fi
@@ -220,28 +225,48 @@ function replaceGtPlaceholdersDuringUpdate() {
 		die "the given updated file %s does not exist" "$updatedFile"
 	fi
 
-	declare -A placeholders=()
 	local -r gtPlaceholderRegex="gt-placeholder-(.*)-start"
 
-	local line key block inner
-	while IFS= read -r line; do
-		if [[ $line =~ $gtPlaceholderRegex ]]; then
-			key="${BASH_REMATCH[1]}"
-			block="$line"$'\n'
-			while IFS= read -r inner; do
-				block+="$inner"$'\n'
-				[[ $inner =~ gt-placeholder-$key-end ]] && break
-			done
-			placeholders["$key"]="$block"
-		fi
-	done <"$currentFile"
+	function extractPlaceholders() {
+		local -n extractPlaceholders_placeholders=$1
+
+		local line key block inner
+		while IFS= read -r line; do
+			if [[ $line =~ $gtPlaceholderRegex ]]; then
+				key="${BASH_REMATCH[1]}"
+				block="$line"$'\n'
+				while IFS= read -r inner; do
+					block+="$inner"$'\n'
+					[[ $inner =~ gt-placeholder-$key-end ]] && break
+				done
+				# shellcheck disable=SC2034	# is used outside
+				extractPlaceholders_placeholders["$key"]="$block"
+			fi
+		done
+	}
+
+	declare -A originalPlaceholders=()
+	if [[ $entryTag != "$tagToPull" ]]; then
+		gitFetchTagFromRemote "$remote" "$repo" "$entryTag"
+		local originalFile
+		originalFile=$(git -C "$repo" --no-pager show "tags/$tagToPull:$repoPath")
+		extractPlaceholders originalPlaceholders <<<"$originalFile"
+	fi
+
+	declare -A placeholders=()
+	extractPlaceholders placeholders <"$currentFile"
 
 	key=""
 	while IFS= read -r line; do
 		if [[ $line =~ $gtPlaceholderRegex ]]; then
 			key="${BASH_REMATCH[1]}"
-			# insert the previous content if defined
-			if [[ -v placeholders[$key] ]]; then
+
+			# placeholder can only be modified if it existed before and then we check if there is a difference to the original
+			# We check if the content was changed by the user because the remote might have changed the placeholder as well
+			# If it was not changed by the user, then we want to update the placeholder to what the remote defined
+			# Note, the key is not defined in originalPlaceholders if the entryTag == tagToPull for performance reasons
+			# because then it is clear that the remote did not update
+			if [[ -v placeholders[$key] ]] && [[ ! -v originalPlaceholders[$key] || "${placeholders[$key]}" != "${originalPlaceholders[$key]}" ]]; then
 				printf "%s" "${placeholders[$key]}" >>"$updatedFile.tmp"
 				unset 'placeholders["'"$key"'"]'
 				while IFS= read -r inner; do
