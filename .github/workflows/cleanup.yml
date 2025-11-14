@@ -17,9 +17,6 @@ on:
 #gt-placeholder-trigger-end
 
 #gt-placeholder-permissions-start
-permissions:
-  contents: read
-  pull-requests: write
 #gt-placeholder-permissions-end
 
 jobs:
