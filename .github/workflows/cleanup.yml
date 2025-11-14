@@ -19,6 +19,7 @@ on:
 #gt-placeholder-permissions-start
 permissions:
   contents: read
+  pull-requests: write
 #gt-placeholder-permissions-end
 
 jobs:
@@ -42,8 +43,8 @@ jobs:
         run: |
           user="${{ github.actor }}"
           repo="${{ github.repository }}"
-          status=$(curl -s -o /dev/null -w '%{http_code}' \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
+          status=$(curl -L -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/$repo/collaborators/$user")
           echo "status $status for user $user"
@@ -52,10 +53,9 @@ jobs:
           else
             echo "reviewer=" >> $GITHUB_OUTPUT
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Pull Request if necessary
+        id: create-pr
         uses: peter-evans/create-pull-request@v7
         with:
           branch: auto-cleanup
@@ -65,4 +65,15 @@ jobs:
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
-          reviewers: ${{ steps.check-collaborator.outputs.reviewer }}
+
+      - name: set reviewer
+        if: ${{ steps.check-collaborator.outputs.reviewer != '' && steps.check-collaborator.outputs.reviewer != null && steps.create-pr.outputs.pull-request-operation == 'created' }}
+        run: |
+          repo="${{ github.repository }}"
+          curl -L \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/$repo/pulls/${{steps.create-pr.outputs.pull-request-number}}/requested_reviewers \
+            -d '{"reviewers":["${{ steps.check-collaborator.outputs.reviewer }}"]}'
