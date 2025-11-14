@@ -55,6 +55,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 		- [list](#list)
 	- [pull](#pull)
 		- [Pull Hook](#pull-hook)
+        - [Placeholders](#placeholders)
 	- [re-pull](#re-pull)
 	- [reset](#reset)
 	- [update](#update)
@@ -572,6 +573,26 @@ function gt_pullHook_tegonal_scripts_after(){
 For a real world example, take a look at the
 [pull-hook.sh](https://github.com/tegonal/gt/blob/main/.gt/remotes/tegonal-gh-commons/pull-hook.sh)
 used in this repo.
+
+If you are a maintainer of a source repository (i.e. consumers `gt pull` your files) then you might want to look at
+the next section which explains how you can provide ways that consumers have a simpler way to modify parts of your
+file without the need of a pull-hook.
+
+### Placeholders
+
+Creating a pull-hook for simple things such as change `tegonal` to another organisation
+in [gt-update github workflow](#required-modifications) seems a bit much. Due to this gt provides the possibility for
+source repositories (i.e. not for consumers `gt pull`ing files but for maintainers) to define placeholders.
+They are defined by using `gt-placeholder-xyz-start` on a line and `gt-placeholder-xyz-end` on another. Everything
+in between including the lines where the markers are defined are considered the content of the placeholder.
+
+Once a consumer modifies the content of a placeholder then those lines will not be updated any more during a
+[`gt update`](#update). A simple way for a consumer to change parts of the pulled file.
+
+Placeholders are typically used for parts where you expect that consumer might change it and where you in turn don't
+expect to make updates in the future. If you should do an update and you think it is relevant for consumers as well,
+then you should rename the placeholder so that the consumers get the update again (e.g. by renaming it from xyz to
+xyz-v2).
 
 ## re-pull
 

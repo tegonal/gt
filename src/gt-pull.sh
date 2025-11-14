@@ -360,16 +360,7 @@ function gt_pull_internal_without_arg_checks() {
 	# now that it was established
 	trap "gt_pull_cleanupRepo '$repo'" EXIT
 
-	local tags
-	tags=$(git -C "$repo" tag) || die "The following command failed (see above): git tag"
-	if grep "$tagToPull" <<<"$tags" >/dev/null; then
-		logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToPull" "$remote"
-	else
-		local remoteTags
-		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote" -r) || (logInfo >&2 "check your internet connection" && return 1) || return $?
-		grep "$tagToPull" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToPull" "$remoteTags" || return $?
-		git -C "$repo" fetch --depth 1 "$remote" "refs/tags/$tagToPull:refs/tags/$tagToPull" || returnDying "was not able to fetch tag %s from remote %s" "$tagToPull" "$remote" || return $?
-	fi
+	gitFetchTagFromRemote "$remote" "$repo" "$tagToPull"  || return $?
 
 	git -C "$repo" checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
 
@@ -493,7 +484,7 @@ function gt_pull_internal_without_arg_checks() {
 
 		"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
 		if [[ $entryHasPlaceholder == true ]]; then
-			replaceGtPlaceholdersDuringUpdate "$absoluteTarget" "$source"
+			replaceGtPlaceholdersDuringUpdate "$remote" "$repo" "$entryFile" "$absoluteTarget" "$source" "$entryTag" "$tagToPull"
 		fi
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
 		"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
