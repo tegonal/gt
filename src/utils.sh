@@ -105,22 +105,22 @@ function gitDiffChars() {
 		grep -A 1 @@ | tail -n +2
 }
 
-function gitFetchTagFromRemote(){
-		local remote repo tagToFetch
-  	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-  	local -ra params=(remote repo tagToFetch)
-  	parseFnArgs params "$@"
+function gitFetchTagFromRemote() {
+	local remote repo tagToFetch
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(remote repo tagToFetch)
+	parseFnArgs params "$@"
 
-		local tags
-		tags=$(git -C "$repo" tag) || die "The following command failed (see above): git tag"
-		if grep "$tagToFetch" <<<"$tags" >/dev/null; then
-			logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToFetch" "$remote"
-		else
-			local remoteTags
-			remoteTags=$(cd "$repo" && remoteTagsSorted "$remote" -r) || (logInfo >&2 "check your internet connection" && return 1) || return $?
-			grep "$tagToFetch" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToFetch" "$remoteTags" || return $?
-			git -C "$repo" fetch --depth 1 "$remote" "refs/tags/$tagToFetch:refs/tags/$tagToFetch" || returnDying "was not able to fetch tag %s from remote %s" "$tagToFetch" "$remote" || return $?
-		fi
+	local tags
+	tags=$(git -C "$repo" tag) || die "The following command failed (see above): git tag"
+	if grep "$tagToFetch" <<<"$tags" >/dev/null; then
+		logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToFetch" "$remote"
+	else
+		local remoteTags
+		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote" -r) || (logInfo >&2 "check your internet connection" && return 1) || return $?
+		grep "$tagToFetch" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToFetch" "$remoteTags" || return $?
+		git -C "$repo" fetch --depth 1 "$remote" "refs/tags/$tagToFetch:refs/tags/$tagToFetch" || returnDying "was not able to fetch tag %s from remote %s" "$tagToFetch" "$remote" || return $?
+	fi
 
 }
 
