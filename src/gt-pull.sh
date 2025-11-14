@@ -360,7 +360,7 @@ function gt_pull_internal_without_arg_checks() {
 	# now that it was established
 	trap "gt_pull_cleanupRepo '$repo'" EXIT
 
-	gitFetchTagFromRemote "$remote" "$repo" "$tagToPull"  || return $?
+	gitFetchTagFromRemote "$remote" "$repo" "$tagToPull" || return $?
 
 	git -C "$repo" checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
 
