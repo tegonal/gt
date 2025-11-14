@@ -210,13 +210,13 @@ function hasGtPlaceholder() {
 }
 
 function replaceGtPlaceholdersDuringUpdate() {
-	local remote repo repoPath currentFile updatedFile entryTag tagToPull
+	local remote repo repoFile currentFile updatedFile entryTag tagToPull pullHookBefore pullHookAfter
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(remote repo repoPath currentFile updatedFile entryTag tagToPull)
+	local -ra params=(remote repo repoFile currentFile updatedFile entryTag tagToPull pullHookBefore pullHookAfter)
 	parseFnArgs params "$@"
 
-	if [[ ! -f "$repo/$repoPath" ]]; then
-		die "the given repo path %s does not exist" "$repo/$repoPath"
+	if [[ ! -f "$repo/$repoFile" ]]; then
+		die "the given repo path %s does not exist" "$repo/$repoFile"
 	fi
 	if [[ ! -f "$currentFile" ]]; then
 		die "the given current file %s does not exist" "$currentFile"
@@ -248,14 +248,27 @@ function replaceGtPlaceholdersDuringUpdate() {
 	declare -A originalPlaceholders=()
 	if [[ $entryTag != "$tagToPull" ]]; then
 		gitFetchTagFromRemote "$remote" "$repo" "$entryTag"
-		local originalFile
-		originalFile=$(git -C "$repo" --no-pager show "tags/$tagToPull:$repoPath")
-		extractPlaceholders originalPlaceholders <<<"$originalFile"
+		local tmpRepo originalFile originalFileAfterHooks
+		tmpRepo="$(getCheapTmpFile "$repo/$remote")"
+		mkdir "$tmpRepo"
+		originalFile="$tmpRepo/$(basename "$currentFile")"
+		originalFileAfterHooks="$(getCheapTmpFile "$originalFile")"
+		git -C "$repo" --no-pager show "tags/$tagToPull:$repoFile" >"$originalFile"
+		cp "$originalFile" "$originalFileAfterHooks"
+		"$pullHookBefore" "$tagToPull" "$originalFile" "$originalFileAfterHooks" || returnDying "pull hook before failed for \033[0;36m%s\033[0m in replaceGtPlaceholdersDuringUpdate" "$repoFile" || return $?
+		"$pullHookAfter" "$tagToPull" "$originalFile" "$originalFileAfterHooks" || returnDying "pull hook after failed for \033[0;36m%s\033[0m in replaceGtPlaceholdersDuringUpdate" "$repoFile" || return $?
+		extractPlaceholders originalPlaceholders <"$originalFileAfterHooks"
+		rm "$originalFile"
+		rm "$originalFileAfterHooks"
 	fi
+
+	declare -p originalPlaceholders
 
 	declare -A placeholders=()
 	extractPlaceholders placeholders <"$currentFile"
 
+	local updateFileTmp
+	updateFileTmp=$(getCheapTmpFile "$updatedFile")
 	key=""
 	while IFS= read -r line; do
 		if [[ $line =~ $gtPlaceholderRegex ]]; then
@@ -267,24 +280,26 @@ function replaceGtPlaceholdersDuringUpdate() {
 			# Note, the key is not defined in originalPlaceholders if the entryTag == tagToPull for performance reasons
 			# because then it is clear that the remote did not update
 			if [[ -v placeholders[$key] ]] && [[ ! -v originalPlaceholders[$key] || "${placeholders[$key]}" != "${originalPlaceholders[$key]}" ]]; then
-				printf "%s" "${placeholders[$key]}" >>"$updatedFile.tmp"
-				unset 'placeholders["'"$key"'"]'
+				printf "%s" "${placeholders[$key]}" >>"$updateFileTmp"
 				while IFS= read -r inner; do
 					[[ $inner =~ gt-placeholder-$key-end ]] && break
 				done
 			else
-				echo "$line" >>"$updatedFile.tmp"
+				echo "$line" >>"$updateFileTmp"
 				while IFS= read -r inner; do
-					echo "$inner" >>"$updatedFile.tmp"
+					echo "$inner" >>"$updateFileTmp"
 					[[ $inner =~ gt-placeholder-$key-end ]] && break
 				done
 			fi
+			if [[ -v placeholders[$key] ]]; then
+				unset 'placeholders["'"$key"'"]'
+			fi
 		else
-			echo "$line" >>"$updatedFile.tmp"
+			echo "$line" >>"$updateFileTmp"
 		fi
 	done <"$updatedFile"
 
-	mv "$updatedFile.tmp" "$updatedFile"
+	mv "$updateFileTmp" "$updatedFile"
 
 	if ((${#placeholders[@]} > 0)); then
 		logWarning "looks like the following placeholders no longer exists in the file %s" "$updatedFile"
@@ -292,4 +307,10 @@ function replaceGtPlaceholdersDuringUpdate() {
 			echo "gt-placeholder-$key"
 		done
 	fi
+}
+
+function getCheapTmpFile() {
+	# We know, in theory we could overwrite an existing file this way but we doubt it will happen. Also, the file name
+	# could be too long. Let's see how fast Murphy gets us.
+	echo "$1.gt_tmp_file"
 }

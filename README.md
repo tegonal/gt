@@ -37,8 +37,10 @@ templates etc. which you use in multiple projects but want to maintain at a sing
 </details>
 
 ---
-❗ You are taking a *sneak peek* at the next version. It could be that some features you find on this page are not released yet.  
-Please have a look at the README of the corresponding release/git tag. Latest version: [README of v1.5.3](https://github.com/tegonal/gt/tree/v1.5.3/README.md).
+❗ You are taking a *sneak peek* at the next version. It could be that some features you find on this page are not
+released yet.  
+Please have a look at the README of the corresponding release/git tag. Latest
+version: [README of v1.5.3](https://github.com/tegonal/gt/tree/v1.5.3/README.md).
 
 ---
 
@@ -55,6 +57,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 		- [list](#list)
 	- [pull](#pull)
 		- [Pull Hook](#pull-hook)
+		- [placeholders](#placeholders)
 	- [re-pull](#re-pull)
 	- [reset](#reset)
 	- [update](#update)
@@ -91,6 +94,7 @@ and of course execute the `install.sh` as such.
 <install>
 
 <!-- auto-generated, do not modify here but in install.sh.doc -->
+
 ```bash
 #!/usr/bin/env bash
 currentDir=$(pwd) &&
@@ -188,7 +192,7 @@ Last but not least, see [additional installation steps](#additional-installation
    rm -r ./gpg
    ```
    Note, `gpg --verify` does not fail if the key which created the signature was revoked in the meantime
-   (it only verifies the signature). Take a look at the output (the [`install.sh`](#using-installsh) checks this 
+   (it only verifies the signature). Take a look at the output (the [`install.sh`](#using-installsh) checks this
    automatically)
 5. copy the src directory to a place where you want to store gt:
 	1. For instance, if you only want it for the current user, then place it into $HOME/.local/lib/gt
@@ -248,6 +252,7 @@ First of all, you can always run `gt --help`, to see the available commands:
 <gt-help>
 
 <!-- auto-generated, do not modify here but in src/gt.sh -->
+
 ```text
 Commands:
 pull          pull files from a previously defined remote
@@ -282,6 +287,7 @@ Following the output of running `gt remote --help`:
 <gt-remote-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
+
 ```text
 Commands:
 add      add a remote
@@ -302,6 +308,7 @@ Some examples (see documentation of each sub command in subsection for more deta
 <gt-remote>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh.doc -->
+
 ```bash
 #!/usr/bin/env bash
 
@@ -324,6 +331,7 @@ Following the output of running `gt remote add --help`:
 <gt-remote-add-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
+
 ```text
 Parameters:
 -r|--remote              name identifying this remote
@@ -368,6 +376,7 @@ Following the output of running `gt remote remove --help`:
 <gt-remote-remove-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
+
 ```text
 Parameters:
 -r|--remote              define the name of the remote which shall be removed
@@ -400,6 +409,7 @@ Following the output of running `gt remote list --help`:
 <gt-remote-list-help>
 
 <!-- auto-generated, do not modify here but in src/gt-remote.sh -->
+
 ```text
 Parameters:
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
@@ -429,6 +439,7 @@ Following the output of running `gt pull --help`:
 <gt-pull-help>
 
 <!-- auto-generated, do not modify here but in src/gt-pull.sh -->
+
 ```text
 Parameters:
 -r|--remote                  name of the remote repository
@@ -476,6 +487,7 @@ Full usage example:
 <gt-pull>
 
 <!-- auto-generated, do not modify here but in src/gt-pull.sh.doc -->
+
 ```bash
 #!/usr/bin/env bash
 
@@ -573,6 +585,26 @@ For a real world example, take a look at the
 [pull-hook.sh](https://github.com/tegonal/gt/blob/main/.gt/remotes/tegonal-gh-commons/pull-hook.sh)
 used in this repo.
 
+If you are a maintainer of a source repository (i.e. consumers `gt pull` your files) then you might want to look at
+the next section which explains how you can provide ways that consumers have a simpler way to modify parts of your 
+file without the need of a pull-hook.
+
+### placeholders
+
+Creating a pull-hook for simple things such as change `tegonal` to another organisation
+in [gt-update github workflow](#required-modifications) seems a bit much. Due to this gt provides the possibility for
+source repositories (i.e. not for consumers `gt pull`ing files but for maintainers) to define placeholders. 
+They are defined by using `gt-placeholder-xyz-start` on a line and `gt-placeholder-xyz-end` on another. Everything
+in between including the lines where the markers are defined are part of the placeholder.
+
+Once a consumer modifies the content in the placeholder manually (i.e. not via a pull-hook) then this section will not 
+be updated any more during a [`gt update`](#update). A simple way for a consumer to change parts of the pulled file.
+
+Placeholders are typically used for parts where you expect that consumer might change it and where you in turn don't
+expect to make updates in the future. If you do an update and you think it is relevant for consumers sa well, then 
+you should rename the placeholder so that
+
+
 ## re-pull
 
 Use this command to pull missing files form all or a specific remote. You can also use it to re-pull files even if they
@@ -583,6 +615,7 @@ Following the output of running `gt re-pull --help`:
 <gt-re-pull-help>
 
 <!-- auto-generated, do not modify here but in src/gt-re-pull.sh -->
+
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
@@ -614,6 +647,7 @@ Full usage example:
 <gt-re-pull>
 
 <!-- auto-generated, do not modify here but in src/gt-re-pull.sh.doc -->
+
 ```bash
 #!/usr/bin/env bash
 
@@ -648,6 +682,7 @@ Following the output of running `gt reset --help`:
 <gt-reset-help>
 
 <!-- auto-generated, do not modify here but in src/gt-reset.sh -->
+
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the remote with this name is reset, otherwise all are reset
@@ -678,6 +713,7 @@ Full usage example:
 <gt-reset>
 
 <!-- auto-generated, do not modify here but in src/gt-reset.sh.doc -->
+
 ```bash
 #!/usr/bin/env bash
 
@@ -710,6 +746,7 @@ Following the output of running `gt update --help`:
 <gt-update-help>
 
 <!-- auto-generated, do not modify here but in src/gt-update.sh -->
+
 ```text
 Parameters:
 -r|--remote              (optional) if set, only the files of this remote are updated, otherwise all
@@ -742,6 +779,7 @@ Full usage example:
 <gt-update>
 
 <!-- auto-generated, do not modify here but in src/gt-update.sh.doc -->
+
 ```bash
 #!/usr/bin/env bash
 
@@ -858,8 +896,8 @@ gt-update:
 	extends: .gt-update
 	# your modifications here, e.g. for an additional step in before_script
 	before_script:
-	- !reference [ .gt-update, before_script ]
-		- cd subdirectory
+		- !reference [ .gt-update, before_script ]
+			- cd subdirectory
 ```
 
 </details>
@@ -895,6 +933,7 @@ Following the output of running `gt self-update --help`:
 <gt-self-update-help>
 
 <!-- auto-generated, do not modify here but in src/gt-self-update.sh -->
+
 ```text
 Parameters:
 --force   if set to true, then install.sh will be called even if gt is already on latest tag -- default false
@@ -923,7 +962,7 @@ Short version:
 
 - git submodules are intended for checking out a certain branch but not a certain tag and files need to reside in the
   submodule directory.
-- gt only supports to pull files from a certain tag but not from a random branch or sha and allows to put files in any 
+- gt only supports to pull files from a certain tag but not from a random branch or sha and allows to put files in any
   directory.
 
 Longer version:
@@ -936,7 +975,7 @@ Longer version:
 
 ## 2. Does gt run on all linux distros?
 
-Most likely not, it was tested only on Ubuntu 22.04 and 24.04 with bash 5.x (it uses `shopt -s inherit_errexit` i.e. 
+Most likely not, it was tested only on Ubuntu 22.04 and 24.04 with bash 5.x (it uses `shopt -s inherit_errexit` i.e.
 requires at least bash 5).
 For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work
 (could be that executing other gt commands require more dependencies).
@@ -944,7 +983,7 @@ For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to m
 ## 3. Can I rename already pulled files?
 
 Yes, however different things to consider. In order that [`gt re-pull`](#re-pull) and [`gt update`](#update) still work
-you need to make a few adjustments. 
+you need to make a few adjustments.
 
 If the rename is static, then simply rename the file and adjust the entry in
 `.gt/remotes/<REMOTE>/pulled.tsv`
@@ -974,7 +1013,10 @@ for further suggestions and guidelines.
 
 # License
 
-gt is licensed under [European Union Public Licence v. 1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12).
+gt is licensed
+under [European Union Public Licence v. 1.2](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12).
 
 gt is using:
-- [tegonal scripts](https://github.com/tegonal/scripts) licensed under [Apache 2.0](https://opensource.org/licenses/Apache2.0)
+
+- [tegonal scripts](https://github.com/tegonal/scripts) licensed
+  under [Apache 2.0](https://opensource.org/licenses/Apache2.0)

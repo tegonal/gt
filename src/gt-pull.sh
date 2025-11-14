@@ -484,7 +484,7 @@ function gt_pull_internal_without_arg_checks() {
 
 		"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
 		if [[ $entryHasPlaceholder == true ]]; then
-			replaceGtPlaceholdersDuringUpdate "$remote" "$repo" "$entryFile" "$absoluteTarget" "$source" "$entryTag" "$tagToPull"
+			replaceGtPlaceholdersDuringUpdate "$remote" "$repo" "$entryFile" "$absoluteTarget" "$source" "$entryTag" "$tagToPull" "$pullHookBefore" "$pullHookAfter"
 		fi
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
 		"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
