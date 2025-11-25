@@ -66,7 +66,7 @@ jobs:
           	} && false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
       #gt-placeholder-gh-action-checkout-1-start
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       #gt-placeholder-gh-action-checkout-1-end
       - id: set-matrix
         run: |
@@ -114,7 +114,7 @@ jobs:
           	} && false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
       #gt-placeholder-gh-action-checkout-2-start
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       #gt-placeholder-gh-action-checkout-2-end
       - name: reset gpg keys
         run: gt reset --gpg-only true -r "${{ matrix.remote }}"
@@ -163,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       #gt-placeholder-gh-action-checkout-3-start
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       #gt-placeholder-gh-action-checkout-3-end
       - name: check if signing key already are or will expire within the next 3 months
         run: |
