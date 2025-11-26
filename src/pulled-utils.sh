@@ -249,7 +249,7 @@ function replaceGtPlaceholdersDuringUpdate() {
 	if [[ $entryTag != "$tagToPull" ]]; then
 		gitFetchTagFromRemote "$remote" "$repo" "$entryTag"
 		local originalFile
-		originalFile=$(git -C "$repo" --no-pager show "tags/$tagToPull:$repoPath")
+		originalFile=$(git -C "$repo" --no-pager show "tags/$entryTag:$repoPath")
 		extractPlaceholders originalPlaceholders <<<"$originalFile"
 	fi
 
