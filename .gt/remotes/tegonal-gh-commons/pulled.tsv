@@ -1,13 +1,13 @@
 #@ Version: 1.2.0
 tag	file	relativeTarget	tagFilter	hasPlaceholder	sha512
-v5.0.0	src/.github/workflows/cleanup.yml	../.github/workflows/cleanup.yml	.*	true	e14558b193f6b1ab5baf23364fce18a89d6133d9036103653a583cbc9c394aef0073fafb88b810fc6a2fe85cb5c59c61919b4159cea13d28108452531040004c
-v5.0.0	src/.github/dependabot.yml	../.github/dependabot.yml	.*	false	5a999f8e885f1195a36f8cc294736c7926f8317b3b84555bb0a577ab6ba5113ed15487e51d8da5ee690a9aab978f6cff72fb4f35ef091cffb53a1f18f77bfa98
-v5.0.0	src/.github/CODE_OF_CONDUCT.md	../.github/CODE_OF_CONDUCT.md	.*	false	c7e479aa809ec55f4390d29863caef7e79679c0d6ad620562f5f660dcdca818045b267ed6907c4e80169c3f2c145806bda793e963cd1e8ae78603d2f9acc90df
-v5.0.0	src/.github/PULL_REQUEST_TEMPLATE.md	../.github/PULL_REQUEST_TEMPLATE.md	.*	false	9112d1ea1f72ea250cdfe686fc152e63f2e0cdcea9c46935289471d7a3f54c35af8a3f283570f5d863e936c7782939c7b1548cb7d4ccda712bbf9314926f58cb
-v5.0.0	src/gt/pull-hook-functions.sh	../lib/tegonal-gh-commons/src/gt/pull-hook-functions.sh	.*	false	bf7676c3cdf9f94084145f510f68b62b2043957ba90136df7ba1ba9b4efd272d8f3da383da55c7bb44505e25ea3f3c3437e24e9830a63288c135e15f315f15ab
-v5.0.0	src/.github/Contributor Agreement.txt	../.github/Contributor Agreement.txt	.*	false	0b9a8a954edf302ca5fe0062b7e283d3da06a6bc0631a812663095a78b3a734cefb43b725ae342694d770be75206124c42a1150e168fac33f28aebea0bda35ec
-v5.0.0	src/gt/signing-key.public.asc	signing-key.public.asc	.*	false	d81379cb2f3bf19f8a30a2b5e88e5fb5a924eb86dc289554faf5a035babe66012407b2fd265b18112380c2b6e5698e6f0308839df507423066520ff34cc82180
-v5.0.0	src/gt/signing-key.public.asc.actual_sig	signing-key.public.asc.sig	.*	false	a05c1d55da5073830a7ecdc117f77526bc90586f9bb049ccd809098432fb5d9cb4e36e5e47b1508aa651cea76f1f2d7f501793053022c13df51321f02593b810
-v5.0.0	src/dotfiles/.editorconfig	../.editorconfig	.*	false	e0782d8f07757102722c4b2fd97f920f79c112cbd9be53716e2db8389bd31433f539f94ed8d806fed4f9cc43363d7caf586fef76ff925f24c1f9cae8e7b06213
-v5.0.0	src/dotfiles/.shellcheckrc	../.shellcheckrc	.*	false	d7c68d7e7ebd43ac94b730cee15265f6bc1af0fceac5de09a3631af245e439cf6ee1972a4a8b405548c5fa93490774974f3113491217da01a36655c1e87ee075
-v5.0.0	src/gt/tegonal.data.source.sh	../lib/tegonal-gh-commons/src/gt/tegonal.data.source.sh	.*	false	b0891d0f2534305ee270ed45a66f678f625aa06c49c512d8451f594621ee42f6beb500d25a0b069c258455132c388a9ebc9be3db09e2ff6bd66fa6faabb4f092
+v5.0.2	src/.github/workflows/cleanup.yml	../.github/workflows/cleanup.yml	.*	true	340568d8e0fb5e8040aa621af0e9a8752bd160a5a4c4d5a948a92ece5f0630912957952ca3e341096616d4ed3276eb3f18f2f859fb4472c790d8186d20b7e155
+v5.0.2	src/.github/dependabot.yml	../.github/dependabot.yml	.*	false	b1e1f24a67bd02307494107ec2c8e50f18d0cceb63e20e4ab1376af7bfdd9a32ecc0ab336f3eaeb64b2e54bf8ffe4e252f1aad8374c847a0f3329bddead0dde5
+v5.0.2	src/.github/CODE_OF_CONDUCT.md	../.github/CODE_OF_CONDUCT.md	.*	false	1b1ff080951248ae58c8eadb6ebcc87527d9cdeaefc3ac23362ca791f95d814d55de0abedf8989c646a298e40143e6afb0a43156684c4a37158aeaae0ddb2b05
+v5.0.2	src/.github/PULL_REQUEST_TEMPLATE.md	../.github/PULL_REQUEST_TEMPLATE.md	.*	false	9112d1ea1f72ea250cdfe686fc152e63f2e0cdcea9c46935289471d7a3f54c35af8a3f283570f5d863e936c7782939c7b1548cb7d4ccda712bbf9314926f58cb
+v5.0.2	src/gt/pull-hook-functions.sh	../lib/tegonal-gh-commons/src/gt/pull-hook-functions.sh	.*	false	fe3912e4fd610d1b677022f00d72d2df65fe5fd6a56889e09ced3158dbbadff0b89cd5e1593300860abd17d159236feffa2de8e2e251c6abd806b9d72c174d75
+v5.0.2	src/.github/Contributor Agreement.txt	../.github/Contributor Agreement.txt	.*	false	0b9a8a954edf302ca5fe0062b7e283d3da06a6bc0631a812663095a78b3a734cefb43b725ae342694d770be75206124c42a1150e168fac33f28aebea0bda35ec
+v5.0.2	src/gt/signing-key.public.asc	signing-key.public.asc	.*	false	d81379cb2f3bf19f8a30a2b5e88e5fb5a924eb86dc289554faf5a035babe66012407b2fd265b18112380c2b6e5698e6f0308839df507423066520ff34cc82180
+v5.0.2	src/gt/signing-key.public.asc.actual_sig	signing-key.public.asc.sig	.*	false	a05c1d55da5073830a7ecdc117f77526bc90586f9bb049ccd809098432fb5d9cb4e36e5e47b1508aa651cea76f1f2d7f501793053022c13df51321f02593b810
+v5.0.2	src/dotfiles/.editorconfig	../.editorconfig	.*	false	826d4ef330e06f5062713317b4ac4c22b30d13a2a16dbd8979fc4459436000466f40bae642866acf63f741dc67daa54dfca7d14e166b08f55f27f6169e8c1227
+v5.0.2	src/dotfiles/.shellcheckrc	../.shellcheckrc	.*	false	90fce3260027c5368006339165017b80801970288cfe7786c79b98f7d400bed2c8c64c5983ecb94b1d3d91a312867c13eb4d50393296fed242d10d7465181b64
+v5.0.2	src/gt/tegonal.data.source.sh	../lib/tegonal-gh-commons/src/gt/tegonal.data.source.sh	.*	false	dc5f699bc55f638bcaabdce79d1f0dce34f08f981801029594e243458a8a532da60b7fd994f8566ca5b87f8133fd950630cbe15f48b92c42883302a235f65e83
