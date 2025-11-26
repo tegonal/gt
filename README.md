@@ -1,17 +1,17 @@
 <!-- for main -->
-
-[![Download](https://img.shields.io/badge/Download-v1.6.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v1.6.0)
+<!--
+[![Download](https://img.shields.io/badge/Download-v1.6.1-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v1.6.1)
 [![EUPL](https://img.shields.io/badge/%E2%9A%96-EUPL%201.2-%230b45a6)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12 "License")
 [![Quality Assurance](https://github.com/tegonal/gt/actions/workflows/quality-assurance.yml/badge.svg?event=push&branch=main)](https://github.com/tegonal/gt/actions/workflows/quality-assurance.yml?query=branch%3Amain)
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
-
+-->
 <!-- for main end -->
 <!-- for release -->
-<!--
-[![Download](https://img.shields.io/badge/Download-v1.6.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v1.6.0)
+
+[![Download](https://img.shields.io/badge/Download-v1.6.1-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v1.6.1)
 [![EUPL](https://img.shields.io/badge/%E2%9A%96-EUPL%201.2-%230b45a6)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-11-12 "License")
 [![Newcomers Welcome](https://img.shields.io/badge/%F0%9F%91%8B-Newcomers%20Welcome-blueviolet)](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22 "Ask in discussions for help")
--->
+
 <!-- for release end -->
 
 # gt
@@ -36,11 +36,11 @@ templates etc. which you use in multiple projects but want to maintain at a sing
 
 </details>
 
----
+<!---
 ❗ You are taking a *sneak peek* at the next version. It could be that some features you find on this page are not released yet.  
-Please have a look at the README of the corresponding release/git tag. Latest version: [README of v1.6.0](https://github.com/tegonal/gt/tree/v1.6.0/README.md).
+Please have a look at the README of the corresponding release/git tag. Latest version: [README of v1.6.1](https://github.com/tegonal/gt/tree/v1.6.1/README.md).
 
----
+--->
 
 **Table of Contents**
 
@@ -102,8 +102,8 @@ currentDir=$(pwd) &&
 	echo "public key trusted" &&
 	mkdir ./gpg &&
 	gpg --homedir ./gpg --import ./signing-key.public.asc &&
-	wget "https://raw.githubusercontent.com/tegonal/gt/v1.6.0/install.sh" &&
-	wget "https://raw.githubusercontent.com/tegonal/gt/v1.6.0/install.sh.sig" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v1.6.1/install.sh" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v1.6.1/install.sh.sig" &&
 	gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh &&
 	chmod +x ./install.sh &&
 	echo "verification successful" ||
@@ -172,7 +172,7 @@ Last but not least, see [additional installation steps](#additional-installation
 
 ## manually
 
-1. [![Download](https://img.shields.io/badge/Download-v1.6.0-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v1.6.0)
+1. [![Download](https://img.shields.io/badge/Download-v1.6.1-%23007ec6)](https://github.com/tegonal/gt/releases/tag/v1.6.1)
 2. extract the zip/tar.gz
 3. open a terminal at the corresponding folder and verify the public key of this repo
    against [Tegonal's public key](https://tegonal.com/gpg/github.asc):
@@ -262,7 +262,7 @@ self-update   update gt to the latest version
 --version  prints the version of this script
 
 INFO: Version of gt.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-help>
@@ -293,7 +293,7 @@ list     list all remotes
 --version  prints the version of this script
 
 INFO: Version of gt-remote.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-remote-help>
@@ -357,7 +357,7 @@ gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts --unsecur
 gt remote add -r tegonal-scripts -u https://github.com/tegonal/scripts -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-remote-add-help>
@@ -389,7 +389,7 @@ gt remote remove -r tegonal-scripts --delete-pulled-files true
 gt remote remove -r tegonal-scripts -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-remote-remove-help>
@@ -416,7 +416,7 @@ gt remote list
 gt remote list -w .github/.gt
 
 INFO: Version of gt-remote.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-remote-list-help>
@@ -467,7 +467,7 @@ gt pull -r tegonal-scripts -t v0.1.0 -d .github --chop-path true -p .github/CODE
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --tag-filter "^v3.*"
 
 INFO: Version of gt-pull.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-pull-help>
@@ -625,7 +625,7 @@ gt re-pull
 gt re-pull -r tegonal-scripts --only-missing false
 
 INFO: Version of gt-re-pull.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-re-pull-help>
@@ -689,7 +689,7 @@ gt reset
 gt reset --gpg-only true
 
 INFO: Version of gt-reset.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-reset-help>
@@ -753,7 +753,7 @@ gt update -r tegonal-scripts
 gt update -r tegonal-scripts -t v1.0.0
 
 INFO: Version of gt-update.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-update-help>
@@ -931,7 +931,7 @@ gt self-update
 gt self-update --force
 
 INFO: Version of gt-self-update.sh is:
-v1.7.0-SNAPSHOT
+v1.6.1
 ```
 
 </gt-self-update-help>
