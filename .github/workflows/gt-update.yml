@@ -148,7 +148,9 @@ jobs:
           ) || (printf '\033[0;34mINFO\033[0m: going to reset changes back to the status after `gt update` and continue without cleanup\n' && git reset --hard)
       - name: Create pull request if necessary
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
+        #gt-placeholder-gh-action-create-pr-start
         uses: peter-evans/create-pull-request@v7
+        #gt-placeholder-gh-action-create-pr-end
         with:
           branch: 'gt/update/${{ matrix.remote }}'
           title: 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt'
