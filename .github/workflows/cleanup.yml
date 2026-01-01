@@ -60,7 +60,7 @@ jobs:
       - name: Create Pull Request if necessary
         id: create-pr
         #gt-placeholder-gh-action-create-pull-request-start
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         #gt-placeholder-gh-action-create-pull-request-end
         with:
           branch: auto-cleanup
