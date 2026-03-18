@@ -162,7 +162,10 @@ function grepPulledEntryByFile() {
 	local -r pulledTsv=$1
 	local -r file=$2
 	shift 2 || traceAndDie "could not shift by 2"
-	grep -E "^[^\t]+	$file" "$@" "$pulledTsv"
+	local escapedFile
+	# shellcheck disable=SC2016	# $ in regex is not a variable, all good
+	escapedFile="$(printf '%s\n' "$file" | sed -e 's/[.[\*^$()+?{}|\\]/\\&/g')"
+	grep -E "^[^	]+	$escapedFile" "$@" "$pulledTsv"
 }
 
 function replacePulledEntry() {
