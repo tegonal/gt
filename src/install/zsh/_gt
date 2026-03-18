@@ -132,6 +132,9 @@ function _gt_update() {
 		(gpg-only)
 			_describe 'gpg-only' "('true:only the gpg key(s) are reset, files are not reset' 'false:gpg key(s) and files are reset (i.e. removed and re-pulled)')"
 			;;
+		(list)
+  			_describe 'list' "('true:only list updatable files' 'false:update files (do not only list them)"
+  			;;
 		(remote)
 			_gt_describe_remotes
 			;;

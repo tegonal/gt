@@ -432,7 +432,7 @@ function gt_pull_internal_without_arg_checks() {
 
 		local relativeTarget hasPlaceholder sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
-		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha12 for \033[0;36m%s\033[0m" "$source" || return $?
+		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha512 for \033[0;36m%s\033[0m" "$source" || return $?
 		hasPlaceholder=$(hasGtPlaceholder "$source")
 		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
