@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.10.0
+#                                         Version: v4.11.0
 #######  Description  #############
 #
 #  installs shellcheck v0.11.0 into $HOME/.local/lib and sets up a symlink in $HOME/.local/bin
