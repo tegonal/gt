@@ -248,7 +248,7 @@ function install() {
 				logError "looks like something went wrong. You seem using zsh and the parent directory of the symlink (%s) is a typical BASH location.\nMake sure you have added it to your PATH in your .zshrc -- i.e. add the following if it is missing:\nexport PATH=\"\$PATH:\$HOME/.local/bin\"\n\nFollowing the current PATH:\n%s" "$symlinkDir" "$PATH"
 				echo ""
 			else
-				logError "looks like something is wrong, make sure %s is in your PATH and " "$symlinkDir"
+				logError "looks like something is wrong, make sure %s is in your PATH and try again. Following the PATH:\n%s" "$symlinkDir" "$PATH"
 			fi
 			exit 1
 		fi
