@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.10.0
+#                                         Version: v4.11.0
 #######  Description  #############
 #
 #  installs shfmt v3.12.0_linux_amd64 into $HOME/.local/bin
