@@ -5,7 +5,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.0.2
+#                                         Version: v5.0.3
 ###################################
 name: Cleanup
 
@@ -39,6 +39,8 @@ jobs:
 
       - name: Cleanup Sources
         run: ./scripts/cleanup-on-push-to-main.sh
+      #gt-placeholder-additional-steps-start
+      #gt-placeholder-additional-steps-end
 
       - name: Check if actor is collaborator
         id: check-collaborator
@@ -63,14 +65,19 @@ jobs:
         uses: peter-evans/create-pull-request@v8
         #gt-placeholder-gh-action-create-pull-request-end
         with:
+          #gt-placeholder-branch-start
           branch: auto-cleanup
+          #gt-placeholder-branch-end
+          #gt-placeholder-title-and-co-start
           title: Auto Cleanup
           commit-message: auto cleanup sources
           body: Looks like someone forgot to run ./scripts/cleanup-on-push-to-main.sh before committing. I did it for them :)
+          #gt-placeholder-title-and-co-end
           delete-branch: true
+          #gt-placeholder-token-and-co-start
           token: ${{ secrets.AUTO_PR_TOKEN }}
           push-to-fork: ${{ vars.AUTO_PR_FORK_NAME != '' && vars.AUTO_PR_FORK_NAME || secrets.AUTO_PR_FORK_NAME }}
-
+          #gt-placeholder-token-and-co-end
 
       - name: set reviewer
         if: ${{ steps.check-collaborator.outputs.reviewer != '' && steps.check-collaborator.outputs.reviewer != null && steps.create-pr.outputs.pull-request-operation == 'created' }}
