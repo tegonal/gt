@@ -9,7 +9,7 @@
 #                                         Version: v4.12.0
 #######  Description  #############
 #
-#  Deprecated: script which sets up variables and functions for tegonal's scripts -> use setup_tegonal_scripts.sh instead
+#  script which should be sourced and sets up variables and functions for the scripts
 #
 #######  Usage  ###################
 #
@@ -21,7 +21,7 @@
 #    	# Assumes your script is in (root is project folder) e.g. /src or /scripts and
 #    	# the tegonal scripts have been pulled via gt and put into /lib/tegonal-scripts
 #    	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
-#    	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+#    	source "$dir_of_tegonal_scripts/setup_tegonal_scripts.sh" "$dir_of_tegonal_scripts"
 #    fi
 #
 #    sourceOnce "$dir_of_tegonal_scripts/utility/io.sh"
@@ -33,12 +33,12 @@ unset CDPATH
 
 # shellcheck disable=SC2034		# global var used in log.sh
 declare -A TEGONAL_SCRIPTS_SUPPRESSED_DEPRECATION=()
-
-#TODO 5.0.0 rename file to setup_tegonal_scripts.sh -- this way consumers will not run into shellcheck issues when they name a file setup_tegonal_scripts.sh as well
+# shellcheck disable=SC2034		# global var used in log.sh
+declare TEGONAL_SCRIPTS_ERROR_ON_DEPRECATION=true
 
 if (($# != 1)); then
 	printf >&2 "\033[0;31mERROR\033[0m: You need to pass the path to the tegonal scripts directory as first argument. Following an example\n"
-	echo >&2 "source \"\$dir_of_tegonal_scripts/setup.sh\" \"\$dir_of_tegonal_scripts\""
+	echo >&2 "source \"\$dir_of_tegonal_scripts/setup_tegonal_scripts.sh\" \"\$dir_of_tegonal_scripts\""
 	exit 9
 fi
 
@@ -49,8 +49,3 @@ if ! dir_of_tegonal_scripts=$(realpath "$1"); then
 fi
 readonly dir_of_tegonal_scripts
 source "$dir_of_tegonal_scripts/utility/source-once.sh"
-
-logDeprecation SETUP_SH "please switch to source \"\$dir_of_tegonal_scripts/setup_tegonal_scripts.sh\" -- setup.sh will be removed with v5.0.0"
-
-# shellcheck disable=SC2034		# global var used in log.sh
-declare TEGONAL_SCRIPTS_ERROR_ON_DEPRECATION=true

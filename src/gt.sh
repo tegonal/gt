@@ -56,11 +56,7 @@ if ! [[ -v dir_of_gt ]]; then
 	dir_of_gt=$(cd -P "$(dirname "$intermediateSource")" >/dev/null && pwd 2>/dev/null)
 	readonly dir_of_gt
 fi
-
-if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$dir_of_gt/../lib/tegonal-scripts/src"
-	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
-fi
+source "$dir_of_gt/dirsSrc.source.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-commands.sh"
 
 function gt_source() {
