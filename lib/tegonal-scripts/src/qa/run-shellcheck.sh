@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.10.0
+#                                         Version: v4.12.0
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -19,7 +19,7 @@
 #    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 #    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
 #    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
-#    source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+#    source "$dir_of_tegonal_scripts/setup_tegonal_scripts.sh" "$dir_of_tegonal_scripts"
 #
 #    source "$dir_of_tegonal_scripts/qa/run-shellcheck.sh"
 #
@@ -43,7 +43,7 @@ unset CDPATH
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
-	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
+	source "$dir_of_tegonal_scripts/setup_tegonal_scripts.sh" "$dir_of_tegonal_scripts"
 fi
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/recursive-declare-p.sh"
@@ -118,19 +118,33 @@ function runShellcheck() {
 }
 
 function runShellcheckPullHooks() {
-	if (($# != 1)); then
-		logError "Exactly one parameter needs to be passed to runShellcheckPullHooks, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
-		echo >&2 '1: gt_dir  working directory of gt'
+	if (($# != 1)) && (($# != 2)); then
+		logError "Exactly one or two parameters need to be passed to runShellcheckPullHooks, given \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "$#"
+		echo >&2 '1: gt_dir       working directory of gt'
+		echo >&2 "2: sourcePath   equivalent to shellcheck's -P, path to search for sourced files, separated by : -- per default includes \$dir_of_tegonal_scripts and if defined also \$scriptsDir"
 		printStackTrace
 		exit 9
 	fi
 	local -r gt_dir=$1
+	shift 1 || traceAndDie "could not shift by 1"
+
+	local sourcePath=""
+	if (($# == 2)); then
+		sourcePath=$2
+		shift 1 || traceAndDie "could not shift by 1"
+	else
+		sourcePath="$dir_of_tegonal_scripts"
+		# if scriptsDir is defined, then we add it to sourcePath
+		if [[ -v scriptsDir ]]; then
+			sourcePath="$scriptsDir:$sourcePath"
+		fi
+	fi
 
 	local -r gt_remote_dir="$gt_dir/remotes"
 	logInfo "analysing $gt_remote_dir/**/pull-hook*.sh"
 
 	# shellcheck disable=SC2034   # is passed by name to runShellcheck
 	local -ra dirs=("$gt_remote_dir")
-	local sourcePath="$dir_of_tegonal_scripts"
+
 	runShellcheck dirs "$sourcePath" -name "pull-hook*.sh"
 }
