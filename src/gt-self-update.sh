@@ -28,11 +28,7 @@ if ! [[ -v dir_of_gt ]]; then
 	dir_of_gt="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
 	readonly dir_of_gt
 fi
-
-if ! [[ -v dir_of_tegonal_scripts ]]; then
-	dir_of_tegonal_scripts="$(realpath "$dir_of_gt/../lib/tegonal-scripts/src")"
-	source "$dir_of_tegonal_scripts/setup.sh" "$dir_of_tegonal_scripts"
-fi
+source "$dir_of_gt/dirsSrc.source.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/ask.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
