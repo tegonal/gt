@@ -1,0 +1,13 @@
+[package]
+name = "gt-remote"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+regex = "1"
+thiserror = "2"
+dirs = "5"
+
+[dev-dependencies]
+tempfile = "3"
