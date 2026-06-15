@@ -1,6 +1,6 @@
 use crate::config::{Paths, exit_if_path_outside_of, resolve_working_dir};
 use crate::error::{GtRemoteError, Result};
-use crate::git::{add_remote, fetch_remote, get_remote_default_branch, init_git_dir};
+use crate::git::{add_remote, checkout_ref, fetch_remote, get_remote_default_branch, init_git_dir};
 use crate::gpg::{
     check_signing_key_exists, gt_dir_exists, import_signing_key_from_remote, init_gpg_dir,
     list_sigs,
@@ -68,33 +68,38 @@ pub fn execute(
 
     let default_branch = get_remote_default_branch(&paths.repo, remote_name)?;
 
+    // Fetch the default branch to get access to the remote's files
+    fetch_remote(
+        &paths.repo,
+        remote_name,
+        &format!(
+            "refs/heads/{}:refs/remotes/{}",
+            default_branch, default_branch
+        ),
+    )?;
+
+    // Checkout the default branch to populate the working directory
+    checkout_ref(
+        &paths.repo,
+        &format!("refs/remotes/{}/{}", remote_name, default_branch),
+    )?;
+
     // Try to checkout the .gt directory from the remote
     let gt_dir_in_repo = paths.repo.join(".gt");
     if !gt_dir_in_repo.exists() {
-        fetch_remote(
-            &paths.repo,
-            remote_name,
-            &format!(
-                "refs/heads/{}:refs/remotes/{}",
-                default_branch, default_branch
-            ),
-        )?;
-
-        if !gt_dir_exists(&paths.repo, ".gt") {
-            if unsecure {
-                println!(
-                    "Warning: No .gt directory found in remote '{}' branch '{}', ignoring because --unsecure was specified",
-                    remote_name, default_branch
-                );
-                write_pull_args(&paths, pull_dir, tag_filter, unsecure)?;
-                fs::remove_dir_all(&paths.repo)?;
-                return Ok(());
-            } else {
-                return Err(GtRemoteError::Config(format!(
-                    "Remote '{}' has no .gt directory defined in branch '{}', unable to fetch GPG key(s). Use --unsecure true to disable this check.",
-                    remote_name, default_branch
-                )));
-            }
+        if unsecure {
+            println!(
+                "Warning: No .gt directory found in remote '{}' branch '{}', ignoring because --unsecure was specified",
+                remote_name, default_branch
+            );
+            write_pull_args(&paths, pull_dir, tag_filter, unsecure)?;
+            fs::remove_dir_all(&paths.repo)?;
+            return Ok(());
+        } else {
+            return Err(GtRemoteError::Config(format!(
+                "Remote '{}' has no .gt directory defined in branch '{}', unable to fetch GPG key(s). Use --unsecure true to disable this check.",
+                remote_name, default_branch
+            )));
         }
     }
 
