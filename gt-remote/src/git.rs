@@ -85,22 +85,7 @@ pub fn checkout_branch(repo_path: &Path, branch: &str) -> Result<()> {
 }
 
 pub fn get_remote_default_branch(repo_path: &Path, remote_name: &str) -> Result<String> {
-    let output = std::process::Command::new("git")
-        .arg("-C")
-        .arg(repo_path)
-        .arg("remote")
-        .arg("set-head")
-        .arg(remote_name)
-        .arg("--auto")
-        .output()
-        .map_err(|e| GtRemoteError::Git(format!("Failed to get default branch: {}", e)))?;
-
-    if !output.status.success() {
-        return Err(GtRemoteError::Git(
-            "Failed to determine default branch".to_string(),
-        ));
-    }
-
+    // First try git remote get-head which directly gets the default branch
     let output = std::process::Command::new("git")
         .arg("-C")
         .arg(repo_path)
@@ -110,28 +95,48 @@ pub fn get_remote_default_branch(repo_path: &Path, remote_name: &str) -> Result<
         .output()
         .map_err(|e| GtRemoteError::Git(format!("Failed to get HEAD: {}", e)))?;
 
-    if !output.status.success() {
-        let branches = list_remote_branches(repo_path, remote_name)?;
-        for branch in branches {
-            if branch.contains("HEAD") || branch.contains("master") || branch.contains("main") {
-                let branch_name = branch
-                    .strip_prefix(&format!("refs/remotes/{}/", remote_name))
-                    .unwrap_or(&branch);
-                return Ok(branch_name.to_string());
-            }
-        }
-        return Err(GtRemoteError::Git(
-            "Could not determine default branch".to_string(),
-        ));
+    if output.status.success() {
+        let branch = String::from_utf8_lossy(&output.stdout)
+            .trim()
+            .strip_prefix(&format!("{}/", remote_name))
+            .unwrap_or(String::from_utf8_lossy(&output.stdout).trim())
+            .to_string();
+        return Ok(branch);
     }
 
-    let branch = String::from_utf8_lossy(&output.stdout)
-        .trim()
-        .strip_prefix(&format!("{}/", remote_name))
-        .unwrap_or(String::from_utf8_lossy(&output.stdout).trim())
-        .to_string();
+    // Fallback: try to determine from remote branches
+    let branches = list_remote_branches(repo_path, remote_name)?;
 
-    Ok(branch)
+    // Look for HEAD symbolic ref first
+    for branch in &branches {
+        if branch.contains("HEAD ->") {
+            let parts: Vec<&str> = branch.split(" -> ").collect();
+            if parts.len() > 1 {
+                return Ok(parts[1].to_string());
+            }
+        }
+    }
+
+    // Look for main, then master as common defaults
+    for preferred in &["main", "master"] {
+        for branch in &branches {
+            if branch.ends_with(&format!("/{preferred}")) || branch == preferred {
+                return Ok(preferred.to_string());
+            }
+        }
+    }
+
+    // Fallback to first branch found
+    if let Some(first_branch) = branches.first() {
+        let branch_name = first_branch
+            .strip_prefix(&format!("{}/", remote_name))
+            .unwrap_or(first_branch)
+            .to_string();
+        return Ok(branch_name);
+    }
+
+    // Last resort: assume 'main'
+    Ok("main".to_string())
 }
 
 pub fn list_remote_branches(repo_path: &Path, _remote_name: &str) -> Result<Vec<String>> {

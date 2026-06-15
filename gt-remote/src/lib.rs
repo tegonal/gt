@@ -140,4 +140,35 @@ mod tests {
         assert!(result.is_ok());
         assert!(repo_path.join(".git").exists());
     }
+
+    #[test]
+    fn test_get_remote_default_branch_with_real_remote() {
+        let temp_dir = TempDir::new().unwrap();
+        let repo_path = temp_dir.path().join("repo");
+
+        // Initialize a local git repo
+        git::init_git_dir(&repo_path).unwrap();
+
+        // Add a real remote
+        git::add_remote(&repo_path, "origin", "https://github.com/tegonal/gt.git").unwrap();
+
+        // Fetch refs to get branch information
+        let status = std::process::Command::new("git")
+            .arg("-C")
+            .arg(&repo_path)
+            .arg("fetch")
+            .arg("--depth")
+            .arg("1")
+            .arg("origin")
+            .status()
+            .unwrap();
+        assert!(status.success());
+
+        // Now try to get the default branch
+        let result = git::get_remote_default_branch(&repo_path, "origin");
+        assert!(result.is_ok());
+        let branch = result.unwrap();
+        // Most modern repos use 'main' as default
+        assert!(!branch.is_empty());
+    }
 }

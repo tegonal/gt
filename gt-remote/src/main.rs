@@ -45,7 +45,7 @@ enum Commands {
         tag_filter: Option<String>,
 
         /// If true, the remote does not need to have GPG key(s) defined
-        #[arg(long = "unsecure", default_value = "false")]
+        #[arg(long = "unsecure", value_parser = clap::value_parser!(bool), default_value = "false")]
         unsecure: bool,
     },
 
