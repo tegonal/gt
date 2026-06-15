@@ -4,25 +4,6 @@
 
 The `gt pull` command pulls files or directories from a configured remote repository at a specific tag, with GPG verification.
 
----
-
-## Parameters
-
-| Parameter | Pattern | Required | Description |
-|-----------|---------|----------|-------------|
-| `-r, --remote` | `<name>` | Yes | Name of the remote repository |
-| `-t, --tag` | `<tag>` | No | Git tag to pull from (default: latest) |
-| `-p, --path` | `<path>` | Yes | Path in remote to pull (file or directory) |
-| `-d, --directory` | `<path>` | No | Target directory (default: remote's configured pull dir) |
-| `--chop-path` | `true\|false` | No | Strip remote path structure (default: `false`) |
-| `--target-file-name` | `<name>` | No | Rename file after pulling |
-| `--tag-filter` | `<regex>` | No | Filter tags when determining latest |
-| `--auto-trust` | `true\|false` | No | Auto-trust GPG keys (default: `false`) |
-| `--unsecure` | `true\|false` | No | Skip GPG key requirement (default: `false`) |
-| `--unsecure-no-verification` | `true\|false` | No | Skip all verification (default: `false`) |
-| `-w, --working-directory` | `<path>` | No | Working directory (default: `.gt`) |
-
----
 
 ## Pull Workflow
 
@@ -35,7 +16,7 @@ sequenceDiagram
     participant FileSystem
 
     User->>gt-pull: gt pull -r <remote> -t <tag> -p <path>
-    gt-pull->>FileSystem: Read pull.args from remote
+    gt-pull->>FileSystem: Read local pull.args defined for remote <remote>
     gt-pull->>FileSystem: Merge arguments with command-line
     gt-pull->>FileSystem: Create pull directory if needed
     gt-pull->>GPG: Check/initialize GPG directory
@@ -49,13 +30,23 @@ sequenceDiagram
     end
     gt-pull->>Git: Fetch tag from remote
     gt-pull->>Git: Checkout tag and path
-    alt file with signature
-        Git->>FileSystem: Checkout file.sig
-        gt-pull->>GPG: Verify signature
-        GPG-->>gt-pull: Verification result
-        alt verification fails
-            GPG-->>User: Error: verification failed
-        end
+    alt --unsecure-no-verification is set
+		GPG-->>gt-pull: Skip verification entirely
+	else
+    	alt file with signature
+			Git->>FileSystem: Checkout file.sig
+			gt-pull->>GPG: Verify signature
+			GPG-->>gt-pull: Verification result
+			alt verification fails
+				GPG-->>User: Error: verification failed
+			end
+		else
+			alt --unsecure is set
+				GPG-->>gt-pull: Proceed without .sig file
+			else
+				GPG-->>User: Error: .sig file missing and no unsecure flags set
+			end
+		end
     end
     gt-pull->>FileSystem: Execute pull-hook before
     gt-pull->>FileSystem: Move file to target
@@ -129,13 +120,27 @@ graph TD
 For each file:
 
 ```bash
-if [[ $doVerification == true && -f "$sigFile" ]]; then
-    gpg --homedir "$gpgDir" --verify "$sigFile" "$absoluteFile"
-    
-    # Check for key revocation
-    keyData=$(getSigningGpgKeyData "$sigFile" "$gpgDir")
-    keyId=$(extractGpgKeyIdFromKeyData "$keyData")
-    isGpgKeyInKeyDataRevoked "$keyData"
+if [[ $doVerification == true ]]; then
+    if [[ -f "$sigFile" ]]; then
+        gpg --homedir "$gpgDir" --verify "$sigFile" "$absoluteFile"
+        
+        # Check for key revocation
+        keyData=$(getSigningGpgKeyData "$sigFile" "$gpgDir")
+        keyId=$(extractGpgKeyIdFromKeyData "$keyData")
+        isGpgKeyInKeyDataRevoked "$keyData"
+    else
+        if [[ $unsecureNoVerification == true ]]; then
+            # Skip verification entirely
+            echo "Skipping verification due to --unsecure-no-verification"
+        elif [[ $unsecure == true ]]; then
+            # Proceed without .sig file
+            echo "Proceeding without .sig file due to --unsecure"
+        else
+            # Error: .sig file missing and no unsecure flags set
+            echo "Error: .sig file missing and no unsecure flags set"
+            exit 1
+        fi
+    fi
 fi
 ```
 
@@ -151,12 +156,14 @@ graph TD
     D -->|Yes| E{Has .sig file?}
     D -->|No| F[Move file]
     E -->|Yes| G[Verify signature]
-    E -->|No| H{--unsecure?}
+    E -->|No| H{--unsecure-no-verification?}
     G --> I{Valid?}
     I -->|Yes| F
     I -->|No| J[Skip file]
     H -->|Yes| F
-    H -->|No| K[Skip file, warn]
+    H -->|No| K{--unsecure?}
+    K -->|Yes| F
+    K -->|No| L[Skip file, error]
     F --> L[Execute before hook]
     L --> M[Check placeholders]
     M -->|Has placeholders| N[Replace placeholders]

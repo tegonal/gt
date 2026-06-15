@@ -42,21 +42,17 @@
 
 ```mermaid
 graph TD
-    subgraph WorkingDir[Working Directory .gt]
-        subgraph Remotes[remotes/]
-            subgraph Remote[<REMOTE_NAME>/]
-                Repo[repo/ Git Clone]
-                subgraph PublicKeys[public-keys/]
-                    GPGKeys[*.asc Public Keys]
-                    GPGDir[gpg/ GPG Home]
-                end
-                PulledTSV[pulled.tsv]
-                PullArgs[pull.args]
-                PullHook[pull-hook.sh]
-                Gitconfig[gitconfig]
-            end
-        end
-    end
+	WorkingDir[Working Directory .gt]
+	Repo["repo/ Git Clone"]
+	PulledTSV["pulled.tsv"]
+	PullArgs["pull.args"]
+	PullHook["pull-hook.sh"]
+	Gitconfig["gitconfig"]
+	Remotes["remotes/"]
+	Remote["&lt;REMOTE_NAME&gt;/"]
+	PublicKeys["public-keys/"]
+	GPGKeys["*.asc Public Keys"]
+	GPGDir["gpg/ GPG Home"]
 
     WorkingDir --> Remotes
     Remotes --> Remote
@@ -94,15 +90,7 @@ tag	file	relativeTarget	tagFilter	hasPlaceholder	sha512
 
 ### pull.args Format
 
-Stores default arguments for pulling from a remote:
-
-```
---directory <pull_directory>
---tag-filter <tag_filter_regex>
---unsecure true  # optional
-```
-
----
+Stores pre-defined arguments which is passed to `gt pull`. Arguments specified by the user take precedence.
 
 ## Commands
 
@@ -110,21 +98,6 @@ Stores default arguments for pulling from a remote:
 
 ```mermaid
 graph LR
-    subgraph GT[gt]
-        Pull[pull]
-        Repull[re-pull]
-        Remote[remote]
-        Reset[reset]
-        Update[update]
-        SelfUpdate[self-update]
-    end
-
-    subgraph RemoteCommands[remote subcommands]
-        Add[add]
-        Remove[remove]
-        List[list]
-    end
-
     GT --> Pull
     GT --> Repull
     GT --> Remote

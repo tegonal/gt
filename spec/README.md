@@ -1,6 +1,6 @@
 # gt Specifications Index
 
-This directory contains detailed specifications for the `gt` (g(it)t(ools)) tool, which can be used to re-implement the tool in a different language (e.g., Rust).
+This directory contains detailed specifications for `gt` (g(it)t(ools)), which can be used to re-implement the tool in a different language (e.g., Rust).
 
 ## Specification Files
 

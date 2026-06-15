@@ -4,19 +4,6 @@
 
 The `gt re-pull` command re-fetches files defined in `pulled.tsv` for a specific remote or all remotes. It's used to restore missing files or re-fetch all files.
 
----
-
-## Parameters
-
-| Parameter | Pattern | Required | Description |
-|-----------|---------|----------|-------------|
-| `-r, --remote` | `<name>` | No | Remote to re-pull (default: all remotes) |
-| `--only-missing` | `true\|false` | No | Only pull missing files (default: `true`) |
-| `--auto-trust` | `true\|false` | No | Auto-trust GPG keys (default: `false`) |
-| `-w, --working-directory` | `<path>` | No | Working directory (default: `.gt`) |
-
----
-
 ## Workflow
 
 ```mermaid
@@ -113,7 +100,7 @@ When re-pulling, the original pull arguments are preserved:
 - directory (parentDir of entryRelativePath)
 - target-file-name (basename of entryRelativePath)
 
-# These are inherited from the remote's pull.args:
+# These are inherited from the remote's pull.args specified in .gt/remotes/<remote>/pull.args:
 - chop-path (always true for re-pull)
 - auto-trust, unsecure, etc.
 ```
