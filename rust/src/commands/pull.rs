@@ -480,7 +480,7 @@ fn pull_without_arg_checks(
         }
 
         let repo_file = absolute_file.strip_prefix(&paths.repo).unwrap().to_str().unwrap();
-        let sig_file = absolute_file.with_extension(sig_extension);
+        let sig_file = PathBuf::from(format!("{}.{sig_extension}", absolute_file.display()));
 
         if do_verification && sig_file.is_file() {
             log_info(&format!("verifying {} from remote {}", cyan(repo_file), cyan(remote)));

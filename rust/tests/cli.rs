@@ -890,3 +890,61 @@ fn pull_auto_detect_latest_tag_with_filter() {
         "should pull v2.0.0, got:\n{tsv_content}"
     );
 }
+
+/// Regression test for the `with_extension("sig")` bug:
+/// a file like `install.sh` with a corresponding `install.sh.sig`
+/// should be found, not `install.sig`.
+#[test]
+fn pull_finds_sig_file_with_compound_extension() {
+    let src = create_source_repo_with_file("sigbug", "install.sh", "#!/bin/bash\n");
+    // create the .sig file and commit it
+    std::fs::write(src.join("install.sh.sig"), "detached-sig\n").unwrap();
+    git(&src, &["-c", "user.email=a@b.c", "-c", "user.name=test", "add", "-A"]);
+    git(
+        &src,
+        &[
+            "-c",
+            "user.email=a@b.c",
+            "-c",
+            "user.name=test",
+            "commit",
+            "-qm",
+            "add-sig",
+        ],
+    );
+    tag_repo(&src, "v1.0.0");
+
+    let consumer = unique_dir("sigbug-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "sigremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0, "add stderr: {}", stderr(&add));
+
+    // Fake a gpg store so that do_verification stays true:
+    // gpg_dir must exist and contain trustdb.gpg so unsecure+do_verification doesn't disable it.
+    let gpg_dir = consumer.join(".gt/remotes/sigremote/public-keys/gpg");
+    std::fs::create_dir_all(&gpg_dir).unwrap();
+    std::fs::write(gpg_dir.join("trustdb.gpg"), "").unwrap();
+
+    let out = run(
+        &consumer,
+        &["pull", "-r", "sigremote", "-p", "install.sh", "-t", "v1.0.0"],
+        "",
+    );
+
+    // The bug makes gt look for install.sig instead of install.sh.sig,
+    // so verification warns "no corresponding *.sig file" and 0 files are pulled.
+    // With the fix the sig is found; gpg verification will fail (fake key),
+    // which also leads to "0 files" / exit 1 but via the "gpg verification failed" path.
+    // We distinguish the two by checking the stderr.
+    assert!(
+        !stdout(&out).contains("no corresponding *.sig"),
+        "gt should find install.sh.sig, not look for install.sig -- bug!\nstdout: {}",
+        stdout(&out)
+    );
+}
