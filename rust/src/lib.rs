@@ -65,6 +65,7 @@ pub fn run(args: &[String]) -> GtResult {
     match parse_command(&commands, GT_VERSION, "gt.sh", args)? {
         CommandSelection::Selected { name, rest } => match name {
             "remote" => commands::remote::run(rest),
+            "self-update" => commands::self_update::run(rest),
             other => not_yet_implemented(other),
         },
         CommandSelection::Handled => Ok(()),
@@ -73,7 +74,7 @@ pub fn run(args: &[String]) -> GtResult {
 
 fn not_yet_implemented(command: &str) -> GtResult {
     log_error(&format!(
-        "the command '{command}' has not been ported to the Rust implementation yet (only 'remote' is available so far)"
+        "the command '{command}' has not been ported to the Rust implementation yet (only 'remote' and 'self-update' are available so far)"
     ));
     Err(Exit(1))
 }

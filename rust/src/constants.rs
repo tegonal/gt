@@ -38,6 +38,10 @@ pub const UNSECURE_PARAM_PATTERN: &[&str] = &["--unsecure"];
 // ----- `--auto-trust` --------------------------------------------------------
 pub const AUTO_TRUST_PARAM_PATTERN_LONG: &str = "--auto-trust";
 
+// ----- `--force` (self-update) -----------------------------------------------
+pub const FORCE_PARAM_PATTERN_LONG: &str = "--force";
+pub const FORCE_PARAM_PATTERN: &[&str] = &["--force"];
+
 // ----- `--url` ---------------------------------------------------------------
 pub const URL_PARAM_PATTERN: &[&str] = &["-u", "--url"];
 

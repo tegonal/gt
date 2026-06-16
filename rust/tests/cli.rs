@@ -375,6 +375,49 @@ fn add_then_remove_round_trip() {
 }
 
 // ---------------------------------------------------------------------------
+// self-update
+// ---------------------------------------------------------------------------
+
+#[test]
+fn self_update_help_prints_parameters_and_returns_99() {
+    let dir = unique_dir("suhelp");
+    let out = run(&dir, &["self-update", "--help"], "");
+    assert_eq!(code(&out), 99);
+    let o = stdout(&out);
+    assert!(o.contains("Parameters"));
+    assert!(o.contains("--force"));
+    assert!(o.contains("--help"));
+    assert!(o.contains("prints this help"));
+}
+
+#[test]
+fn self_update_version_returns_99() {
+    let dir = unique_dir("suversion");
+    let out = run(&dir, &["self-update", "--version"], "");
+    assert_eq!(code(&out), 99);
+    assert!(stdout(&out).contains("Version of gt is"));
+}
+
+#[test]
+fn self_update_corrupt_installation_exits_1() {
+    // The test binary lives in target/<profile>/, whose parent has no install.sh,
+    // so self-update must report the corrupt-installation error and exit 1.
+    let dir = unique_dir("sucorrupt");
+    let out = run(&dir, &["self-update"], "");
+    assert_eq!(code(&out), 1);
+    assert!(stderr(&out).contains("there is no install.sh"));
+}
+
+#[test]
+fn self_update_unknown_arg_exits_9() {
+    let dir = unique_dir("suunknown");
+    // answer the "shall I print the help?" prompt with "n"
+    let out = run(&dir, &["self-update", "--bogus", "x"], "n\n");
+    assert_eq!(code(&out), 9);
+    assert!(stderr(&out).contains("unknown argument"));
+}
+
+// ---------------------------------------------------------------------------
 // add (secure path with a real, generated GPG key)
 // ---------------------------------------------------------------------------
 

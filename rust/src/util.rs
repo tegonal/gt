@@ -115,6 +115,27 @@ fn chmod_recursive(path: &Path, mode: u32) -> io::Result<()> {
     Ok(())
 }
 
+/// Recursively copies `src` into `dst` (creating `dst` and parents as needed),
+/// mirroring `cp -r "$src" "$dst"`. Symlinks are recreated as symlinks.
+pub fn copy_dir_recursive(src: &Path, dst: &Path) -> io::Result<()> {
+    std::fs::create_dir_all(dst)?;
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let from = entry.path();
+        let to = dst.join(entry.file_name());
+        if file_type.is_symlink() {
+            let target = std::fs::read_link(&from)?;
+            std::os::unix::fs::symlink(target, &to)?;
+        } else if file_type.is_dir() {
+            copy_dir_recursive(&from, &to)?;
+        } else {
+            std::fs::copy(&from, &to)?;
+        }
+    }
+    Ok(())
+}
+
 /// Returns the current directory or fails (exit 1) like the Bash `die` call.
 pub fn current_dir() -> Result<PathBuf, Exit> {
     std::env::current_dir().map_err(|_| {
