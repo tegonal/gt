@@ -4,13 +4,13 @@
 use std::path::Path;
 
 use crate::args::{
-    cyan, exit_if_not_all_arguments_set, parse_arguments, parse_command, Command, CommandSelection, Param,
+    Command, CommandSelection, Param, cyan, exit_if_not_all_arguments_set, parse_arguments, parse_command,
 };
 use crate::ask::ask_yes_or_no;
 use crate::constants::*;
 use crate::error::{Exit, GtResult};
 use crate::log::{log_error, log_info, log_success, log_warning};
-use crate::paths::{remotes_dir, RemotePaths};
+use crate::paths::{RemotePaths, remotes_dir};
 use crate::util::{
     check_working_dir_exists, current_dir, delete_dir_chmod_777, exit_if_path_named_is_outside_of,
     exit_if_working_dir_does_not_exist, normalize_path,
@@ -405,7 +405,11 @@ fn remove(args: &[String]) -> GtResult {
     let current = current_dir()?;
 
     let params = vec![
-        Param::new("remote", REMOTE_PARAM_PATTERN, "define the name of the remote which shall be removed"),
+        Param::new(
+            "remote",
+            REMOTE_PARAM_PATTERN,
+            "define the name of the remote which shall be removed",
+        ),
         Param::new(
             "deletePulledFiles",
             DELETE_PULLED_FILES_PARAM_PATTERN,

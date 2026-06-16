@@ -25,11 +25,30 @@ pub const DEFAULT_WORKING_DIR: &str = ".gt";
 pub const PULL_DIR_PARAM_PATTERN_LONG: &str = "--directory";
 pub const PULL_DIR_PARAM_PATTERN: &[&str] = &["-d", "--directory"];
 
+// ----- `--tag` -------------------------------------------------------------
+pub const TAG_PARAM_PATTERN_LONG: &str = "--tag";
+pub const TAG_PARAM_PATTERN: &[&str] = &["-t", "--tag"];
+
+// ----- `--path` ------------------------------------------------------------
+pub const PATH_PARAM_PATTERN_LONG: &str = "--path";
+pub const PATH_PARAM_PATTERN: &[&str] = &["-p", "--path"];
+
+// ----- `--chop-path` --------------------------------------------------------
+pub const CHOP_PATH_PARAM_PATTERN_LONG: &str = "--chop-path";
+pub const CHOP_PATH_PARAM_PATTERN: &[&str] = &["--chop-path"];
+
+// ----- `--target-file-name` -------------------------------------------------
+pub const TARGET_FILE_NAME_PARAM_PATTERN_LONG: &str = "--target-file-name";
+pub const TARGET_FILE_NAME_PARAM_PATTERN: &[&str] = &["--target-file-name"];
+
 // ----- `--tag-filter` --------------------------------------------------------
 pub const TAG_FILTER_PARAM_PATTERN_LONG: &str = "--tag-filter";
 pub const TAG_FILTER_PARAM_PATTERN: &[&str] = &["--tag-filter"];
-pub const TAG_FILTER_PARAM_DOCU: &str =
-    "(optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag";
+pub const TAG_FILTER_PARAM_DOCU: &str = "(optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag";
+
+// ----- `--unsecure-no-verification` ----------------------------------------
+pub const UNSECURE_NO_VERIFICATION_PARAM_PATTERN_LONG: &str = "--unsecure-no-verification";
+pub const UNSECURE_NO_VERIFICATION_PARAM_PATTERN: &[&str] = &["--unsecure-no-verification"];
 
 // ----- `--unsecure` ----------------------------------------------------------
 pub const UNSECURE_PARAM_PATTERN_LONG: &str = "--unsecure";
@@ -51,6 +70,9 @@ pub const PULLED_TSV_HEADER: &str = "tag\tfile\trelativeTarget\ttagFilter\thasPl
 
 /// Name of the public signing key that a remote must provide.
 pub const SIGNING_KEY_ASC: &str = "signing-key.public.asc";
+
+/// Sentinel value used when `--tag` is omitted (to detect "use latest").
+pub const FAKE_TAG: &str = "NOT_A_REAL_TAG_JUST_TEMPORARY";
 
 /// The latest `pulled.tsv` version pragma line (`#@ Version: 1.2.0`).
 pub fn pulled_tsv_latest_version_pragma() -> String {

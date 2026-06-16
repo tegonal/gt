@@ -9,7 +9,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::args::cyan;
-use crate::constants::{pulled_tsv_latest_version_pragma, GT_VERSION, PULLED_TSV_HEADER, PULLED_TSV_LATEST_VERSION};
+use crate::constants::{GT_VERSION, PULLED_TSV_HEADER, PULLED_TSV_LATEST_VERSION, pulled_tsv_latest_version_pragma};
 use crate::error::Exit;
 use crate::log::{log_error, log_warning};
 use crate::util::normalize_path;
@@ -106,6 +106,178 @@ pub fn read_pulled_tsv(
         });
     }
     Ok(Some(entries))
+}
+
+/// Initialise a fresh `pulled.tsv` with the version pragma and header.
+pub fn initialise_pulled_tsv(path: &Path) -> Result<(), Exit> {
+    let content = format!("{}\n{PULLED_TSV_HEADER}\n", pulled_tsv_latest_version_pragma());
+    std::fs::write(path, content).map_err(|_| {
+        log_error(&format!(
+            "failed to initialise the pulled.tsv file at {}",
+            cyan(&path.display().to_string())
+        ));
+        Exit(1)
+    })
+}
+
+/// Validate that `pulled.tsv` has the correct version pragma and header.
+/// Exits 100 if not (no migrations are performed here).
+pub fn validate_pulled_tsv_header(pulled_tsv: &Path) -> Result<(), Exit> {
+    let content = std::fs::read_to_string(pulled_tsv).map_err(|_| {
+        log_error(&format!(
+            "could not read the current pulled.tsv at {}",
+            pulled_tsv.display()
+        ));
+        Exit(1)
+    })?;
+    let mut lines = content.lines();
+
+    let version_pragma = lines.next().unwrap_or("");
+    if version_pragma != pulled_tsv_latest_version_pragma() {
+        log_error(&format!(
+            "the format of {} is not at the latest version {PULLED_TSV_LATEST_VERSION}; automatic migration is part of the (not yet ported) pull command",
+            cyan(&pulled_tsv.display().to_string())
+        ));
+        eprintln!("In case you updated gt, then check the release notes for migration hints:");
+        eprintln!("https://github.com/tegonal/gt/releases/tag/{GT_VERSION}");
+        return Err(Exit(100));
+    }
+
+    let header = lines.next().unwrap_or("");
+    if header != PULLED_TSV_HEADER {
+        log_error(&format!(
+            "looks like the format of {} changed:",
+            cyan(&pulled_tsv.display().to_string())
+        ));
+        eprintln!("Expected Header (after Version pragma): {PULLED_TSV_HEADER}");
+        eprintln!("Current  Header (after Version pragma): {header}");
+        eprintln!();
+        eprintln!("In case you updated gt, then check the release notes for migration hints:");
+        eprintln!("https://github.com/tegonal/gt/releases/tag/{GT_VERSION}");
+        return Err(Exit(100));
+    }
+    Ok(())
+}
+
+/// Format a `pulled.tsv` data row. Column order: tag, file, relativeTarget,
+/// tagFilter, hasPlaceholder, sha512.
+pub fn pulled_tsv_entry(
+    tag: &str,
+    file: &str,
+    relative_target: &str,
+    tag_filter: &str,
+    has_placeholder: &str,
+    sha512: &str,
+) -> String {
+    format!("{tag}\t{file}\t{relative_target}\t{tag_filter}\t{has_placeholder}\t{sha512}")
+}
+
+/// Returns `"true"` if the file contains the literal substring `gt-placeholder`.
+pub fn has_gt_placeholder(path: &Path) -> String {
+    match std::fs::read_to_string(path) {
+        Ok(content) if content.contains("gt-placeholder") => "true".to_string(),
+        _ => "false".to_string(),
+    }
+}
+
+/// Search `pulled.tsv` for a line whose second column (file) matches `file`.
+/// Returns the full line text, or an empty string if not found.
+pub fn find_entry_by_file(pulled_tsv: &Path, file: &str) -> Result<String, Exit> {
+    let content = std::fs::read_to_string(pulled_tsv).map_err(|_| {
+        log_error(&format!(
+            "could not read the current pulled.tsv at {}",
+            pulled_tsv.display()
+        ));
+        Exit(1)
+    })?;
+    for line in content.lines() {
+        if line.starts_with('#') || line.is_empty() {
+            continue;
+        }
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.len() >= 2 && fields[1] == file {
+            return Ok(line.to_string());
+        }
+    }
+    Ok(String::new())
+}
+
+/// Append a new entry line to `pulled.tsv`.
+pub fn append_entry(pulled_tsv: &Path, entry: &str) -> Result<(), Exit> {
+    let mut file = std::fs::OpenOptions::new().append(true).open(pulled_tsv).map_err(|_| {
+        log_error(&format!(
+            "was not able to append the entry to {}",
+            cyan(&pulled_tsv.display().to_string())
+        ));
+        Exit(1)
+    })?;
+    use std::io::Write;
+    writeln!(file, "{entry}").map_err(|_| {
+        log_error(&format!(
+            "was not able to append the entry to {}",
+            cyan(&pulled_tsv.display().to_string())
+        ));
+        Exit(1)
+    })
+}
+
+/// Replace the existing entry for `file` with `new_entry`.
+///
+/// Rewrites the file filtering out the old line, then appends the new one.
+pub fn replace_entry_by_file(pulled_tsv: &Path, file: &str, new_entry: &str) -> Result<(), Exit> {
+    let content = std::fs::read_to_string(pulled_tsv).map_err(|_| {
+        log_error(&format!(
+            "could not read the current pulled.tsv at {}",
+            pulled_tsv.display()
+        ));
+        Exit(1)
+    })?;
+    let mut filtered = Vec::new();
+    for line in content.lines() {
+        if line.starts_with('#') || line.is_empty() {
+            filtered.push(line.to_string());
+            continue;
+        }
+        let fields: Vec<&str> = line.split('\t').collect();
+        if fields.len() >= 2 && fields[1] == file {
+            continue; // drop the old line
+        }
+        filtered.push(line.to_string());
+    }
+    filtered.push(new_entry.to_string());
+
+    let new_path = pulled_tsv.with_extension("new");
+    let data = filtered.join("\n");
+    std::fs::write(&new_path, data).map_err(|_| {
+        log_error(&format!(
+            "was not able to write to {}",
+            cyan(&new_path.display().to_string())
+        ));
+        Exit(1)
+    })?;
+    std::fs::rename(&new_path, pulled_tsv).map_err(|_| {
+        log_error(&format!(
+            "was not able to override {} with the new content",
+            cyan(&pulled_tsv.display().to_string())
+        ));
+        Exit(1)
+    })
+}
+
+/// Parse a `pulled.tsv` data line into its 6 columns.
+pub fn parse_entry(line: &str) -> Option<(String, String, String, String, String, String)> {
+    let fields: Vec<&str> = line.split('\t').collect();
+    if fields.len() < 6 {
+        return None;
+    }
+    Some((
+        fields[0].to_string(),
+        fields[1].to_string(),
+        fields[2].to_string(),
+        fields[3].to_string(),
+        fields[4].to_string(),
+        fields[5].to_string(),
+    ))
 }
 
 #[cfg(test)]

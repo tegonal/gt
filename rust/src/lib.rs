@@ -24,7 +24,7 @@ pub mod paths;
 pub mod pulled;
 pub mod util;
 
-use args::{parse_command, print_version, Command, CommandSelection};
+use args::{Command, CommandSelection, parse_command, print_version};
 use constants::GT_VERSION;
 use error::{Exit, GtResult};
 use log::log_error;
@@ -64,6 +64,7 @@ pub fn run(args: &[String]) -> GtResult {
 
     match parse_command(&commands, GT_VERSION, "gt.sh", args)? {
         CommandSelection::Selected { name, rest } => match name {
+            "pull" => commands::pull::run(rest),
             "remote" => commands::remote::run(rest),
             other => not_yet_implemented(other),
         },

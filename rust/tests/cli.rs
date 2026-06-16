@@ -152,7 +152,7 @@ fn unknown_command_exits_1() {
 #[test]
 fn not_yet_ported_command_reports_and_exits_1() {
     let dir = unique_dir("notported");
-    let out = run(&dir, &["pull"], "");
+    let out = run(&dir, &["update"], "");
     assert_eq!(code(&out), 1);
     assert!(stderr(&out).contains("not been ported"));
 }
@@ -473,4 +473,420 @@ Name-Real: Test Signer\nName-Email: signer@test.local\nExpire-Date: 0\n%commit\n
     let pull_args = std::fs::read_to_string(remote_dir.join("pull.args")).unwrap();
     assert!(pull_args.contains("--directory \"lib/secure\""));
     assert!(!pull_args.contains("--unsecure"));
+}
+
+// ---------------------------------------------------------------------------
+// helpers for pull tests
+// ---------------------------------------------------------------------------
+
+fn create_source_repo_with_file(label: &str, subpath: &str, content: &str) -> PathBuf {
+    let repo = unique_dir(label).join("srcrepo");
+    std::fs::create_dir_all(&repo).unwrap();
+    git(&repo, &["init", "-q", "-b", "main"]);
+    let file = repo.join(subpath);
+    std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+    std::fs::write(&file, content).unwrap();
+    git(&repo, &["-c", "user.email=a@b.c", "-c", "user.name=test", "add", "-A"]);
+    git(
+        &repo,
+        &[
+            "-c",
+            "user.email=a@b.c",
+            "-c",
+            "user.name=test",
+            "commit",
+            "-qm",
+            "init",
+        ],
+    );
+    repo
+}
+
+fn tag_repo(repo: &Path, tag: &str) {
+    git(repo, &["tag", tag]);
+}
+
+// ---------------------------------------------------------------------------
+// pull
+// ---------------------------------------------------------------------------
+
+#[test]
+fn pull_single_file_success() {
+    let src = create_source_repo_with_file("pullfile", "src/hello.sh", "#!/bin/bash\n");
+    tag_repo(&src, "v0.1.0");
+
+    let consumer = unique_dir("pullfile-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "myremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0, "add stderr: {}", stderr(&add));
+
+    let out = run(
+        &consumer,
+        &["pull", "-r", "myremote", "-p", "src/hello.sh", "-t", "v0.1.0"],
+        "",
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+    assert!(stdout(&out).contains("pulled from"));
+
+    let pulled_file = consumer.join("lib/myremote/src/hello.sh");
+    assert!(pulled_file.is_file());
+    let content = std::fs::read_to_string(&pulled_file).unwrap();
+    assert_eq!(content, "#!/bin/bash\n");
+}
+
+#[test]
+fn pull_directory_success() {
+    let src = create_source_repo_with_file("pulldir", "scripts/lib/a.sh", "a\n");
+    let b = src.join("scripts/lib/b.sh");
+    std::fs::write(&b, "b\n").unwrap();
+    git(&src, &["-c", "user.email=a@b.c", "-c", "user.name=test", "add", "-A"]);
+    git(
+        &src,
+        &[
+            "-c",
+            "user.email=a@b.c",
+            "-c",
+            "user.name=test",
+            "commit",
+            "-qm",
+            "add-b",
+        ],
+    );
+    tag_repo(&src, "v1.0.0");
+
+    let consumer = unique_dir("pulldir-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "dirremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &["pull", "-r", "dirremote", "-p", "scripts/lib/", "-t", "v1.0.0"],
+        "",
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+    assert!(stdout(&out).contains("files pulled"));
+
+    assert!(consumer.join("lib/dirremote/scripts/lib/a.sh").is_file());
+    assert!(consumer.join("lib/dirremote/scripts/lib/b.sh").is_file());
+}
+
+#[test]
+fn pull_chop_path_file() {
+    let src = create_source_repo_with_file("chopfile", "src/utils.sh", "utils\n");
+    tag_repo(&src, "v0.2.0");
+
+    let consumer = unique_dir("chopfile-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "chopremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &[
+            "pull",
+            "-r",
+            "chopremote",
+            "-p",
+            "src/utils.sh",
+            "-t",
+            "v0.2.0",
+            "--chop-path",
+            "true",
+        ],
+        "",
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+
+    assert!(consumer.join("lib/chopremote/utils.sh").is_file());
+}
+
+#[test]
+fn pull_chop_path_directory() {
+    let src = create_source_repo_with_file("chopdir", "src/lib/a.sh", "a\n");
+    tag_repo(&src, "v0.3.0");
+
+    let consumer = unique_dir("chopdir-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "chopdremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &[
+            "pull",
+            "-r",
+            "chopdremote",
+            "-p",
+            "src/lib/",
+            "-t",
+            "v0.3.0",
+            "--chop-path",
+            "true",
+        ],
+        "",
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+
+    assert!(consumer.join("lib/chopdremote/a.sh").is_file());
+}
+
+#[test]
+fn pull_target_file_name() {
+    let src = create_source_repo_with_file("rename", "src/old.sh", "old\n");
+    tag_repo(&src, "v0.4.0");
+
+    let consumer = unique_dir("rename-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "renremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &[
+            "pull",
+            "-r",
+            "renremote",
+            "-p",
+            "src/old.sh",
+            "-t",
+            "v0.4.0",
+            "--target-file-name",
+            "new.sh",
+        ],
+        "",
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+
+    assert!(consumer.join("lib/renremote/src/new.sh").is_file());
+}
+
+#[test]
+fn pull_directory_with_target_file_name_fails() {
+    let src = create_source_repo_with_file("dirtgt", "dir/a.sh", "a\n");
+    tag_repo(&src, "v0.5.0");
+
+    let consumer = unique_dir("dirtgt-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "dtgremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &[
+            "pull",
+            "-r",
+            "dtgremote",
+            "-p",
+            "dir/",
+            "-t",
+            "v0.5.0",
+            "--target-file-name",
+            "x.sh",
+        ],
+        "",
+    );
+    assert_eq!(code(&out), 1);
+    assert!(stderr(&out).contains("cannot specify"));
+}
+
+#[test]
+fn pull_leading_slash_in_path_fails() {
+    let src = create_source_repo_with_file("slash", "a.sh", "a\n");
+    tag_repo(&src, "v0.6.0");
+
+    let consumer = unique_dir("slash-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "slremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &["pull", "-r", "slremote", "-p", "/a.sh", "-t", "v0.6.0"],
+        "",
+    );
+    assert_eq!(code(&out), 1);
+    assert!(stderr(&out).contains("Leading / not allowed"));
+}
+
+#[test]
+fn pull_target_file_name_with_slash_fails() {
+    let src = create_source_repo_with_file("tgtslash", "a.sh", "a\n");
+    tag_repo(&src, "v0.7.0");
+
+    let consumer = unique_dir("tgtslash-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "tsremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &[
+            "pull",
+            "-r",
+            "tsremote",
+            "-p",
+            "a.sh",
+            "-t",
+            "v0.7.0",
+            "--target-file-name",
+            "b/c.sh",
+        ],
+        "",
+    );
+    assert_eq!(code(&out), 1);
+    assert!(stderr(&out).contains("/ not allowed in the targetFileName"));
+}
+
+#[test]
+fn pull_missing_required_args_fails() {
+    let dir = unique_dir("missing");
+    std::fs::create_dir_all(dir.join(".gt")).unwrap();
+    let out = run(&dir, &["pull", "-r", "missing-remote"], "");
+    assert_eq!(code(&out), 1);
+    assert!(stderr(&out).contains("path not set"));
+}
+
+#[test]
+fn pull_same_tag_sha_changed_warns_and_refuses() {
+    let src = create_source_repo_with_file("sha", "src/f.sh", "v1\n");
+    tag_repo(&src, "v1.0.0");
+
+    let consumer = unique_dir("sha-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "sharemote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    // First pull at v1.0.0
+    let first = run(
+        &consumer,
+        &["pull", "-r", "sharemote", "-p", "src/f.sh", "-t", "v1.0.0"],
+        "",
+    );
+    assert_eq!(code(&first), 0, "first pull stderr: {}", stderr(&first));
+
+    // Overwrite source file with different content and commit + tag again
+    std::fs::write(src.join("src/f.sh"), "v2\n").unwrap();
+    git(&src, &["-c", "user.email=a@b.c", "-c", "user.name=test", "add", "-A"]);
+    git(
+        &src,
+        &["-c", "user.email=a@b.c", "-c", "user.name=test", "commit", "-qm", "v2"],
+    );
+    git(&src, &["tag", "-d", "v1.0.0"]);
+    tag_repo(&src, "v1.0.0");
+
+    // Delete the local tag in the consumer repo so the new tag content is fetched
+    let consumer_repo = consumer.join(".gt/remotes/sharemote/repo");
+    git(&consumer_repo, &["tag", "-d", "v1.0.0"]);
+
+    // Re-pull at the same tag — sha should differ, so it should refuse
+    let second = run(
+        &consumer,
+        &["pull", "-r", "sharemote", "-p", "src/f.sh", "-t", "v1.0.0"],
+        "",
+    );
+    assert_eq!(code(&second), 1, "second pull should fail: {}", stderr(&second));
+    assert!(stderr(&second).contains("sha512") || stderr(&second).contains("0 files"));
+}
+
+#[test]
+fn pull_auto_detect_latest_tag_with_filter() {
+    let src = create_source_repo_with_file("latest", "file.txt", "hello\n");
+    git(
+        &src,
+        &[
+            "-c",
+            "user.email=a@b.c",
+            "-c",
+            "user.name=test",
+            "commit",
+            "--allow-empty",
+            "-qm",
+            "empty",
+        ],
+    );
+    tag_repo(&src, "v2.0.0");
+    tag_repo(&src, "v1.0.0");
+    tag_repo(&src, "beta-1.0");
+
+    let consumer = unique_dir("latest-consumer");
+    std::fs::create_dir_all(consumer.join(".gt")).unwrap();
+    let url = format!("file://{}", src.display());
+
+    let add = run(
+        &consumer,
+        &["remote", "add", "-r", "latremote", "-u", &url, "--unsecure", "true"],
+        "",
+    );
+    assert_eq!(code(&add), 0);
+
+    let out = run(
+        &consumer,
+        &["pull", "-r", "latremote", "-p", "file.txt", "--tag-filter", "^v[0-9]+"],
+        "",
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+    assert!(stdout(&out).contains("pulled from"));
+
+    // Should have pulled v2.0.0 (latest matching ^v[0-9]+)
+    let tsv = consumer.join(".gt/remotes/latremote/pulled.tsv");
+    let tsv_content = std::fs::read_to_string(&tsv).unwrap();
+    assert!(
+        tsv_content.contains("v2.0.0"),
+        "should pull v2.0.0, got:\n{tsv_content}"
+    );
 }

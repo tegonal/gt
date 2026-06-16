@@ -402,11 +402,7 @@ fn extract_pub_key_ids(output_key: &str) -> Vec<String> {
             // e.g. "pub   rsa4096/0B66B0D6 ..." -> take "0B66B0D6"
             let after_slash = l.split('/').nth(1)?;
             let id: String = after_slash.chars().take_while(|c| c.is_ascii_alphanumeric()).collect();
-            if id.is_empty() {
-                None
-            } else {
-                Some(id)
-            }
+            if id.is_empty() { None } else { Some(id) }
         })
         .collect()
 }
@@ -506,11 +502,7 @@ fn get_sig_creation_date(sig_file: &Path) -> Option<String> {
         let idx = l.find("sig created ")?;
         let rest = &l[idx + "sig created ".len()..];
         let date: String = rest.chars().take_while(|c| c.is_ascii_digit() || *c == '-').collect();
-        if date.is_empty() {
-            None
-        } else {
-            Some(date)
-        }
+        if date.is_empty() { None } else { Some(date) }
     })
 }
 
@@ -609,6 +601,41 @@ pub fn log_setup_success(remote: &str, number_of_imported_keys: u32) {
         "remote {} was set up successfully; imported {number_of_imported_keys} GPG key(s) for verification.\nYou are ready to pull files via:\ngt pull -r {remote} -p <PATH>",
         cyan(remote)
     ));
+}
+
+/// `gpg --homedir <gpgDir> --verify <sig> <file>`.
+///
+/// Returns `Ok(true)` on success, `Ok(false)` on verification failure.
+pub fn verify_file(gpg_dir: &Path, sig: &Path, file: &Path) -> Result<bool, Exit> {
+    let status = Command::new("gpg")
+        .arg("--homedir")
+        .arg(gpg_dir)
+        .arg("--verify")
+        .arg(sig)
+        .arg(file)
+        .status();
+    Ok(matches!(status, Ok(s) if s.success()))
+}
+
+/// Returns the key-id and revocation status of the key that signed `sig_file`.
+///
+/// Uses the already-existing private helpers in this module.
+pub fn verify_and_check_revocation(sig_file: &Path, gpg_dir: &Path) -> Result<(String, bool), Exit> {
+    let key_data = match get_signing_gpg_key_data(sig_file, Some(gpg_dir)) {
+        Some(d) => d,
+        None => {
+            return Ok((String::new(), false));
+        }
+    };
+    let key_id = extract_field(&key_data, 5);
+    if is_key_data_revoked(&key_data) {
+        log_error(&format!(
+            "the key {key_id} which signed the file {} was revoked",
+            cyan(&sig_file.display().to_string())
+        ));
+        return Ok((key_id, true));
+    }
+    Ok((key_id, false))
 }
 
 #[cfg(test)]

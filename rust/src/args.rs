@@ -56,6 +56,27 @@ pub fn parse_arguments(
     version: &str,
     args: &[String],
 ) -> Result<HashMap<String, String>, Exit> {
+    parse_arguments_inner(params, examples, version, args, false)
+}
+
+/// Like [`parse_arguments`], but ignores unknown arguments rather than
+/// returning an error. Used by the two-pass `gt pull` parser (first pass).
+pub fn parse_arguments_lenient(
+    params: &[Param],
+    examples: &str,
+    version: &str,
+    args: &[String],
+) -> Result<HashMap<String, String>, Exit> {
+    parse_arguments_inner(params, examples, version, args, true)
+}
+
+fn parse_arguments_inner(
+    params: &[Param],
+    examples: &str,
+    version: &str,
+    args: &[String],
+    ignore_unknown: bool,
+) -> Result<HashMap<String, String>, Exit> {
     let mut values: HashMap<String, String> = HashMap::new();
     let mut num_parsed = 0usize;
 
@@ -69,13 +90,17 @@ pub fn parse_arguments(
                     "there were arguments defined prior to --help, they were all ignored and instead the help is shown",
                 );
             } else if args.len() - i > 1 {
-                log_warning("there were arguments defined after --help, they will all be ignored, you might want to remove --help");
+                log_warning(
+                    "there were arguments defined after --help, they will all be ignored, you might want to remove --help",
+                );
             }
             return Err(Exit(99));
         }
         if arg == "--version" {
             if num_parsed != 0 {
-                log_warning("there were arguments defined prior to --version, they will all be ignored and instead printVersion will be called");
+                log_warning(
+                    "there were arguments defined prior to --version, they will all be ignored and instead printVersion will be called",
+                );
             }
             print_version(version);
             return Err(Exit(99));
@@ -102,16 +127,22 @@ pub fn parse_arguments(
         }
 
         if !matched {
-            if arg.starts_with('-') && i + 1 < args.len() {
-                log_error(&format!(
-                    "unknown argument {BOLD_CYAN}{arg}{COLOR_RESET} (and value {})",
-                    args[i + 1]
-                ));
+            if ignore_unknown {
+                if arg.starts_with('-') && i + 1 < args.len() {
+                    i += 1; // skip the value too
+                }
             } else {
-                log_error(&format!("unknown argument {BOLD_CYAN}{arg}{COLOR_RESET}"));
+                if arg.starts_with('-') && i + 1 < args.len() {
+                    log_error(&format!(
+                        "unknown argument {BOLD_CYAN}{arg}{COLOR_RESET} (and value {})",
+                        args[i + 1]
+                    ));
+                } else {
+                    log_error(&format!("unknown argument {BOLD_CYAN}{arg}{COLOR_RESET}"));
+                }
+                ask_print_help(params, examples, version);
+                return Err(Exit(9));
             }
-            ask_print_help(params, examples, version);
-            return Err(Exit(9));
         }
         i += 1;
     }
