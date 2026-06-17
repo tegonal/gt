@@ -77,10 +77,11 @@ fn create_source_repo(label: &str) -> PathBuf {
 
 fn git(cwd: &Path, args: &[&str]) {
     let status = Command::new("git")
+		.args(["-C", cwd.to_str().unwrap()])
         .args(args)
-        .current_dir(cwd)
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
+        // .current_dir(cwd)
+        // .stdout(Stdio::null())
+        // .stderr(Stdio::null())
         .status()
         .expect("failed to run git");
     assert!(status.success(), "git {:?} failed", args);
@@ -503,7 +504,7 @@ fn create_source_repo_with_file(label: &str, subpath: &str, content: &str) -> Pa
 }
 
 fn tag_repo(repo: &Path, tag: &str) {
-    git(repo, &["tag", tag]);
+    git(repo, &["tag", "-a", tag, "-m", tag]);
 }
 
 // ---------------------------------------------------------------------------
@@ -846,19 +847,6 @@ fn pull_same_tag_sha_changed_warns_and_refuses() {
 #[test]
 fn pull_auto_detect_latest_tag_with_filter() {
     let src = create_source_repo_with_file("latest", "file.txt", "hello\n");
-    git(
-        &src,
-        &[
-            "-c",
-            "user.email=a@b.c",
-            "-c",
-            "user.name=test",
-            "commit",
-            "--allow-empty",
-            "-qm",
-            "empty",
-        ],
-    );
     tag_repo(&src, "v2.0.0");
     tag_repo(&src, "v1.0.0");
     tag_repo(&src, "beta-1.0");
