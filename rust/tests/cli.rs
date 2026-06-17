@@ -10,6 +10,9 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU32, Ordering};
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
+
 static COUNTER: AtomicU32 = AtomicU32::new(0);
 
 fn unique_dir(label: &str) -> PathBuf {
@@ -608,6 +611,71 @@ fn self_update_git_behind_tag_proceeds() {
     );
     assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
     // It proceeds to update successfully
+}
+
+#[test]
+fn self_update_temp_dir_creation_fails() {
+    let install_dir = create_install_dir("sutempfail");
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+
+    // make a read-only parent directory so create_dir_all fails
+    let bad_tmp = install_dir.join("badtmp");
+    std::fs::create_dir_all(&bad_tmp).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&bad_tmp, std::fs::Permissions::from_mode(0o555)).unwrap();
+    }
+
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "y\n",
+        &[
+            ("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap()),
+            ("TMPDIR", bad_tmp.to_str().unwrap()),
+        ],
+    );
+
+    #[cfg(unix)]
+    {
+        std::fs::set_permissions(&bad_tmp, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let _ = std::fs::remove_dir_all(&bad_tmp);
+
+    assert_eq!(code(&out), 1, "stderr: {}", stderr(&out));
+}
+
+#[test]
+fn self_update_copy_dir_recursive_fails() {
+    let install_dir = create_install_dir("sucopyfail");
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+    // add an unreadable file inside the install dir so copy_dir_recursive fails
+    let unreadable = install_dir.join("unreadable.txt");
+    std::fs::write(&unreadable, "secret").unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&unreadable, std::fs::Permissions::from_mode(0o000)).unwrap();
+    }
+
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "y\n",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+
+    #[cfg(unix)]
+    {
+        std::fs::set_permissions(&unreadable, std::fs::Permissions::from_mode(0o644)).unwrap();
+    }
+
+    assert_eq!(code(&out), 1, "stderr: {}", stderr(&out));
 }
 
 // ---------------------------------------------------------------------------
