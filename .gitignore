@@ -3,5 +3,5 @@
 .idea
 .gt/**/repo
 .gt/**/gpg
-
+rust/target
 /target

@@ -53,6 +53,83 @@ fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
+// ---------------------------------------------------------------------------
+// helpers for self-update integration tests (copies the binary so
+// current_exe() resolves to a controlled install directory)
+// ---------------------------------------------------------------------------
+
+fn run_binary(binary: &Path, cwd: &Path, args: &[&str], stdin: &str) -> Output {
+    run_binary_env(binary, cwd, args, stdin, &[])
+}
+
+fn run_binary_env(binary: &Path, cwd: &Path, args: &[&str], stdin: &str, envs: &[(&str, &str)]) -> Output {
+    let mut cmd = Command::new(binary);
+    cmd.args(args)
+        .current_dir(cwd)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    for (k, v) in envs {
+        cmd.env(k, v);
+    }
+    let mut child = cmd.spawn().expect("failed to spawn gt");
+    child.stdin.take().unwrap().write_all(stdin.as_bytes()).unwrap();
+    child.wait_with_output().expect("failed to wait for gt")
+}
+
+fn create_install_dir_in(install_dir: &Path) {
+    let bin_dir = install_dir.join("bin");
+    std::fs::create_dir_all(&bin_dir).unwrap();
+    let gt_source = PathBuf::from(env!("CARGO_BIN_EXE_gt"));
+    let gt_binary = bin_dir.join("gt");
+    std::fs::copy(&gt_source, &gt_binary).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&gt_binary, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+}
+
+/// Creates a temporary directory containing a copied gt binary in bin/ and an
+/// install.sh in the root so that self-update sees a valid installation.
+fn create_install_dir(label: &str) -> PathBuf {
+    let install_dir = unique_dir(label);
+    create_install_dir_in(&install_dir);
+    install_dir
+}
+
+/// Creates a git-based installation directory with a bare origin and a clone.
+fn create_git_install_dir(label: &str) -> PathBuf {
+    let base = unique_dir(label);
+    let origin = base.join("origin.git");
+    let install_dir = base.join("install");
+    std::fs::create_dir_all(&origin).unwrap();
+
+    Command::new("git")
+        .args(["init", "--bare", "-q"])
+        .current_dir(&origin)
+        .status()
+        .expect("git init --bare failed");
+
+    Command::new("git")
+        .args(["clone", "-q", origin.to_str().unwrap(), install_dir.to_str().unwrap()])
+        .status()
+        .expect("git clone failed");
+
+    create_install_dir_in(&install_dir);
+    install_dir
+}
+
+fn write_install_sh(install_dir: &Path, content: &str) {
+    let path = install_dir.join("install.sh");
+    std::fs::write(&path, content).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+}
+
 /// Creates a local git repo (acting as the remote) without a `.gt` directory.
 fn create_source_repo(label: &str) -> PathBuf {
     let repo = unique_dir(label).join("srcrepo");
@@ -415,6 +492,122 @@ fn self_update_unknown_arg_exits_9() {
     let out = run(&dir, &["self-update", "--bogus", "x"], "n\n");
     assert_eq!(code(&out), 9);
     assert!(stderr(&out).contains("unknown argument"));
+}
+
+#[test]
+fn self_update_non_git_user_says_yes() {
+    let install_dir = create_install_dir("suyes");
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "y\n",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+}
+
+#[test]
+fn self_update_non_git_user_says_no() {
+    let install_dir = create_install_dir("suno");
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "n\n",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+    assert_eq!(code(&out), 1, "stderr: {}", stderr(&out));
+    assert!(stdout(&out).contains("aborted self update"), "stdout: {}", stdout(&out));
+}
+
+#[test]
+fn self_update_install_sh_fails_with_exit_code() {
+    let install_dir = create_install_dir("sufail");
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 42");
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "y\n",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+    assert_eq!(code(&out), 42, "stderr: {}", stderr(&out));
+}
+
+#[test]
+fn self_update_git_already_latest() {
+    let install_dir = create_git_install_dir("sugitlatest");
+    git(&install_dir, &["-c", "user.email=a@b.c", "-c", "user.name=t", "commit", "--allow-empty", "-qm", "init"]);
+    git(&install_dir, &["tag", "v1.0.0"]);
+    git(&install_dir, &["push", "-q", "origin", "v1.0.0"]);
+    // Delete the local tag so that creating a branch with the same name does
+    // not make git rev-parse --abbrev-ref HEAD return heads/v1.0.0.
+    git(&install_dir, &["tag", "-d", "v1.0.0"]);
+    git(&install_dir, &["checkout", "-b", "v1.0.0"]);
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+    assert!(stdout(&out).contains("already installed"), "stdout: {}", stdout(&out));
+}
+
+#[test]
+fn self_update_git_force_reinstalls() {
+    let install_dir = create_git_install_dir("sugitforce");
+    git(&install_dir, &["-c", "user.email=a@b.c", "-c", "user.name=t", "commit", "--allow-empty", "-qm", "init"]);
+    git(&install_dir, &["tag", "v1.0.0"]);
+    git(&install_dir, &["push", "-q", "origin", "v1.0.0"]);
+    // Delete the local tag so the branch name is unambiguous.
+    git(&install_dir, &["tag", "-d", "v1.0.0"]);
+    git(&install_dir, &["checkout", "-b", "v1.0.0"]);
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update", "--force", "true"],
+        "",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+    // It should mention it's reinstalling despite being on latest.
+    assert!(
+        stdout(&out).contains("going to re-install it"),
+        "stdout: {}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn self_update_git_behind_tag_proceeds() {
+    let install_dir = create_git_install_dir("sugitbehind");
+    git(&install_dir, &["-c", "user.email=a@b.c", "-c", "user.name=t", "commit", "--allow-empty", "-qm", "init"]);
+    git(&install_dir, &["tag", "v1.0.0"]);
+    git(&install_dir, &["push", "-q", "origin", "v1.0.0"]);
+    // Stay on default branch (e.g. main), which differs from the tag
+    write_install_sh(&install_dir, "#!/bin/sh\nexit 0");
+    let exe_dir = install_dir.join("bin");
+    let out = run_binary_env(
+        &exe_dir.join("gt"),
+        &install_dir,
+        &["self-update"],
+        "",
+        &[("GT_SELF_UPDATE_EXE_DIR", exe_dir.to_str().unwrap())],
+    );
+    assert_eq!(code(&out), 0, "stderr: {}", stderr(&out));
+    // It proceeds to update successfully
 }
 
 // ---------------------------------------------------------------------------

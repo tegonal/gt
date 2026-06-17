@@ -5,7 +5,7 @@
 //! can be added as further commands are ported.
 
 /// Version of the tool. Mirrors `GT_VERSION` in the Bash sources.
-pub const GT_VERSION: &str = "v1.7.0-SNAPSHOT";
+pub const GT_VERSION: &str = "v1.7.0-SNAPSHOT-rust";
 
 // ----- ANSI colour codes (matching the Bash log/ask helpers) -----------------
 pub const COLOR_RESET: &str = "\x1b[0m";
