@@ -77,13 +77,10 @@ fn create_source_repo(label: &str) -> PathBuf {
 
 fn git(cwd: &Path, args: &[&str]) {
     let status = Command::new("git")
-		.args(["-C", cwd.to_str().unwrap()])
+        .args(["-C", cwd.to_str().unwrap()])
         .args(args)
-        // .current_dir(cwd)
-        // .stdout(Stdio::null())
-        // .stderr(Stdio::null())
         .status()
-        .expect("failed to run git");
+		.unwrap_or_else(|_| panic!("failed to run git {:?}", args));
     assert!(status.success(), "git {:?} failed", args);
 }
 

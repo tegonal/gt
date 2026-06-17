@@ -1,0 +1,19 @@
+[workspace]
+members = [
+	"rust", #TODO switch to . once we move it
+	"xtask"
+]
+resolver = "3"
+
+[workspace.package]
+version = "1.7.0-SNAPSHOT"
+rust-version = "1.96"
+edition = "2024"
+license = "EUPL-1.2"
+authors = ["Tegonal Genossenschaft"]
+repository = "https://github.com/tegonal/gt"
+
+[workspace.lints]
+
+[profile.release]
+strip = true

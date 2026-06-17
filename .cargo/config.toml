@@ -1,0 +1,4 @@
+[alias]
+xtask="run -p xtask --"
+coverage = "llvm-cov"
+lint ="clippy --all-targets --all-features -- -D warnings"

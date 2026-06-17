@@ -1,22 +1,13 @@
 [package]
 name = "gt"
-version = "1.7.0"
-edition = "2024"
 description = "Rust re-implementation of the gt tool (currently the 'remote' command)"
-license = "EUPL-1.2"
 
-[[bin]]
-name = "gt"
-path = "src/main.rs"
-
-[lib]
-name = "gt"
-path = "src/lib.rs"
+version.workspace = true
+rust-version.workspace = true
+edition.workspace = true
 
 # Intentionally no external dependencies: the implementation only relies on the
 # standard library plus the `git` and `gpg` command line tools (exactly like the
 # original Bash implementation). This keeps the build hermetic and reproducible.
 [dependencies]
 
-[profile.release]
-strip = true

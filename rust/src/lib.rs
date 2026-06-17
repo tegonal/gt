@@ -54,7 +54,7 @@ pub fn run(args: &[String]) -> GtResult {
         },
         Command {
             name: "update",
-            help: "update pulled files to latest or particular version",
+            help: "update pulled files to latest or a particular version",
         },
         Command {
             name: "self-update",
