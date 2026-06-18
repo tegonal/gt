@@ -10,6 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # the github runners include rustup but maybe not the version we want
+      - name: Pin rustup
+        run: rustup toolchain install
+
+      - name: install taplo-cli
+        run: cargo install taplo-cli
 
       - name: install shellcheck
         run: ./lib/tegonal-scripts/src/ci/install-shellcheck.sh

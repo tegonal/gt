@@ -33,6 +33,13 @@ jobs:
       #gt-placeholder-gh-action-checkout-end
 
       #gt-placeholder-install-dependencies-start
+      # the github runners include rust but maybe not the version we want
+      - name: Pin rustup
+        run: rustup toolchain install
+
+      - name: install taplo-cli
+        run: cargo install taplo-cli
+
       - name: install shfmt
         run: ./lib/tegonal-scripts/src/ci/install-shfmt.sh
       #gt-placeholder-install-dependencies-end
