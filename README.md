@@ -64,6 +64,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 	- [self-update](#self-update)
 - [FAQ](#faq)
 - [Contributors and contribute](#contributors-and-contribute)
+	- [Initial Setup](#initial-setup)
 - [License](#license)
 
 # Installation
@@ -992,6 +993,10 @@ You are more than welcome to contribute as well:
 Please have a look at
 [CONTRIBUTING.md](https://github.com/tegonal/gt/tree/main/.github/CONTRIBUTING.md)
 for further suggestions and guidelines.
+
+## Initial Setup
+
+Take a look at [CONTRIBUTING.md -> Your first Code contribution](.github/CONTRIBUTING.md#your-first-code-contribution)
 
 # License
 

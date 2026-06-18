@@ -1,0 +1,54 @@
+#
+#    __                          __
+#   / /____ ___ ____  ___  ___ _/ /       This file is provided to you by https://github.com/tegonal/gt
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
+#         /___/                           Please report bugs and contribute back your improvements
+#
+#                                         Version: v1.7.0-SNAPSHOT
+###################################
+[package]
+name = "gt"
+publish = false
+description = "Utility to retrieve files from a git repository"
+version.workspace = true
+
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+
+[dependencies]
+clap = { workspace = true }
+
+[lints]
+workspace = true
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+[workspace]
+members = [".", "xtask"]
+# applies to all members
+resolver = "3"
+
+[workspace.package]
+version = "2.0.0-SNAPSHOT"
+rust-version = "1.96"
+edition = "2024"
+license = "EUPL-1.2"
+authors = ["Tegonal Genossenschaft"]
+repository = "https://github.com/tegonal/gt.git"
+homepage = "https://github.com/tegonal/gt"
+readme = "README.md"
+
+[workspace.dependencies]
+clap = { version = "4.6.1", features = ["derive"] }
+
+[workspace.lints]
+
+# applies to all members
+[profile.release]
+strip = true
