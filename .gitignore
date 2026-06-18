@@ -1,5 +1,7 @@
 .history
 .vscode
 .idea
+target
+
 .gt/**/repo
 .gt/**/gpg

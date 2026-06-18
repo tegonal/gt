@@ -24,8 +24,11 @@ sourceOnce "$dir_of_tegonal_scripts/utility/update-bash-docu.sh"
 sourceOnce "$scriptsDir/run-shfmt.sh"
 
 function cleanupOnPushToMain() {
-	customRunShfmt || die "was not able to format"
+	cargo cleanup || die "was not able to cleanup rust files"
 
+	customRunShfmt || die "was not able to format bash files"
+
+	# TODO needs to be re-implemented for rust, replaceHelpSnippet should still work
 	find "$projectDir/src" -maxdepth 1 -type f \
 		-name "*.sh" \
 		-not -name "*.doc.sh" \

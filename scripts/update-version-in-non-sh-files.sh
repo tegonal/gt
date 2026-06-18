@@ -27,6 +27,10 @@ function updateVersionInNonShFiles() {
 	local version projectsRootDir additionalPattern
 	parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
 
+	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
+	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
+	exitIfNotAllArgumentsSet afterVersionHookParams "" "$GT_VERSION"
+
 	local -ra additionalScripts=(
 		"$projectsRootDir/install.sh"
 	)
@@ -36,15 +40,19 @@ function updateVersionInNonShFiles() {
 	done
 
 	local -ra additionalFilesWithVersions=(
-		"$projectDir/.github/workflows/gt-update.yml"
-		"$projectDir/src/install/zsh/_gt"
-		"$projectDir/src/install/zsh/gt.plugin.zsh"
+		"$projectsRootDir/.github/workflows/gt-update.yml"
+		"$projectsRootDir/src/install/zsh/_gt"
 	)
 
 	logInfo "going to update version in non-sh files to %s" "$version"
 	for file in "${additionalFilesWithVersions[@]}"; do
 		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file"
 	done
+
+	find "$projectsRootDir" -name "*.toml" -type f -print0 |
+		while read -r -d $'\0' file; do
+			perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file"
+		done
 }
 
 ${__SOURCED__:+return}

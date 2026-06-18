@@ -18,14 +18,19 @@ if ! [[ -v scriptsDir ]]; then
 fi
 source "$scriptsDir/dirs.source.sh"
 sourceOnce "$dir_of_tegonal_scripts/qa/run-shellspec-if-installed.sh"
-
+sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$scriptsDir/cleanup-on-push-to-main.sh"
 sourceOnce "$scriptsDir/run-shellcheck.sh"
 
 function beforePr() {
+	if ! checkCommandExists cargo; then
+		die "could not find the cargo command, run ./scripts/initial-setup.sh"
+	fi
+
 	# using && because this function is used on the left side of an || in releaseFiles
 	# this way we still have fail fast behaviour and don't mask/hide a non-zero exit code
-	runShellspecIfInstalled --jobs 2 &&
+	cargo lint &&
+		runShellspecIfInstalled --jobs 2 &&
 		customRunShellcheck &&
 		cleanupOnPushToMain
 }
