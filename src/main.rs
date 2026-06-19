@@ -1,6 +1,7 @@
 use clap::Parser;
 
 mod commands;
+mod utils;
 
 #[derive(Parser)]
 #[command(name = "gt")]

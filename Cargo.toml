@@ -23,6 +23,7 @@ readme.workspace = true
 
 [dependencies]
 clap = { workspace = true }
+anyhow = { workspace = true }
 
 [lints]
 workspace = true
@@ -45,6 +46,7 @@ homepage = "https://github.com/tegonal/gt"
 readme = "README.md"
 
 [workspace.dependencies]
+anyhow = { version = "1.0.102" }
 clap = { version = "4.6.1", features = ["derive"] }
 
 [workspace.lints]

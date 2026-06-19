@@ -41,9 +41,14 @@ set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
 
+if ! [[ -v location_of_install_sh ]]; then
+	location_of_install_sh="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+	readonly location_of_install_sh
+fi
+
 function logError() {
 	local -r msg=$1
-	shift 1 || die "could not shift by 1"
+	shift 1 || die "Could not shift by 1"
 	# shellcheck disable=SC2059
 	printf >&2 "\033[0;31mERROR\033[0m: $msg\n" "$@"
 }
@@ -89,19 +94,65 @@ function deleteDirChmod777() {
 	rm -r "$dir"
 }
 
-exitIfCommandDoesNotExist "git"
-
 declare projectName="gt"
 declare repoUrl="https://github.com/tegonal/$projectName"
 declare tmpDir
 tmpDir=$(mktemp -d -t gt-install-XXXXXXXXXX)
 declare gpgDir="$tmpDir/gpg"
-declare repoDir="$tmpDir/repo"
+declare tmpLibDir="$tmpDir/bin"
+declare bakDir="$tmpDir/bak"
 
 function cleanup() {
 	# necessary because .git files are sometime 700 and would require sudo to delete
 
 	deleteDirChmod777 "$tmpDir" >/dev/null 2>&1 || true
+}
+
+function determinePackage() {
+	local -r tag=$1
+	local os arch
+	os=$(uname -s)
+	arch=$(uname -m)
+
+	case "$os" in
+	Linux)
+		os="unknown-linux-gnu"
+		;;
+	Darwin)
+		os="apple-darwin"
+		;;
+	MINGW* | MSYS* | CYGWIN*)
+		os="pc-windows-msvc"
+		;;
+	*)
+		die "Unsupported os: $os -- please open a feature request at https://github.com/tegonal/gt/discussions/new?category=ideas&title=Support%20for%20OS%20$os"
+		;;
+	esac
+
+	case "$arch" in
+	x86_64)
+		arch="x86_64"
+		;;
+	arm64)
+		arch="aarch64"
+		;;
+	*)
+		die "Unsupported architecture: $arch -- please open a feature request at https://github.com/tegonal/gt/discussions/new?category=ideas&title=Support%20for%20arch%20$arch"
+		;;
+	esac
+
+	echo"gt-${arch}-${os}"
+}
+
+function download() {
+	local -r url=$1
+	local -r target=$1
+	if command -v wget >/dev/null; then
+		wget --https-only --secure-protocol=TLSv1_2 -O "$target" -q "$url" || die "could not fetch $target from $url"
+	else
+		# if wget does not exist, then we try it with curl
+		curl --proto '=https' --tlsv1.2 -fL -o "$target" -s "$url" || die "could not fetch $target from $url"
+	fi
 }
 
 function install() {
@@ -110,58 +161,59 @@ function install() {
 	local -r symbolicLink=$3
 	shift 3 || die "could not shift by 3"
 
-	local -r versionRegex="^(v[0-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$"
+	local -r versionRegex="^(v[2-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$"
 	if ! grep -Eq "$versionRegex" >/dev/null <<<"$tag"; then
-		die "tag needs to follow the regex %s -- given %s" "$versionRegex" "$tag"
+		if grep -Eq "[0-1]\.([0-9]+)\.[0-9]+(-RC[0-9]+)?"; then
+			die "Version 0 and 1 can no longer be installed. Use an older version of install.sh if you want to install the bash based version of gt"
+		else
+			die "tag needs to follow the regex %s -- given %s" "$versionRegex" "$tag"
+		fi
 	fi
 
 	mkdir -p "$gpgDir"
 	chmod 700 "$gpgDir"
-	mkdir -p "$repoDir"
+	mkdir -p "$tmpLibDir"
 
 	trap cleanup EXIT
 
-	echo "downloading $projectName $tag"
+	logInfo "downloading $projectName $tag"
 
-	cd "$repoDir"
-	git init >/dev/null
-	git remote add origin "$repoUrl" >/dev/null
-	git fetch --depth=1 origin "$tag" >/dev/null
-	git checkout -b "$tag" FETCH_HEAD >/dev/null
+	cd "$tmpLibDir"
+	local binaryName binary
+	binaryName="$(determinePackage)"
+	binary="$tmpLibDir/$binaryName"
 
-	echo "verifying the files against the current GPG key (in branch main) of $projectName"
-	# we will check the chosen version against the current gpg key,
-	# i.e. only if the signatures of the chosen version are still valid against the current key we are happy
 	local -r publicKey="$tmpDir/signing-key.public.asc"
-	local -r url="https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc"
-	if command -v wget >/dev/null; then
-		wget -O "$publicKey" -q "$url" || die "could not fetch public key from main branch"
-	else
-		# if wget does not exist, then we try it with curl
-		curl -L -o "$publicKey" -s "$url" || die "could not fetch public key from main branch"
-	fi
+	logInfo "Verifying the binary and latest install.sh against the current GPG key (in branch main) of $projectName (assuming you trusting this key)"
+	# we will check the chosen version against the current gpg key,
+	# i.e. only if the signature of the chosen version are still valid against the current key we are happy
+	download "https://raw.githubusercontent.com/tegonal/$projectName/main/.gt/signing-key.public.asc" "$publicKey"
 	gpg --homedir "$gpgDir" --import "$publicKey" || die "could not import public key"
 	gpg --homedir "$gpgDir" --list-sig || true
 
+	# downloading the latest installer, regardless of the installer we currently use, so that the self-update works well
+	download "https://raw.githubusercontent.com/tegonal/$projectName/main/install.sh" "$tmpLibDir/install.sh"
+	download "https://raw.githubusercontent.com/tegonal/$projectName/main/install.sh.sig" "$tmpLibDir/install.sh.sig"
+	download "https://github.com/tegonal/gt/releases/download/$tag/$binaryName" "$binary"
+	download "https://github.com/tegonal/gt/releases/download/$tag/$binaryName.sig" "$binary.sig"
+
 	local previousKeyId=""
 
-	find "$repoDir" \
+	find "$tmpLibDir" \
 		-type f \
 		-name "*.sig" \
-		-not -path "$repoDir/.gt/signing-key.public.asc.sig" \
-		-not -path "$repoDir/.gt/remotes/*/public-keys/*.sig" \
 		-print0 |
 		while read -r -d $'\0' sigFile; do
 			local file=${sigFile::-4}
-			echo "verifying $file"
+			echo "Verifying $file"
 			local output
 			if ! output="$(gpg --homedir "$gpgDir" --keyid-format LONG --verify "$sigFile" "$file" 2>&1)"; then
-				printf "verification failed for %s:\n%s\n\n" "$file" "$output"
+				printf "Verification failed for %s:\n%s\n\n" "$file" "$output"
 				return 2
 			else
 				local sigPackets keyId
-				sigPackets=$(gpg --list-packets "$sigFile") || returnDying "could not list-packets for %s" "$sigFile" || return $?
-				keyId=$(grep -oE "keyid .*" <<<"$sigPackets" | cut -c7-) || returnDying "could not extract keyid from signature packets:\n%s" "$sigPackets" || return $?
+				sigPackets=$(gpg --list-packets "$sigFile") || returnDying "Could not list-packets for %s" "$sigFile" || return $?
+				keyId=$(grep -oE "keyid .*" <<<"$sigPackets" | cut -c7-) || returnDying "Could not extract keyid from signature packets:\n%s" "$sigPackets" || return $?
 				if [[ $previousKeyId != "$keyId" ]]; then
 					previousKeyId="$keyId"
 					local keyData
@@ -169,27 +221,27 @@ function install() {
 						gpg --homedir "$gpgDir" --list-keys \
 							--list-options show-sig-expire,show-unusable-subkeys,show-unusable-uids \
 							--with-colons "$keyId" | grep -E "^(pub|sub).*$keyId"
-					) || returnDying "was not able to extract the key data for %s" "$keyId" || return $?
+					) || returnDying "Was not able to extract the key data for %s" "$keyId" || return $?
 					if grep -E '^(sub|pub):r:' <<<"$keyData" >/dev/null; then
-						logError "key %s which signed the files of tag %s was revoked, aborting installation" "$keyId" "$tag"
+						logError "Key %s which signed the files of tag %s was revoked, aborting installation" "$keyId" "$tag"
 						return 3
 					else
-						logInfo "verified that key %s which signed files is not revoked" "$keyId"
+						echo "Verified that key %s which signed files is not revoked" "$keyId"
 					fi
 				fi
 			fi
-		done || die "verification failed, see above"
+		done || die "Verification failed, see above"
 
-	echo "Verification complete, note that we did not verify $projectName's dependencies"
+	logInfo "Verification complete"
 	echo ""
 
+	## check if it works before we remove maybe an older installation
+	"$binary" --version || die "Could not run $binary, aborting"
+
 	if [[ -d $installDir ]]; then
-		currentBranch=$(git --git-dir="$installDir/.git" rev-parse --abbrev-ref HEAD || echo "<UNKNOWN, most likely manual installation>")
-		echo "Looks like $projectName was already installed in $installDir"
-		printf "Current tag in use is \033[0;36m%s\033[0m\n" "$currentBranch"
-		printf "going to replace the current installation with the chosen \033[0;36m%s\033[0m\n" "$tag"
-		# necessary because .git files are sometimes mod 700 and would require sudo to delete
-		deleteDirChmod777 "$installDir"
+		mv "$installDir" "$bakDir"
+		echo "Looks like $projectName was already installed in $installDir (the directory exists) -- moved it to the backup dir $bakDir"
+		printf "Going to replace the current installation with the chosen \033[0;36m%s\033[0m\n" "$tag"
 		if [[ -n $symbolicLink ]]; then
 			rm "$symbolicLink" >/dev/null 2>&1 || true
 		fi
@@ -197,19 +249,26 @@ function install() {
 	local parent
 	parent=$(dirname "$installDir")
 	mkdir -p "$parent"
-	mv "$repoDir" "$installDir"
+	mv "$tmpLibDir" "$installDir"
 
-	logInfo "moved sources to installation directory $installDir"
+	logInfo "Moved files to installation directory $installDir"
 
 	if [[ -n $symbolicLink ]]; then
 		logInfo "set up symbolic link $symbolicLink"
 		parent=$(dirname "$symbolicLink")
 		mkdir -p "$parent"
-		ln -sf "$installDir/src/$projectName.sh" "$symbolicLink" || sudo ln -sf "$installDir/src/$projectName.sh" "$symbolicLink"
+		ln -sf "$installDir/$binaryName" "$symbolicLink" || sudo ln -sf "$installDir/$binaryName" "$symbolicLink"
 	else
 		logInfo "no symbolic link set up, please do manually if required"
 	fi
 	logSuccess "installation completed, %s %s set up in %s" "$projectName" "$tag" "$installDir"
+
+	if [[ -d $bakDir ]]; then
+		logInfo "removing the backup dir in %s" "$bakDir"
+		# necessary because .git files (in the bash-based gt version we checked out the repo)
+		# are sometimes mod 700 and would require sudo to delete
+		deleteDirChmod777 "$bakDir"
+	fi
 
 	local fpath_output
 	fpath_output=$(zsh -c 'echo $fpath' 2>/dev/null) || echo ""
