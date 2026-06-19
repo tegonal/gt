@@ -23,6 +23,11 @@ readme.workspace = true
 
 [dependencies]
 clap = { workspace = true }
+git2 = { version = "0.21", features = ["vendored-libgit2"] }
+gpgme = "0.11"
+
+[dev-dependencies]
+tempfile = "3"
 
 [lints]
 workspace = true

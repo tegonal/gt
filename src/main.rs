@@ -1,6 +1,8 @@
 use clap::Parser;
 
 mod commands;
+#[path = "pulled-utils.rs"]
+mod pulled_utils;
 
 #[derive(Parser)]
 #[command(name = "gt")]
