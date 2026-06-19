@@ -57,7 +57,7 @@ use crate::commands::common_args::{RemoteArg, WorkingDirectoryArg};
 #[derive(Args)]
 pub struct RemoteAddArgs {
 	#[command(flatten)]
-	pub remote: RemoteArg,
+	pub remote_arg: RemoteArg,
 
 	/// URL of the remote repository
 	#[arg(short = 'u', long)]
@@ -67,12 +67,25 @@ pub struct RemoteAddArgs {
 	#[arg(short = 'd', long)]
 	pub directory: Option<String>,
 
+	/// Define a regexp pattern to filter available tags when determining the latest tag
+	#[arg(long)]
+	pub tag_filter: Option<String>,
+
 	/// (Optional) If set, the remote does not need to have a .gt/signing-key.public.asc defined
 	#[arg(long, default_value_t = false)]
 	pub unsecure: bool,
 
 	#[command(flatten)]
-	pub working_directory: WorkingDirectoryArg,
+	pub working_directory_arg: WorkingDirectoryArg,
+}
+
+impl RemoteAddArgs {
+	pub fn working_directory(&self) -> &Path {
+		&self.working_directory_arg.working_directory.as_path()
+	}
+	pub fn remote(&self) -> &String {
+		&self.remote_arg.remote
+	}
 }
 
 pub fn run(args: RemoteAddArgs) {
@@ -83,12 +96,16 @@ pub fn run(args: RemoteAddArgs) {
 }
 
 fn run_impl(args: RemoteAddArgs) -> Result<(), AddError> {
-	let remote_name = args.remote;
+	let remote_name = args.remote_arg.remote;
 	let url = args.url;
 	let pull_dir = args.directory.unwrap_or_else(|| format!("lib/{}", remote_name));
 	let tag_filter = args.tag_filter.unwrap_or_else(|| ".*".to_string());
 	let unsecure = args.unsecure;
-	let working_dir = args.working_directory.unwrap_or_else(|| ".gt".to_string());
+	let working_dir = args
+		.working_directory_arg
+		.working_directory
+		.to_str()
+		.unwrap_or_else(|| ".gt");
 
 	validate_remote_name(&remote_name)?;
 
@@ -253,7 +270,7 @@ fn run_impl(args: RemoteAddArgs) -> Result<(), AddError> {
 	Ok(())
 }
 
-fn validate_remote_name(name: &str) -> Result<(), AddError> {
+fn validate_remote_name(name: &String) -> Result<(), AddError> {
 	if name.is_empty() {
 		return Err(AddError::Validation("remote name cannot be empty".into()));
 	}
@@ -392,19 +409,19 @@ mod tests {
 
 	#[test]
 	fn valid_remote_name() {
-		assert!(validate_remote_name("tegonal-scripts").is_ok());
-		assert!(validate_remote_name("my_remote").is_ok());
-		assert!(validate_remote_name("a-b-1").is_ok());
-		assert!(validate_remote_name("A_B-2").is_ok());
+		assert!(validate_remote_name(&"tegonal-scripts".to_string()).is_ok());
+		assert!(validate_remote_name(&"my_remote".to_string()).is_ok());
+		assert!(validate_remote_name(&"a-b-1".to_string()).is_ok());
+		assert!(validate_remote_name(&"A_B-2".to_string()).is_ok());
 	}
 
 	#[test]
 	fn invalid_remote_name() {
-		assert!(validate_remote_name("").is_err());
-		assert!(validate_remote_name("my remote").is_err());
-		assert!(validate_remote_name("my/remote").is_err());
-		assert!(validate_remote_name(":remote").is_err());
-		assert!(validate_remote_name("remote!").is_err());
+		assert!(validate_remote_name(&"".to_string()).is_err());
+		assert!(validate_remote_name(&"my remote".to_string()).is_err());
+		assert!(validate_remote_name(&"my/remote".to_string()).is_err());
+		assert!(validate_remote_name(&":remote".to_string()).is_err());
+		assert!(validate_remote_name(&"remote!".to_string()).is_err());
 	}
 
 	#[test]
@@ -440,12 +457,16 @@ mod tests {
 		fs::create_dir(&project).unwrap();
 
 		let args = RemoteAddArgs {
-			remote: "invalid remote!".to_string(),
+			remote_arg: RemoteArg {
+				remote: "invalid remote!".to_string(),
+			},
 			url: "https://example.com/repo.git".to_string(),
 			directory: None,
 			tag_filter: None,
 			unsecure: false,
-			working_directory: None,
+			working_directory_arg: WorkingDirectoryArg {
+				working_directory: project.to_path_buf(),
+			},
 		};
 
 		let result = run_impl(args);
@@ -462,12 +483,16 @@ mod tests {
 		env::set_current_dir(&project).unwrap();
 
 		let args = RemoteAddArgs {
-			remote: "test-remote".to_string(),
+			remote_arg: RemoteArg {
+				remote: "test-remote".to_string(),
+			},
 			url: "https://example.com/nonexistent.git".to_string(),
 			directory: None,
 			tag_filter: None,
 			unsecure: true,
-			working_directory: None,
+			working_directory_arg: WorkingDirectoryArg {
+				working_directory: project.to_path_buf(),
+			},
 		};
 
 		let _result = run_impl(args);
@@ -490,12 +515,16 @@ mod tests {
 		fs::File::create(remote_dir.join("pulled.tsv")).unwrap();
 
 		let args = RemoteAddArgs {
-			remote: "existing".to_string(),
+			remote_arg: RemoteArg {
+				remote: "existing".to_string(),
+			},
 			url: "https://example.com/repo.git".to_string(),
 			directory: None,
 			tag_filter: None,
 			unsecure: false,
-			working_directory: None,
+			working_directory_arg: WorkingDirectoryArg {
+				working_directory: project.to_path_buf(),
+			},
 		};
 
 		let result = run_impl(args);
