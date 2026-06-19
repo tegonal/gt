@@ -1,30 +1,26 @@
 use clap::Args;
 
+use crate::commands::common_args::{RemoteArg, WorkingDirectoryArg};
+
 #[derive(Args)]
 pub struct RemoteAddArgs {
-	/// Name identifying this remote
-	#[arg(short = 'r', long)]
-	pub remote: String,
+	#[command(flatten)]
+	pub remote: RemoteArg,
 
 	/// URL of the remote repository
 	#[arg(short = 'u', long)]
 	pub url: String,
 
-	/// Directory into which files are pulled -- default: lib/<remote>
+	/// (Optional) Directory into which files are pulled [default: lib/<REMOTE>]
 	#[arg(short = 'd', long)]
 	pub directory: Option<String>,
 
-	/// Define a regexp pattern to filter available tags when determining the latest tag
-	#[arg(long)]
-	pub tag_filter: Option<String>,
-
-	/// If set, the remote does not need to have GPG key(s) defined
-	#[arg(long)]
+	/// (Optional) If set, the remote does not need to have a .gt/signing-key.public.asc defined
+	#[arg(long, default_value_t = false)]
 	pub unsecure: bool,
 
-	/// Path which gt shall use as working directory -- default: .gt
-	#[arg(short = 'w', long)]
-	pub working_directory: Option<String>,
+	#[command(flatten)]
+	pub working_directory: WorkingDirectoryArg,
 }
 
 pub fn run(_args: RemoteAddArgs) {

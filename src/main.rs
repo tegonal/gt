@@ -4,7 +4,7 @@ mod commands;
 
 #[derive(Parser)]
 #[command(name = "gt")]
-#[command(about, version,author, disable_help_subcommand = true)]
+#[command(about, version, author, disable_help_subcommand = true)]
 struct Cli {
 	#[command(subcommand)]
 	command: commands::Commands,

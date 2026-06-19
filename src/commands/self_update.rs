@@ -2,8 +2,8 @@ use clap::Args;
 
 #[derive(Args)]
 pub struct SelfUpdateArgs {
-	/// If set, then install.sh will be called even if gt is already on latest tag
-	#[arg(long)]
+	/// (Optional) If Defined, then install.sh will be called even if gt is already on latest tag
+	#[arg(long, default_value_t = false)]
 	pub force: bool,
 }
 

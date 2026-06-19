@@ -1,11 +1,11 @@
 use clap::Args;
-use std::path::PathBuf;
+
+use crate::commands::common_args::WorkingDirectoryArg;
 
 #[derive(Args)]
 pub struct RemoteListArgs {
-	/// Path which gt shall use as working directory -- default: .gt
-	#[arg(short = 'w', long)]
-	pub working_directory: Option<PathBuf>,
+	#[command(flatten)]
+	pub working_directory: WorkingDirectoryArg,
 }
 
 pub fn run(_args: RemoteListArgs) {
