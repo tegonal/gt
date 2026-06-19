@@ -1,19 +1,19 @@
 use clap::Args;
-use std::path::PathBuf;
+
+use crate::commands::common_args::WorkingDirectoryArg;
 
 #[derive(Args)]
 pub struct ResetArgs {
-	/// If set, only the remote with this name is reset, otherwise all are reset
+	/// (Optional) If set, only the remote with this name is reset, otherwise all are reset
 	#[arg(short = 'r', long)]
 	pub remote: Option<String>,
 
-	/// If set, then only the gpg keys are reset but the files are not re-pulled
-	#[arg(long)]
-	pub gpg_only: bool,
+	/// (Optional) If defined, then only the gpg keys are reset but the files are not re-pulled
+	#[arg(long, default_value_t = false)]
+	pub only_gpg: bool,
 
-	/// Path which gt shall use as working directory -- default: .gt
-	#[arg(short = 'w', long)]
-	pub working_directory: Option<PathBuf>,
+	#[command(flatten)]
+	pub working_directory: WorkingDirectoryArg,
 }
 
 pub fn run(_args: ResetArgs) {

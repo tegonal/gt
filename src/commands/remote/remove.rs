@@ -1,19 +1,18 @@
 use clap::Args;
-use std::path::PathBuf;
+
+use crate::commands::common_args::{RemoteArg, WorkingDirectoryArg};
 
 #[derive(Args)]
 pub struct RemoteRemoveArgs {
-	/// Define the name of the remote which shall be removed
-	#[arg(short = 'r', long)]
-	pub remote: String,
+	#[command(flatten)]
+	pub remote: RemoteArg,
 
-	/// If set, then all files defined in the remote's pulled.tsv are deleted as well
-	#[arg(long)]
+	/// (Optional) If defined, then all files defined in the remote's pulled.tsv are deleted as well
+	#[arg(long, default_value_t = false)]
 	pub delete_pulled_files: bool,
 
-	/// Path which gt shall use as working directory -- default: .gt
-	#[arg(short = 'w', long)]
-	pub working_directory: Option<PathBuf>,
+	#[command(flatten)]
+	pub working_directory: WorkingDirectoryArg,
 }
 
 pub fn run(_args: RemoteRemoveArgs) {

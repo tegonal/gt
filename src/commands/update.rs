@@ -1,27 +1,23 @@
 use clap::Args;
-use std::path::PathBuf;
+
+use crate::commands::common_args::PullCommonArgs;
 
 #[derive(Args)]
 pub struct UpdateArgs {
-	/// If set, only the files of this remote are updated, otherwise all
+	/// (Optional) If set, only the files of this remote are updated, otherwise all
 	#[arg(short = 'r', long)]
 	pub remote: Option<String>,
 
-	/// Define from which tag files shall be pulled, only valid if remote via -r is specified
+	/// (Optional) define from which tag files shall be pulled, only valid if <REMOTE> is specified
 	#[arg(short = 't', long)]
 	pub tag: Option<String>,
 
-	/// If set, then no files are updated and instead a list with updatable files is output
-	#[arg(long)]
+	/// (Optional) If defined, then no files are updated and instead a list with updatable files including versions is output
+	#[arg(long, default_value_t = false)]
 	pub list: bool,
 
-	/// If set and GPG is not set up yet, then all keys are imported without manual consent
-	#[arg(long)]
-	pub auto_trust: bool,
-
-	/// Path which gt shall use as working directory -- default: .gt
-	#[arg(short = 'w', long)]
-	pub working_directory: Option<PathBuf>,
+	#[command(flatten)]
+	pub pull_common: PullCommonArgs,
 }
 
 pub fn run(_args: UpdateArgs) {

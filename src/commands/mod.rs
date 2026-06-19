@@ -1,10 +1,10 @@
+pub mod common_args;
 pub mod pull;
+pub mod remote;
 pub mod repull;
 pub mod reset;
 pub mod self_update;
 pub mod update;
-
-pub mod remote;
 
 use clap::Subcommand;
 
