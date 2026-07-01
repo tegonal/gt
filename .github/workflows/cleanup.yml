@@ -29,7 +29,7 @@ jobs:
     #gt-placeholder-runs-on-end
     steps:
       #gt-placeholder-gh-action-checkout-start
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       #gt-placeholder-gh-action-checkout-end
 
       #gt-placeholder-install-dependencies-start
