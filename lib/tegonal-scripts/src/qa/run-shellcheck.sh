@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.0
+#                                         Version: v4.12.1
 #######  Description  #############
 #
 #  function which searches for *.sh files within defined paths (directories or a single *.sh) and
@@ -129,8 +129,8 @@ function runShellcheckPullHooks() {
 	shift 1 || traceAndDie "could not shift by 1"
 
 	local sourcePath=""
-	if (($# == 2)); then
-		sourcePath=$2
+	if (($# == 1)); then
+		sourcePath=$1
 		shift 1 || traceAndDie "could not shift by 1"
 	else
 		sourcePath="$dir_of_tegonal_scripts"
