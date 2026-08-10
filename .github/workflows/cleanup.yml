@@ -5,7 +5,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Creative Commons Zero v1.0 Universal
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v6.0.0
+#                                         Version: v6.0.1
 ###################################
 name: Cleanup
 
@@ -50,10 +50,10 @@ jobs:
           status=$(curl -L -s -o /dev/null -w '%{http_code}' \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$repo/collaborators/$user"
+            "https://api.github.com/repos/$repo/collaborators/$user/permission"
           )
           echo "status $status for user $user"
-          if [ "$status" = "204" ]; then
+          if [ "$status" = "200" ]; then
             echo "reviewer=$user" >> $GITHUB_OUTPUT
           else
             echo "reviewer=" >> $GITHUB_OUTPUT
