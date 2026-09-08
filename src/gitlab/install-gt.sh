@@ -31,7 +31,6 @@ trap 'cleanupTmp tmpPaths' EXIT
 gpg --import - <<<"$PUBLIC_GPG_KEYS_WE_TRUST"
 
 # see install.doc.sh in https://github.com/tegonal/gt, MODIFY THERE NOT HERE (please report bugs)
-#!/usr/bin/env bash
 currentDir=$(pwd) &&
 	tmpDir=$(mktemp -d -t gt-download-install-XXXXXXXXXX) && cd "$tmpDir" &&
 	wget "https://raw.githubusercontent.com/tegonal/gt/main/.gt/signing-key.public.asc" &&
@@ -40,8 +39,8 @@ currentDir=$(pwd) &&
 	echo "public key trusted" &&
 	mkdir ./gpg &&
 	gpg --homedir ./gpg --import ./signing-key.public.asc &&
-	wget "https://raw.githubusercontent.com/tegonal/gt/v1.4.4/install.sh" &&
-	wget "https://raw.githubusercontent.com/tegonal/gt/v1.4.4/install.sh.sig" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v1.6.3/install.sh" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v1.6.3/install.sh.sig" &&
 	gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh &&
 	chmod +x ./install.sh &&
 	echo "verification successful" ||

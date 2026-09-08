@@ -96,7 +96,7 @@ function includeInstallDoc() {
 		# shellcheck disable=SC2001	# cannot use search/replace variable substitution here
 		content=$(sed "s/^/$indent/g" <<<"$installScript") || return $?
 		perl -0777 -i \
-			-pe "s@(\n\s+# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@g" \
+			-pe "s@(\n\s*# see install.doc.sh.*\n)[^#]+(# end install.doc.sh\n)@\${1}$content\n$indent\${2}@g" \
 			"$file" || return $?
 	done || traceAndDie "could not replace the install instructions"
 }
