@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.2
+#                                         Version: v4.12.3
 #######  Description  #############
 #
 #  installs shellspec v0.28.1 into $HOME/.local/lib

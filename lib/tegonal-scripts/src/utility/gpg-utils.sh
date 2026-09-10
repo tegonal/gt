@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.2
+#                                         Version: v4.12.3
 #######  Description  #############
 #
 #  utility functions for dealing with gpg
@@ -276,7 +276,10 @@ function getSaveGpgHomedir() {
 	local -ra params=(gpgDir)
 	parseFnArgs params "$@" || return $?
 
-	if ((${#gpgDir} < 100)); then
+	# socket path max is on certain systems 108 - longest socket name which is currently S.gpg-agent.browser (20 chars)
+	# 108 - 20 = 88 - 1 (NUL terminating char) 87 and to be on the safer side we use 85
+	local -r maxSocketPathLength=85
+	if ((${#gpgDir} <= maxSocketPathLength)); then
 		echo "$gpgDir"
 	else
 		local tmpDir
