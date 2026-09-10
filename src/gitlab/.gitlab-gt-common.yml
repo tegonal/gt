@@ -1,0 +1,55 @@
+#
+#    __                          __
+#   / /____ ___ ____  ___  ___ _/ /       This file is provided to you by https://github.com/tegonal/gt
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
+#         /___/                           Please report bugs and contribute back your improvements
+#
+#                                         Version: v1.7.0-SNAPSHOT
+###################################
+variables:
+  #gt-placeholder-alpine-version-start
+  ALPINE_VERSION: "3.24.1"
+  #gt-placeholder-alpine-version-end
+
+stages:
+  - gt
+
+# use this template in case you don't distinguish via `include` and DO_GT_UPDATE
+.run-unless-gt-update:
+  rules:
+    - if: '$DO_GT_UPDATE == null'
+
+.run-if-gt-update: &run-if-gt-update
+  rules:
+    - if: $DO_GT_UPDATE
+
+.gt-base-template: &gt-base-template
+  <<: *run-if-gt-update
+  stage: gt
+
+.gt-base-before-script: &gt-base-before-script
+  - apk add --no-cache bash curl
+
+.gt-before-script: &gt-before-script
+  - *gt-base-before-script
+  - apk add --no-cache coreutils git gnupg grep perl
+
+.gt-job-template: &gt-job-template
+  <<: *gt-base-template
+  image: "alpine:$ALPINE_VERSION"
+  before_script: *gt-base-before-script
+
+.gt-job-template-with-gt-installed: &gt-job-template-with-gt-installed
+  <<: *gt-job-template
+  before_script:
+    - *gt-before-script
+    - export PATH="$PATH:$HOME/.local/bin"
+    - ./lib/gt/src/gitlab/install-gt.sh
+
+.gt-update-remote-template:
+  <<: *gt-job-template-with-gt-installed
+  script:
+    - |
+      [[ -n "$REMOTE_NAME" ]] || { echo "variable $REMOTE_NAME was not defined"; exit 1; }
+    - ./lib/gt/src/gitlab/gt-update-remote-and-create-mr.sh "$REMOTE_NAME"

@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v1.7.0-SNAPSHOT
+#                                         Version: v1.6.3
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
@@ -47,7 +47,7 @@ currentDir=$(pwd) &&
 	{
 		printf >&2 "\033[0;31mERROR\033[0m: verification failed, don't continue !!\n"
 		exit 1
-	} && ./install.sh && result=true ||
+	} && if [[ "$EUID" -eq 0 ]]; then ./install.sh --root; else ./install.sh; fi && result=true ||
 	{
 		echo >&2 "installation failed"
 		exit 1

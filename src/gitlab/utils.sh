@@ -13,19 +13,38 @@ shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors abov
 unset CDPATH
 export GT_VERSION='v1.7.0-SNAPSHOT'
 
+function logError() {
+	local -r msg=$1
+	shift 1 || die "could not shift by 1"
+	# shellcheck disable=SC2059
+	printf >&2 "\033[0;31mERROR\033[0m: $msg\n" "$@"
+}
+
+function die() {
+	logError "$@"
+	exit 1
+}
+
+function logInfo() {
+	local -r msg=$1
+	shift 1 || die "could not shift by 1"
+	# shellcheck disable=SC2059
+	printf "\033[0;34mINFO\033[0m: $msg\n" "$@"
+}
+
 function exitIfEnvVarNotSet() {
 	local -rn exitIfEnvVarNotSet_arr=$1
-	shift 1 || exit 1
+	shift 1 || die "could not shift by 1"
 
-	declare error=false
+	local error=false
 	for envName in "${exitIfEnvVarNotSet_arr[@]}"; do
 		if ! [[ -v "$envName" ]] || [[ -z ${!envName} ]]; then
-			echo >&2 "Looks like you forgot to define the variable $envName"
+			logError "Looks like you forgot to define the variable %s" "$envName"
 			error=true
 		fi
 	done
 	if [[ $error == true ]]; then
-		echo >&2 "In GitLab, go to Settings => CI/CD => Variables and define it/them there"
+		echo >&2 "In GitLab, go to Project (or Group) Settings => CI/CD => Variables and define it/them there"
 		echo >&2 "See also https://github.com/tegonal/gt/tree/${GT_VERSION}#gitlab-job for further information"
 		exit 1
 	fi

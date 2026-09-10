@@ -37,8 +37,9 @@ templates etc. which you use in multiple projects but want to maintain at a sing
 </details>
 
 ---
-❗ You are taking a *sneak peek* at the next version. It could be that some features you find on this page are not released yet.  
-Please have a look at the README of the corresponding release/git tag. Latest version: [README of v1.6.3](https://github.com/tegonal/gt/tree/v1.6.3/README.md).
+❗ You are taking a *sneak peek* at the next version. It could be that some features you find on this page are not
+released yet. Please have a look at the README of the corresponding release/git tag.
+Latest version: [README of v1.6.3](https://github.com/tegonal/gt/tree/v1.6.3/README.md).
 
 ---
 
@@ -55,7 +56,7 @@ Please have a look at the README of the corresponding release/git tag. Latest ve
 		- [list](#list)
 	- [pull](#pull)
 		- [Pull Hook](#pull-hook)
-        - [Placeholders](#placeholders)
+		- [Placeholders](#placeholders)
 	- [re-pull](#re-pull)
 	- [reset](#reset)
 	- [update](#update)
@@ -818,9 +819,9 @@ that this workflow can update the workflow itself.
 You need to change one condition in the workflow which we added in order that this workflow does not run in forks:
 
 ```yml
-    # gt-placeholder-owner-start
-	if: github.repository_owner == 'tegonal'
-	# gt-placeholder-owner-end
+  # gt-placeholder-owner-start
+  if: github.repository_owner == 'tegonal'
+  # gt-placeholder-owner-end
 ```
 
 Most likely you also do not need that it is run in forks, so just replace `tegonal` with your organisation/user-slug.
@@ -830,83 +831,137 @@ Most likely you also do not need that it is run in forks, so just replace `tegon
 The setup requires three steps:
 
 1. pull files and include in your .gitlab-ci.yml
-2. configure Variables and Deploy Keys
+2. configure Access Token and Variables
 3. Set up a Scheduled Pipeline
 
 #### setup .gitlab-ci.yml
 
-This repository contains a `.gitlab-ci.yml` which defines two job templates:
+This repository contains helper files including a `.gitlab-gt.yml` which defines two jobs:
 
-1. gt-update which checks if there are updates for:
-	- the files which have been pulled
-	- the public keys of the remotes
+1. gt-determine-remotes which:
+	- evaluates the remotes
+	- writes a child-pipeline yml with an update job per remote
+2. gt-trigger-update-jobs which creates a child pipeline based on the above yml
 
-   and creates a Merge Request if there are some.
-
-2. gt-update-stop-pipeline which cancels itself and thus stops the pipeline
-
-You can re-use it in your repository. We suggest you fetch it via gt 😉
+You can re-use them in your repository. We suggest you fetch them via gt 😉
 
 ```bash
 gt remote add -r gt -u https://github.com/tegonal/gt
 gt pull -r gt -p src/gitlab/
 ```
 
-In your `.gitlab-ci.yml` you need to add `gt` to your stages and it should be the first stage:
+In your (root) `.gitlab-ci.yml` you need to include it. We suggest you split the pipeline so that no other of your jobs
+are run when performing the gt update jobs.
+
+```yml
+include:
+  - local: lib/gt/src/gitlab/.gitlab-ci.yml
+    rules:
+      - if: $DO_GT_UPDATE
+
+  - local: .gitlab/.gitlab-build.yml
+    rules:
+      - if: '$DO_GT_UPDATE == null'
+```
+
+<details>
+<summary>I cannot / don't want to split:</summary>
+
+If you don't like that approach or there are other reasons that you cannot follow that approach then use:
+
+```yml
+include: lib/gt/src/gitlab/.gitlab-gt.yml
+```
+
+However, now you have to define:
 
 ```yml
 stages:
-	- gt
-...
+  - gt
 ```
 
-At some point you add in addition
+make sure gt is the first stage otherwise you risk that other jobs are run in addition.
 
-```yml
-include: 'lib/gt/src/gitlab/.gitlab-ci.yml'
-```
+Moreover, you now have to either...
+
+1. ... make sure no of your jobs run when a gt update is carried out. You can use the following
+   ```yml
+   your-job:
+     <<: *run-unless-gt-update
+   ```
+   and in case you define own rules as well then
+   ```yml
+   your-job:
+     rules:
+       - !reference [.run-unless-gt-update, rules]
+       - ...
+   ```
+2. ... or you create a job which cancels the pipeline after the update – you can use the template job as follows:
+   ```yml
+   gt-update-stop-pipeline:
+     extends: .gt-update-stop-pipeline
+   ```
+
+</details>
 
 That's it, this defines the two jobs. Yet, you need some extra configuration to be ready to use it...
 
 <details>
-<summary>I need some modifications to the standard job</summary>
+<summary>I need some modifications to the standard job:</summary>
 
-If you need to run additional before_script or the like, then you can re-define
-the job e.g. as follows (after the `include` above):
+If you need to run additional before_script, would like to change the image used for the update job etc. then
+you can re-define the job by creating .gitlab/.gt-update-remote-own-setup.yml and specify
 
 ```yaml
-gt-update:
-	extends: .gt-update
-	# your modifications here, e.g. for an additional step in before_script
-	before_script:
-	- !reference [ .gt-update, before_script ]
-		- cd subdirectory
+.gt-update-remote-own-setup: # change image if you like, make sure it is still alpine based otherwise you need to adapt the before_script
+  # so that
+  image: eclipse-temurin:25-jdk-alpine
+  before_script:
+    - !reference [ .gt-update-remote-template, before_script ]
+    # add your additional steps
+    - cd subdirectory
+```
+
+Once you have created `.gitlab/.gt-update-remote-own-setup.yml` the update remote job will include it as
+follows (see src/gitlab/determine-gt-remotes.sh)
+
+```yml
+update-gt:
+  extends:
+    - .gt-update-remote-template
+    - .gt-update-remote-own-setup
+  variables:
+    REMOTE_NAME: "gt"
 ```
 
 </details>
 
 #### Additional configuration
 
-The `gt-update` job (the `install-gt.sh` to be precise)
-requires you to define a variable named PUBLIC_GPG_KEYS_WE_TRUST which represents an armored export of all
+The gitlab jobs (the `install-gt.sh` to be precise) require you to define a variable named 
+PUBLIC_GPG_KEYS_WE_TRUST which represents an armored export of all
 gpg public keys you trust signing the public keys of remotes,
 i.e. those are used to verify the public keys of the remotes you added via `gt remote add`.
+You can define it as Project (or Group) CI/CD variable in your gitlab settings.
 
 For instance, if you fetched the gitlab job via gt as suggested,
 then you would add [Tegonal's public key for github](https://tegonal.com/gpg/github.asc)
 to PUBLIC_GPG_KEYS_WE_TRUST in order that this job can update itself.
 
-Moreover, the `create-mr.sh` requires an access token which is stored in variable GT_UPDATE_API_TOKEN.
-It is used to create the merge request.
-
-The gitlab job uses the image [gitlab-git](https://github.com/tegonal/gitlab-git) which requires you to define
-the variable GITBOT_SSH_PRIVATE_KEY and a deploy key for it.
-See [Basic Setup](https://github.com/tegonal/gitlab-git#basic-setup) for more information
+Moreover, the `gt-update-remote-and-create-mr.sh` and `create-mr.sh` requires an access token which is able to 
+read and write to the repository as well as creating merge request. We suggest you create an access token with the name
+GT-BOT (this way an internal user is created with that name). You need to store the access token then as a CI/CD 
+variable named GT_UPDATE_API_TOKEN. Make sure you choose `mask and hide` in the visibility section when defining the 
+CI/CD variable.
 
 #### Scheduled job
 
-Now, all that is left is to create a scheduled pipeline (CI/CD -> Schedules) where you need to define Variable
+Now, all that is left is to create a scheduled pipeline (CI/CD -> Schedules) where you need to define the CI/CD Variable
 `DO_GT_UPDATE` with value `true`. Up to you how often you want to let it run (we run it weekly).
+
+Shouldn't you see the section `Variables` when creating the scheduled pipeline, then make sure in the 
+Project Settings -> CI/CD -> section Variables you have set the `Minimum role to use pipeline variables` 
+to at least `Owner`.
 
 ## self-update
 
@@ -944,7 +999,7 @@ Short version:
 
 - git submodules are intended for checking out a certain branch but not a certain tag and files need to reside in the
   submodule directory.
-- gt only supports to pull files from a certain tag but not from a random branch or sha and allows to put files in any 
+- gt only supports to pull files from a certain tag but not from a random branch or sha and allows to put files in any
   directory.
 
 Longer version:
@@ -957,15 +1012,15 @@ Longer version:
 
 ## 2. Does gt run on all linux distros?
 
-Most likely not, it was tested only on Ubuntu 22.04 and 24.04 with bash 5.x (it uses `shopt -s inherit_errexit` i.e. 
+Most likely not, it was tested only on Ubuntu 22.04 and 24.04 with bash 5.x (it uses `shopt -s inherit_errexit` i.e.
 requires at least bash 5).
-For instance, on alpine you need to `apk add bash git gnupg perl coreutils` to make `gt update` work
+For instance, on alpine you need to `apk add bash curl coreutils git gnupg grep perl` to make `gt update` work 
 (could be that executing other gt commands require more dependencies).
 
 ## 3. Can I rename already pulled files?
 
 Yes, however different things to consider. In order that [`gt re-pull`](#re-pull) and [`gt update`](#update) still work
-you need to make a few adjustments. 
+you need to make a few adjustments.
 
 If the rename is static, then simply rename the file and adjust the entry in
 `.gt/remotes/<REMOTE>/pulled.tsv`

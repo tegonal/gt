@@ -1,0 +1,55 @@
+#
+#    __                          __
+#   / /____ ___ ____  ___  ___ _/ /       This file is provided to you by https://github.com/tegonal/gt
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
+#         /___/                           Please report bugs and contribute back your improvements
+#
+#                                         Version: v1.7.0-SNAPSHOT
+###################################
+
+include: lib/gt/src/gitlab/.gitlab-gt-common.yml
+
+# using extends with a template/hidden job so that one could redefine the job as such in the root .gitlab-ci.yml but
+# still re-use section(s) of the template job
+
+gt-determine-remotes:
+  extends: .gt-determine-remotes
+
+gt-trigger-update-jobs:
+  extends: .gt-trigger-update-jobs
+
+### Templates ======================
+
+.gt-determine-remotes:
+  extends: .gt-job-template-with-gt-installed
+  script:
+    - ./lib/gt/src/gitlab/determine-gt-remotes.sh > .gitlab-update-remotes.yml
+    - cat .gitlab-update-remotes.yml
+  artifacts:
+    paths:
+      - .gitlab-update-remotes.yml
+
+.gt-trigger-update-jobs:
+  extends: .gt-base-template
+  needs:
+    - gt-determine-remotes
+  trigger:
+    include:
+      - artifact: .gitlab-update-remotes.yml
+        job: gt-determine-remotes
+    forward:
+      pipeline_variables: true
+    strategy: depend
+
+.gt-update-stop-pipeline:
+  extends: .gt-job-template
+  needs:
+    - gt-trigger-update
+  script:
+    - apk add --no-cache curl
+    - echo 'stopping the pipeline on purpose...'
+    - 'curl --request POST --header "PRIVATE-TOKEN: $GT_UPDATE_API_TOKEN" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${CI_JOB_ID}/cancel"'
+    - sleep 10
+    - echo 'cancel failed, stopping via exit...'
+    - exit 1
