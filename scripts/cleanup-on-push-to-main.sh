@@ -59,6 +59,7 @@ function cleanupOnPushToMain() {
 		"$projectDir/src/gitlab/install-gt.sh" ''
 	)
 	includeInstallDoc "$projectDir/install.doc.sh" includeInstallSh || die "could not include install.doc.sh"
+	perl -0777 -i -pe 's@&& ./install.sh &&@&& if [[ "\$EUID" -eq 0 ]]; then ./install.sh --root; else ./install.sh; fi &&@g;' "$projectDir/src/gitlab/install-gt.sh"
 	echo "included install.doc.sh"
 
 	removeUnusedSignatures "$projectDir"

@@ -37,6 +37,8 @@ function updateVersionInNonShFiles() {
 
 	local -ra additionalFilesWithVersions=(
 		"$projectDir/.github/workflows/gt-update.yml"
+		"$projectDir/src/gitlab/.gitlab-gt.yml"
+		"$projectDir/src/gitlab/.gitlab-gt-common.yml"
 		"$projectDir/src/install/zsh/_gt"
 		"$projectDir/src/install/zsh/gt.plugin.zsh"
 	)
