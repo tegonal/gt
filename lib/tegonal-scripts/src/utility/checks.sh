@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.3
+#                                         Version: v4.12.4
 #######  Description  #############
 #
 #  Functions to check declarations
