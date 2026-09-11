@@ -44,7 +44,7 @@ function updateGtRemote() {
 		# 1. create a tmp file which we use a GIT_CONFIG_GLOBAL
 		local tmpGitConfigGlobal
 		tmpGitConfigGlobal=$(mktemp -d -t gt-git-global-XXXXXXXXXX)
-		export GIT_CONFIG_GLOBAL="$tmpGitConfigGlobal"
+		export GIT_CONFIG_GLOBAL="$tmpGitConfigGlobal/.gitconfig"
 
 		# shellcheck disable=SC2034   # is passed by name to cleanupTmp
 		readonly -a tmpPaths=(tmpGitConfigGlobal)
