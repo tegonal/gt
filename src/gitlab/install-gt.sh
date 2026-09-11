@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.1.0-SNAPSHOT
+#                                         Version: v2.0.1
 ###################################
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
@@ -39,8 +39,8 @@ currentDir=$(pwd) &&
 	echo "public key trusted" &&
 	mkdir ./gpg &&
 	gpg --homedir ./gpg --import ./signing-key.public.asc &&
-	wget "https://raw.githubusercontent.com/tegonal/gt/v2.0.0/install.sh" &&
-	wget "https://raw.githubusercontent.com/tegonal/gt/v2.0.0/install.sh.sig" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v2.0.1/install.sh" &&
+	wget "https://raw.githubusercontent.com/tegonal/gt/v2.0.1/install.sh.sig" &&
 	gpg --homedir ./gpg --verify ./install.sh.sig ./install.sh &&
 	chmod +x ./install.sh &&
 	echo "verification successful" ||
