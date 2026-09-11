@@ -287,6 +287,8 @@ function replaceGtPlaceholdersDuringUpdate() {
 		fi
 	done <"$updatedFile"
 
+	chmod --reference="$updatedFile" "$updateFileTmp"
+	chown --reference="$updatedFile" "$updateFileTmp"
 	mv "$updateFileTmp" "$updatedFile"
 
 	if ((${#placeholders[@]} > 0)); then
