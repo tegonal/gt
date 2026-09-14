@@ -33,10 +33,10 @@ function updateGtRemote() {
 	function exchangeGitlabGitUrlsToHttp() {
 
 		# We no longer use the ssh approach. Using an access token is encouraged by Gitlab by now.
-		# However, the gt remotes might still be setup via ssh which is fine for local usage (by devs) but not if we
+		# However, the gt remotes might still be set up via ssh which is fine for local usage (by devs) but not if we
 		# want to use the GT_UPDATE_API_TOKEN to fetch files in this CI job.
-		# Now, since gt will setup git repos based on the gitconfig files in the remote and because
-		# we don't want to modify those files (as we are going to commit the changes and we cannot now if they are
+		# Now, since gt will set up git repos based on the gitconfig files in the remote and because
+		# we don't want to modify those files (as we are going to commit the changes and we cannot know if they are
 		# updated via gt update) we use url.insteadOf to rewrite and credential.helper.
 		# Since we don't know what Gitlab-runner type is in use and if using git config --global could persist over runs
 		# we make use of GIT_CONFIG_GLOBAL to define an own global and remove all changes in the end again

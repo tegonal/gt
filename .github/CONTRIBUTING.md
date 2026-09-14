@@ -59,7 +59,7 @@ The following are a few guidelines on how we suggest you start.
 
 3. Read up the [Coding Conventions](#coding-conventions) (there are only 5 points).
 
-Perfect, you are setup and ready to go. 
+Perfect, you are set up and ready to go. 
 Have a look at [help wanted issues](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22)
 where [good first issues](https://github.com/tegonal/gt/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 are easier to start with.

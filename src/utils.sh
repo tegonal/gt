@@ -34,7 +34,7 @@ function exitBecauseSigningKeyNotImported() {
 	parseFnArgs params "$@"
 
 	logError "%s not imported, you won't be able to pull files from the remote \033[0;36m%s\033[0m without using %s true\n" "$signingKeyAsc" "$remote" "$unsecureParamPatternLong"
-	printf >&2 "Alternatively, you can:\n- place the %s manually in %s or\n- setup a gpg store yourself at %s\n" "$signingKeyAsc" "$publicKeysDir" "$gpgDir"
+	printf >&2 "Alternatively, you can:\n- place the %s manually in %s or\n- set up a gpg store yourself at %s\n" "$signingKeyAsc" "$publicKeysDir" "$gpgDir"
 	deleteDirChmod777 "$gpgDir"
 	exit 1
 }

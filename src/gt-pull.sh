@@ -44,7 +44,7 @@
 #
 #    # pull the file src/utility/checks.sh from remote tegonal-scripts in the latest version
 #    # Ignore if the gpg store of the remote is not set up and no suitable gpg key is defined in
-#    # .gt/tegonal-scripts/public-keys. However, if the gpg store is setup or a suitable key is defined,
+#    # .gt/tegonal-scripts/public-keys. However, if the gpg store is set up or a suitable key is defined,
 #    # then checks.sh will still be verified against it.
 #    # (you might want to add --unsecure true to .gt/tegonal-scripts/pull.args if you never intend to
 #    # set up gpg -- this way you don't have to repeat this option)

@@ -169,7 +169,7 @@ function gt_remote_add() {
 	git -C "$repo" remote add "$remote" "$url"
 
 	# we need to copy the git config away in order that one can commit it
-	# this file will be used to restore the config for those who have not setup the remote on their machine
+	# this file will be used to restore the config for those who have not set up the remote on their machine
 	cp "$repo/.git/config" "$gitconfig"
 
 	local defaultBranch

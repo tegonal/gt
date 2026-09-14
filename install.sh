@@ -265,7 +265,7 @@ function parseError() {
 	die "unknown $1 $2\nHelp:
 	-t|--tag        (optional) the tag which shall be installed -- default: latest
 	-d|--directory  (optional) the installation directory -- default: \$HOME/.local/lib and
-	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gt if directory is not set otherwise nothing in which case no symbolic link is setup
+	-ln             (optional) the path of a symbolic link which shall be set up -- default: \$HOME/.local/bin/gt if directory is not set otherwise nothing in which case no symbolic link is set up
 	--root				  (optional) if you explicitly want to run it as root"
 }
 
