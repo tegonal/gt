@@ -910,7 +910,7 @@ That's it, this defines the two jobs. Yet, you need some extra configuration to 
 <summary>I need some modifications to the standard job:</summary>
 
 If you need to run additional before_script, would like to change the image used for the update job etc. then
-you can re-define the job by creating .gitlab/.gt-update-remote-own-setup.yml and specify
+you can re-define the job by creating .gitlab/.gitlab-gt-update-remote-own-setup.yml and specify
 
 ```yaml
 .gt-update-remote-own-setup: # change image if you like, make sure it is still alpine based otherwise you need to adapt the before_script
@@ -1019,8 +1019,8 @@ For instance, on alpine you need to `apk add bash curl coreutils git gnupg grep 
 
 ## 3. Can I rename already pulled files?
 
-Yes, however different things to consider. In order that [`gt re-pull`](#re-pull) and [`gt update`](#update) still work
-you need to make a few adjustments.
+Yes! However, different things to consider. In order that [`gt re-pull`](#re-pull) and [`gt update`](#update) still 
+work, you need to make a few adjustments.
 
 If the rename is static, then simply rename the file and adjust the entry in
 `.gt/remotes/<REMOTE>/pulled.tsv`
