@@ -7,11 +7,6 @@
 #
 #                                         Version: v2.1.0-SNAPSHOT
 ###################################
-variables:
-  #gt-placeholder-alpine-version-start
-  ALPINE_VERSION: "3.24.1"
-  #gt-placeholder-alpine-version-end
-
 stages:
   - gt
 
@@ -37,7 +32,9 @@ stages:
 
 .gt-job-template: &gt-job-template
   <<: *gt-base-template
-  image: "alpine:$ALPINE_VERSION"
+  #gt-placeholder-image-start
+  image: "alpine:3.24.0"
+  #gt-placeholder-image-end
   before_script: *gt-base-before-script
 
 .gt-job-template-with-gt-installed: &gt-job-template-with-gt-installed
