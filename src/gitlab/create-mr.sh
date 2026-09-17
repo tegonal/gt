@@ -49,7 +49,7 @@ function commitAndCreateMrOnChanges() {
 
 	if [[ $gitStatus == "" ]]; then
 		logInfo "No git changes, no need to create a merge request, going to remove remote branch if it exists"
-		git push gitlab_origin --delete "$sourceBranch" 2 &>/dev/null  || true
+		git push gitlab_origin --delete "$sourceBranch" 2 &>/dev/null || true
 		return 0
 	fi
 
