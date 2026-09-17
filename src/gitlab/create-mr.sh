@@ -39,13 +39,6 @@ function commitAndCreateMrOnChanges() {
 	local gitStatus
 	gitStatus=$(git status --porcelain) || die "the following command failed (see above): git status --porcelain"
 
-	if [[ $gitStatus == "" ]]; then
-		logInfo "No git changes, no need to create a merge request"
-		return 0
-	fi
-
-	logInfo "Detected changes, going to push changes to branch %s" "$sourceBranch"
-
 	#gt-placeholder-user-email-start
 	local -r userEmail="gt-bot@tegonal.com"
 	#gt-placeholder-user-email-end
@@ -53,6 +46,15 @@ function commitAndCreateMrOnChanges() {
 	git config user.email "$userEmail"
 	git config user.name "tegonal-bot"
 	git remote add gitlab_origin "https://gt-bot:$GT_UPDATE_API_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git"
+
+	if [[ $gitStatus == "" ]]; then
+		logInfo "No git changes, no need to create a merge request, going to remove remote branch if it exists"
+		git push gitlab_origin --delete "$sourceBranch" 2 &>/dev/null  || true
+		return 0
+	fi
+
+	logInfo "Detected changes, going to push changes to branch %s" "$sourceBranch"
+
 	git branch -D "$sourceBranch" 2 &>/dev/null || true
 	git checkout -b "$sourceBranch" || die "could not checkout branch %s" "$sourceBranch"
 	git add . || die "could not add changes"
