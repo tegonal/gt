@@ -54,7 +54,7 @@ function cleanupTmp() {
 	local -rn cleanupTmp_paths=$1
 	for path in "${cleanupTmp_paths[@]}"; do
 		if [[ -v "$path" && -n ${!path} ]]; then
-			rm -rf "$path"
+			rm -rf "${!path}" 2 &>/dev/null || true
 		fi
 	done
 }

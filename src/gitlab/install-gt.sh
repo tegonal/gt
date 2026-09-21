@@ -24,6 +24,8 @@ declare -a envVars=(
 exitIfEnvVarNotSet envVars
 readonly PUBLIC_GPG_KEYS_WE_TRUST
 
+declare currentDir tmpDir result
+
 # shellcheck disable=SC2034   # is passed by name to cleanupTmp
 readonly -a tmpPaths=(tmpDir)
 trap 'cleanupTmp tmpPaths' EXIT
