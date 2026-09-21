@@ -156,7 +156,8 @@ function gt_pull_parse_args() {
 		local pullArgsFile="$workingDir/remotes/$remote/pull.args"
 		if [[ -f $pullArgsFile ]]; then
 			while read -r line; do
-				eval 'args+=('"$line"');'
+				# adding a newline at the end of the line in order that one can use # comments (own line, end of line)
+				eval 'args+=('"$line"$'\n'');'
 			done <"$pullArgsFile" || die "could not read %s, you might not execute what you want without it, aborting" "$pullArgsFile"
 		fi
 	fi
