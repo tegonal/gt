@@ -1,5 +1,10 @@
 {
 	"extends": [
 		"config:recommended"
-	]
+	],
+	"gitlabci": {
+		"managerFilePatterns": [
+			"/^\\.gitlab-.+\\.ya?ml$/"
+		]
+	}
 }
