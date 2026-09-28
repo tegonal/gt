@@ -4,7 +4,7 @@
 	],
 	"gitlabci": {
 		"managerFilePatterns": [
-			"/^\\.gitlab-.+\\.ya?ml$/"
+			"/\\.gitlab-.+\\.ya?ml$/"
 		]
 	}
 }
