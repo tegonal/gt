@@ -458,14 +458,18 @@ function gt_checkForSelfUpdate() {
 		logInfo "Going to check if there is a new version of gt since the last check on %s" "$lastCheckDateInUserFormat"
 		local currentGtVersion latestGtVersion
 		currentGtVersion="$("$dir_of_gt/gt.sh" --version | tail -n 1)"
-		latestGtVersion="$(remoteTagsSorted 'https://github.com/tegonal/gt' | tail -n 1)"
-		date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
-		if [[ $currentGtVersion != "$latestGtVersion" ]]; then
-			if askYesOrNo "a new version of gt is available \033[0;93m%s\033[0;36m (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
-				gt_self_update
-			fi
+		latestGtVersion="$(remoteTagsSorted 'https://github.com/tegonal/gt' | tail -n 1 || true)"
+		if [[ -z $latestGtVersion ]]; then
+			logWarning "Could not determine the latest version of gt, run gt self-update yourself if you want to update, current version in use is %s" "$currentGtVersion"
 		else
-			logInfo "... gt up-to-date in version \033[0;36m%s\033[0m" "$currentGtVersion"
+			date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
+			if [[ $currentGtVersion != "$latestGtVersion" ]]; then
+				if askYesOrNo "A new version of gt is available \033[0;93m%s\033[0;36m (your current version is %s), shall I update?" "$latestGtVersion" "$currentGtVersion"; then
+					gt_self_update
+				fi
+			else
+				logInfo "... gt up-to-date in version \033[0;36m%s\033[0m" "$currentGtVersion"
+			fi
 		fi
 	}
 
