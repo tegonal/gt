@@ -33,7 +33,7 @@ stages:
 .gt-job-template: &gt-job-template
   <<: *gt-base-template
   #gt-placeholder-image-start
-  image: "alpine:3.24.0"
+  image: "alpine:3.24.2"
   #gt-placeholder-image-end
   before_script: *gt-base-before-script
 
