@@ -347,7 +347,7 @@ function gt_pull_internal_without_arg_checks() {
 		mkdir -p "$pullDirAbsolute" || die "failed to create the pull directory %s" "$pullDirAbsolute"
 	fi
 
-	local publicKeysDir repo gpgDir pulledTsv pullHookFile lastSigningKeyCheckFile
+	local publicKeysDir repo gpgDir pulledTsv pullHookFile pullHookBeforeFile pullHookAfterFile lastSigningKeyCheckFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	# we want to expand $repo here and not when signal happens (as $repo might be out of scope)
@@ -386,13 +386,32 @@ function gt_pull_internal_without_arg_checks() {
 	}
 	gt_pull_pullSignatureOfSingleFetchedFile
 
+	# TODO remove with v3.0.0
 	local pullHookBefore="gt_pull_noop"
 	local pullHookAfter="gt_pull_noop"
 	if [[ -f $pullHookFile ]]; then
+		logDeprecation PULL_HOOK "use two files pull-hook-before.sh and pull-hook-after instead of pull-hook.sh which is sourced and can create conflicts with global variables. Support for pull-hook.sh will be dropped with v3.0.0"
 		sourceOnce "$pullHookFile" || traceAndDie "could not source %s" "$pullHookFile"
 		pullHookBefore="gt_pullHook_${remote//-/_}_before"
 		pullHookAfter="gt_pullHook_${remote//-/_}_after"
 	fi
+
+	function returnIfExistsAndIfSoCheckIsFileAndExecutable() {
+		local -r file=$1
+		if [[ -e $file ]]; then
+			if ! [[ -f $file ]]; then
+				die "%s exists but is not a file" "$file"
+			elif ! [[ -x $file ]]; then
+				die "%s exists but is not executable" "$file"
+			else
+				echo "$file"
+			fi
+		fi
+	}
+
+	local pullHookBeforeFileExecutable pullHookAfterFileExecutable
+	pullHookBeforeFileExecutable="$(returnIfExistsAndIfSoCheckIsFileAndExecutable "$pullHookBeforeFile")" || return $?
+	pullHookAfterFileExecutable="$(returnIfExistsAndIfSoCheckIsFileAndExecutable "$pullHookAfterFile")" || return $?
 
 	local -i numberOfPulledFiles=0
 
@@ -478,11 +497,19 @@ function gt_pull_internal_without_arg_checks() {
 			fi
 		fi
 
+		if [[ -n $pullHookBeforeFileExecutable ]]; then
+			"$pullHookBeforeFileExecutable" "$entryTag" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
+		fi
+		# TODO remove with v3.0.0
 		"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
 		if [[ $entryHasPlaceholder == true ]]; then
 			replaceGtPlaceholdersDuringUpdate "$remote" "$repo" "$entryFile" "$absoluteTarget" "$source" "$entryTag" "$tagToPull"
 		fi
 		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
+		if [[ -n $pullHookAfterFileExecutable ]]; then
+			"$pullHookAfterFileExecutable" "$entryTag" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
+		fi
+		# TODO remove with v3.0.0
 		"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
 
 		((++numberOfPulledFiles))
@@ -554,6 +581,7 @@ function gt_pull_cleanupRepo() {
 	fi
 }
 
+# TODO remove with v3.0.0
 function gt_pull_noop() {
 	true
 }

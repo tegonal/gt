@@ -21,15 +21,13 @@ source "$scriptsDir/dirs.source.sh"
 sourceOnce "$dir_of_github_commons/gt/pull-hook-functions.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
-function gt_pullHook_tegonal_gh_commons_before() {
-	local _tag source _target
+function pull_hook_before() {
+	local _currentTag _tag source _target
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(_tag source _target)
+	local -ra params=(_currentTag _tag source _target)
 	parseFnArgs params "$@"
 
 	replaceTegonalGhCommonsPlaceholders_Tegonal "$source" "gt" "$GT_LATEST_VERSION" "gt"
 }
 
-function gt_pullHook_tegonal_gh_commons_after() {
-	: # no op, nothing to do
-}
+pull_hook_before "$@"
