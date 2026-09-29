@@ -32,7 +32,8 @@ function updateVersionInNonShFiles() {
 	)
 
 	for script in "${additionalScripts[@]}"; do
-		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script"
+		[[ -f $script ]] || die "looks like the additional script %s no longer exists" "$script"
+		updateVersionScripts -v "$version" -p "$additionalPattern" -d "$script" || die "could not update version in additional script %s" "$script"
 	done
 
 	local -ra additionalFilesWithVersions=(
@@ -45,7 +46,8 @@ function updateVersionInNonShFiles() {
 
 	logInfo "going to update version in non-sh files to %s" "$version"
 	for file in "${additionalFilesWithVersions[@]}"; do
-		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file"
+		[[ -f $file ]] || die "looks like the non-sh file %s no longer exists" "$file"
+		perl -0777 -i -pe "s/(# {4,}Version: ).*/\${1}$version/g;" "$file" || die "could not update version in non-sh file %s" "$script"
 	done
 }
 
