@@ -41,7 +41,6 @@ function updateVersionInNonShFiles() {
 		"$projectDir/src/gitlab/.gitlab-gt.yml"
 		"$projectDir/src/gitlab/.gitlab-gt-common.yml"
 		"$projectDir/src/install/zsh/_gt"
-		"$projectDir/src/install/zsh/gt.plugin.zsh"
 	)
 
 	logInfo "going to update version in non-sh files to %s" "$version"
