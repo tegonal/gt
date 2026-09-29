@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v2.2.0
+#                                         Version: v2.3.0-SNAPSHOT
 #######  Description  #############
 #
 #  defines constants pointing to source root directories intended to be sourced in sh files
