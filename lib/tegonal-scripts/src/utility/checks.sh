@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.13.0-SNAPSHOT
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -215,7 +215,7 @@ function checkArgIsArrayWithTuples() {
 
 		local -i i j
 		for ((i = 0; i < arrLength; i += tupleNum)); do
-			local -r length=$((i + tupleNum - 1 < arrLength ? i + tupleNum : arrLength))
+			local length=$((i + tupleNum - 1 < arrLength ? i + tupleNum : arrLength))
 			if ((i + tupleNum - 1 >= arrLength)); then
 				printf >&2 "\033[1;33mleftovers:\033[0m\n"
 			fi

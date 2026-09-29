@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2168,SC2154
+# shellcheck disable=SC2034,SC2168
 #
 #    __                          __
 #   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
@@ -10,15 +10,8 @@
 #                                         Version: v4.13.0-SNAPSHOT
 #######  Description  #############
 #
-#  intended to be sourced into a function which expects params version and nextVersion
-#  Expects a variable `versionRegex` to be defined, specifying the semver regex.
+# defines local variables for the params defined in ...params-definition.source.sh
 #
 ###################################
 
-if [[ -v version ]] && ! [[ -v nextVersion ]]; then
-	if [[ $version =~ $versionRegex ]]; then
-		nextVersion="${BASH_REMATCH[1]}.$((BASH_REMATCH[2] + 1)).0"
-	else
-		logInfo "cannot deduce nextVersion from version as it does not follow format vX.Y.Z(-RC...): $version"
-	fi
-fi
+local version projectsRootDir additionalPattern

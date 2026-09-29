@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.13.0-SNAPSHOT
 #######  Description  #############
 #
 #  Releasing files based on conventions:
@@ -75,7 +75,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.12.4'
+export TEGONAL_SCRIPTS_VERSION='v4.13.0-SNAPSHOT'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -88,41 +88,11 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/release-template.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function releaseFiles() {
-	local versionParamPatternLong projectsRootDirParamPatternLong
-	local additionalPatternParamPatternLong afterVersionUpdateHookParamPatternLong releaseHookParamPatternLong
-	local findForSigningParamPatternLong beforePrFnParamPatternLong prepareNextDevCycleFnParamPatternLong
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
-
-	local version key findForSigning branch projectsRootDir additionalPattern
-	# shellcheck disable=SC2034   # seems unused but is set in deduce-next-version
-	local nextVersion
-	local prepareOnly beforePrFn prepareNextDevCycleFn afterVersionUpdateHook
-	# shellcheck disable=SC2034   # is passed by name to parseArguments
-	local -ra params=(
-		version "$versionParamPattern" "$versionParamDocu"
-		key "$keyParamPattern" "$keyParamDocu"
-		findForSigning "$findForSigningParamPattern" "$findForSigningParamDocu"
-		branch "$branchParamPattern" "$branchParamDocu"
-		projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
-		additionalPattern "$additionalPatternParamPattern" "$additionalPatternParamDocu"
-		nextVersion "$nextVersionParamPattern" "$nextVersionParamDocu"
-		prepareOnly "$prepareOnlyParamPattern" "$prepareOnlyParamDocu"
-		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
-		prepareNextDevCycleFn "$prepareNextDevCycleFnParamPattern" "$prepareNextDevCycleFnParamDocu"
-		afterVersionUpdateHook "$afterVersionUpdateHookParamPattern" "$afterVersionUpdateHookParamDocu"
-	)
-	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
-
-	# deduces nextVersion based on version if not already set (and if version set)
-	source "$dir_of_tegonal_scripts/releasing/deduce-next-version.source.sh"
-	if ! [[ -v branch ]]; then branch="main"; fi
-	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
-	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
-	if ! [[ -v prepareOnly ]] || [[ $prepareOnly != "true" ]]; then prepareOnly=false; fi
-	if ! [[ -v beforePrFn ]]; then beforePrFn='beforePr'; fi
-	if ! [[ -v prepareNextDevCycleFn ]]; then prepareNextDevCycleFn='prepareNextDevCycle'; fi
-	if ! [[ -v afterVersionUpdateHook ]]; then afterVersionUpdateHook=''; fi
-	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
+	source "$dir_of_tegonal_scripts/releasing/release-files.params.source.sh" || traceAndDie "could not source release-files.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/release-files.params-definition.source.sh" || die "could not source release-files.params-definition.source.sh"
+	parseArguments releaseFilesParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
+	source "$dir_of_tegonal_scripts/releasing/release-files.default-args.source.sh" || die "could not source release-files.default-args.source.sh"
+	exitIfNotAllArgumentsSet releaseFilesParams "" "$TEGONAL_SCRIPTS_VERSION"
 
 	exitIfArgIsNotFunction "$findForSigning" "$findForSigningParamPatternLong"
 	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
@@ -131,13 +101,14 @@ function releaseFiles() {
 	# those variables are used in local functions further below which will be called from releaseTemplate.
 	# The problem: in case releaseTemplate defines a variable with the same name, then we would use those
 	# variables instead of the one we define here, hence we prefix them to avoid this problem
-	local release_files_findForSigning="$findForSigning"
-	local release_files_branch="$branch"
 	local release_files_projectsRootDir="$projectsRootDir"
 	local release_files_afterVersionUpdateHook="$afterVersionUpdateHook"
+	local release_files_findForSigning="$findForSigning"
+	local release_files_branch="$branch"
 
 	function releaseFiles_afterVersionHook() {
-		local version projectsRootDir additionalPattern
+		source "$dir_of_tegonal_scripts/releasing/after-version-update-hook.params.source.sh" || traceAndDie "could not source after-version-update-hook.params.source.sh"
+		source "$dir_of_tegonal_scripts/releasing/after-version-update-hook.params-definition.source.sh" || traceAndDie "could not source after-version-update-hook.params-definition.source.sh"
 		parseArguments afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
 
 		updateVersionScripts \
@@ -173,8 +144,11 @@ function releaseFiles() {
 			done || return $?
 	}
 
+	local -a releaseTemplateArgs
+	addLocalVarMatchingParamNamesToArgs releaseTemplateParams releaseTemplateArgs
+
 	releaseTemplate \
-		"$@" \
+		"${releaseTemplateArgs[@]}" \
 		"$releaseHookParamPatternLong" releaseFiles_releaseHook \
 		"$afterVersionUpdateHookParamPatternLong" releaseFiles_afterVersionHook
 }
