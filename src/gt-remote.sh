@@ -325,7 +325,7 @@ function gt_remote_remove() {
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
 	local -r workingDirAbsolute
 
-	local remoteDir pulledTsv pullHookFile
+	local remoteDir pulledTsv pullHookFile pullHookBeforeFile pullHookAfterFile
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
 	if [[ -f $remoteDir ]]; then
@@ -335,9 +335,10 @@ function gt_remote_remove() {
 		exitIfRemoteDirDoesNotExist "$workingDirAbsolute" "$remote"
 	fi
 
-	if [[ -f $pullHookFile ]]; then
-		logWarning "detected a pull-hook.sh in the remote %s, you might want to move it away first." "$remote"
-		if ! askYesOrNo "shall I continue and delete it as well?"; then
+	# TODO remove  || [[ -f $pullHookFile ]] with v3.0.0 and adjust logWarning
+	if [[ -f $pullHookBeforeFile ]] || [[ -f $pullHookAfterFile ]] || [[ -f $pullHookFile ]]; then
+		logWarning "detected a pull-hook file (pull-hook-before.sh, pull-hook-after.sh or pull-hook.sh) in the remote %s, you might want to move it away first." "$remote"
+		if ! askYesOrNo "shall I continue and delete those files as well?"; then
 			logInfo "removing remote \033[0;36m%s\033[0m aborted" "$remote"
 			exit 10
 		fi

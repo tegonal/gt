@@ -24,5 +24,7 @@ local -r pulledTsv="$remoteDir/pulled.tsv"
 # note if you change this structure, then you need to adopt gt-pull.sh => pullArgsFile
 local -r pullArgsFile="$remoteDir/pull.args"
 local -r pullHookFile="$remoteDir/pull-hook.sh"
+local -r pullHookBeforeFile="$remoteDir/pull-hook-before.sh"
+local -r pullHookAfterFile="$remoteDir/pull-hook-after.sh"
 local -r gitconfig="$remoteDir/gitconfig"
 local -r lastSigningKeyCheckFile="$gpgDir/signing-key.last-check.txt"

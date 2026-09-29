@@ -536,43 +536,42 @@ gt allows to hook into the pull process at two stages:
 - before the file is moved from the downloaded path to the desired location
 - after the file was moved to the desired location
 
-If you want to use (one of) those hook(s), then you need create a `pull-hook.sh` in
-`<WORKGIN_DIR>/remotes/<REMOTE>/pull-hook.sh`
-(for instance in `.gt/remotes/tegonal-scripts/pull-hook.sh`).
+For both you need to create an executable file in `<WORKING_DIR>/remotes/<REMOTE>/` named
+`pull-hook-before.sh` and `pull-hook-after.sh`. Up to you if you create none, one or both.
 
-This file should contain two functions named `gt_pullHook_<REMOTE>_before` and `gt_pullHook_<REMOTE>_after`.
-<REMOTE> is the name of the remote where all `-` are replaced by `_`.
-So for the remote tegonal-scripts you should name the functions `gt_pullHook_tegonal_scripts_before`
-and `gt_pullHook_tegonal_scripts_after`
+These two files will be called (if they exist) for each file which is pulled where the following arguments are passed.
 
-These two functions will be called for each file which is pulled where the following arguments are passed.
+1. current tag as specified in pulled.tsv
+2. tag specified via `-t|--tag`
+3. path of the file before the move to its target destination
+4. target destination
 
-1. tag specified via `-t|--tag`
-2. path of the file before the move to its target destination
-3. target destination
-
-For instance, a pull-hook.sh could look as follows:
+For instance, a pull-hook-after.sh could look as follows:
 
 ```bash
 #!/usr/bin/env bash
 set -eu -o pipefail
 
-function gt_pullHook_tegonal_scripts_before(){
-  : # no op, nothing to do
-}
+function pull_hook_after() {
+	local -r currentTag=$1 tag=$2 source=$3 target=$4
 
-function gt_pullHook_tegonal_scripts_after(){
-  local -r tag=$1 source=$2 target=$3
-  
-  if [[ $source =~ .*.txt ]]; then
-    # rename all *.txt to *.msg
-    mv "$target" "${target%????}.msg"
-  fi  
+	if [[ $source =~ \.json$ ]]; then
+		local -r base="${target%.json}"
+
+		# rename all *.json to *.$tag.jsonc
+		mv "$target" "$base.$tag.jsonc"
+
+		# remove the file from the previously pulled tag
+		if [[ $currentTag != "$tag" ]]; then
+			rm -f "$base.$currentTag.jsonc"
+		fi
+	fi
 }
+pull_hook_after "$@"
 ```
 
 For a real world example, take a look at the
-[pull-hook.sh](https://github.com/tegonal/gt/blob/main/.gt/remotes/tegonal-gh-commons/pull-hook.sh)
+[pull-hook-before.sh](https://github.com/tegonal/gt/blob/main/.gt/remotes/tegonal-gh-commons/pull-hook-before.sh)
 used in this repo.
 
 If you are a maintainer of a source repository (i.e. consumers `gt pull` your files) then you might want to look at
