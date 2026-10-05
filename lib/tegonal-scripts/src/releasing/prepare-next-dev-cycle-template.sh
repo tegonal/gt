@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0-SNAPSHOT
+#                                         Version: v4.12.4
 #######  Description  #############
 #
 #  Prepares the next dev cycle based on conventions:
@@ -60,7 +60,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.13.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v4.12.4'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -72,11 +72,26 @@ sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-common-steps.sh"
 
 function prepareNextDevCycleTemplate() {
-	source "$dir_of_tegonal_scripts/releasing/prepare-next-dev-cycle-template.params.source.sh" || traceAndDie "could not source prepare-next-dev-cycle-template.params.source.sh"
-	source "$dir_of_tegonal_scripts/releasing/prepare-next-dev-cycle-template.params-definition.source.sh" || traceAndDie "could not source prepare-next-dev-cycle-template.params-definition.source.sh"
-	parseArgumentsIgnoreUnknown prepareNextDevCycleTemplateParams "" "$TEGONAL_SCRIPTS_VERSION" "$@"
-	source "$dir_of_tegonal_scripts/releasing/prepare-next-dev-cycle-template.default-args.source.sh" || traceAndDie "could not source prepare-next-dev-cycle-template.default-args.source.sh"
-	exitIfNotAllArgumentsSet prepareNextDevCycleTemplateParams "" "$TEGONAL_SCRIPTS_VERSION"
+	local versionRegex versionParamPatternLong projectsRootDirParamPatternLong
+	local additionalPatternParamPatternLong beforePrFnParamPatternLong afterVersionUpdateHookParamPatternLong
+	local forReleaseParamPatternLong
+	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+
+	local version projectsRootDir additionalPattern beforePrFn afterVersionUpdateHook
+	# shellcheck disable=SC2034   # is passed by name to parseArguments
+	local -ra params=(
+		version "$versionParamPattern" 'the version for which we prepare the dev cycle'
+		projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
+		additionalPattern "$additionalPatternParamPattern" "$additionalPatternParamDocu"
+		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
+		afterVersionUpdateHook "$afterVersionUpdateHookParamPattern" "$afterVersionUpdateHookParamDocu"
+	)
+	parseArgumentsIgnoreUnknown params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
+	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath ".") || die "could not determine realpath of ."; fi
+	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
+	if ! [[ -v beforePrFn ]]; then beforePrFn="beforePr"; fi
+	if ! [[ -v afterVersionUpdateHook ]]; then afterVersionUpdateHook=''; fi
+	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 	exitIfArgIsNotVersion "$version" "$versionParamPatternLong"
 	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
 
