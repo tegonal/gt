@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0-SNAPSHOT
+#                                         Version: v4.12.4
 #######  Description  #############
 #
 #  constants intended to be sourced into a function
@@ -69,3 +69,9 @@ local -r afterVersionUpdateHookParamPatternLong='--after-version-update-hook'
 local -r afterVersionUpdateHookParamPattern="$afterVersionUpdateHookParamPatternLong"
 local -r afterVersionUpdateHookParamDocu="(optional) if defined, then this function is called after versions were updated and before calling beforePr. \
 The following arguments are passed: $versionParamPatternLong version $projectsRootDirParamPatternLong projectsRootDir and $additionalPatternParamPatternLong additionalPattern"
+
+local -ra afterVersionHookParams=(
+	version "$versionParamPattern" "$versionParamDocu"
+	projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
+	additionalPattern "$additionalPatternParamPattern" "$additionalPatternParamDocu"
+)
