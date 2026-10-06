@@ -11,7 +11,7 @@
 set -euo pipefail
 shopt -s inherit_errexit
 unset CDPATH
-GT_LATEST_VERSION="v2.1.0"
+GT_LATEST_VERSION="v2.2.0"
 
 if ! [[ -v scriptsDir ]]; then
 	scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../../../scripts"
