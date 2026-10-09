@@ -90,6 +90,7 @@ function gt_update() {
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 	exitIfArgIsNotBoolean "$list" "$listParamPatternLong"
+	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
 
 	if [[ -n $tag && -z $remote ]]; then
 		die "tag can only be defined if a remote is specified via %s" "$remoteParamPattern"
@@ -141,8 +142,8 @@ function gt_update() {
 		local -r currentDir
 
 		local -a gt_pull_parsed_args
-		# we parse the arguments once so that we don't have to re-parse them for every file we might unless we only --list
-		# the updates
+		# we parse the arguments once so that we don't have to re-parse them for every file we might update,
+		# unless we only --list the updates, then we don't parse them
 		if [[ $list != true ]]; then
 			local -a gt_pull_parsed_args
 			gt_pull_parse_args gt_pull_parsed_args "$currentDir" \
@@ -157,12 +158,24 @@ function gt_update() {
 				"$autoTrustParamPatternLong" "$autoTrust" || return $?
 		fi
 
-		# shellcheck disable=SC2329 # gt_update_rePullInternal_callback is called by name
-		function gt_update_rePullInternal_callback() {
-			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder _entrySha512
+		local -a trackingDirs=()
+
+		# shellcheck disable=SC2329 # is invoked just by a function which is itself called by name
+		function gt_update_rePullInternal_callback_logic() {
+			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512 onlyTrackingDir
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512 onlyTrackingDir)
 			parseFnArgs params "$@"
+
+			# we can return early if the entrySha512 is not equal to the directorySha and we only want to update
+			# tracking directories or if the entrySha512 is equal to the directorySha and we only want to update
+			# files which are not tracking directories
+			if [[ $list != true ]] && {
+					[[ $onlyTrackingDir == true && $entrySha512 != "$directorySha" ]] ||
+					[[ $onlyTrackingDir == false && $entrySha512 == "$directorySha" ]]
+			}; then
+					return
+			fi
 
 			local entryTargetFileName
 			entryTargetFileName=$(basename "$entryRelativePath")
@@ -185,30 +198,74 @@ function gt_update() {
 				previousTagFilter="$entryTagFilter"
 			fi
 
-			local parentDir
-			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
-
 			if [[ $list == true ]]; then
 				if [[ $entryTag != "$tagToPull" ]]; then
 					updatablePerRemote+=("$entryTag" "$tagToPull" "$entryFile")
 				fi
 			else
-				local startTimestampInMs elapsedInSeconds
-				startTimestampInMs="$(timestampInMs)" || true
-				gt_pull_parsed_args[2]=$tagToPull
-				gt_pull_parsed_args[3]=$entryFile
-				gt_pull_parsed_args[4]=$parentDir
-				gt_pull_parsed_args[6]=$entryTargetFileName
-				gt_pull_parsed_args[7]=$entryTagFilter
 
-				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
-					((++pulled))
-				else
-					gt_update_incrementError "$entryFile" "$remote"
+				function gt_update_rePullInternal_pull() {
+					local pullDir trackDir targetFileName
+					# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+					local -ra params=(pullDir trackDir targetFileName)
+					parseFnArgs params "$@"
+
+					local startTimestampInMs elapsedInSeconds
+					startTimestampInMs="$(timestampInMs)" || true
+					gt_pull_parsed_args[2]=$tagToPull
+					gt_pull_parsed_args[3]=$entryFile
+					gt_pull_parsed_args[4]=$pullDir
+					gt_pull_parsed_args[5]=$trackDir
+					gt_pull_parsed_args[7]=$targetFileName
+					gt_pull_parsed_args[8]=$entryTagFilter
+
+					if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
+						((++pulled))
+					else
+						gt_update_incrementError "$entryFile" "$remote"
+					fi
+				}
+
+				local parentDir
+				parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
+
+				if [[ $onlyTrackingDir == true && $entrySha512 == "$directorySha" ]]; then
+					trackingDirs+=("$entryFile")
+					gt_update_rePullInternal_pull "$parentDir" true ""
+
+				elif [[ $onlyTrackingDir == false && $entrySha512 != "$directorySha" ]]; then
+					# during an gt update we don't have to update individual files which are within a tracked directory (or sub
+					# directory of a tracked directory) because they will be updated already when we call
+					# gt_update_rePullInternal_callback_logic with onlyTrackingDir=true
+					if isASubPathOf "$entryFile" trackingDirs; then
+						if [[ $entryTag == "$tagToPull" ]]; then
+							logInfo "already pulled via tracking dir, skipping %s" "$entryFile"
+						else
+							logError "looks like %s no longer exists or was renamed in version %s" "$entryFile" "$tagToPull"
+							gt_update_incrementError "$entryFile" "$remote"
+						fi
+					else
+						gt_update_rePullInternal_pull "$parentDir" false "$entryTargetFileName"
+					fi
 				fi
 			fi
 		}
-		readPulledTsv "$workingDirAbsolute" "$remote" gt_update_rePullInternal_callback 5 6
+
+		# shellcheck disable=SC2329 # gt_update_rePullInternal_callback is called by name
+		function gt_update_rePullInternal_callback_trackingDirs() {
+			gt_update_rePullInternal_callback_logic "$@" true
+		}
+
+		# shellcheck disable=SC2329 # gt_update_rePullInternal_callback is called by name
+		function gt_update_rePullInternal_callback_files() {
+			gt_update_rePullInternal_callback_logic "$@" false
+		}
+
+		readPulledTsv "$workingDirAbsolute" "$remote" gt_update_rePullInternal_callback_trackingDirs 5 6
+
+		if [[ $list != true ]]; then
+			readPulledTsv "$workingDirAbsolute" "$remote" gt_update_rePullInternal_callback_files 5 6
+		fi
 
 		if [[ $list == true ]]; then
 			local -r updatablePerRemoteLength="${#updatablePerRemote[@]}"

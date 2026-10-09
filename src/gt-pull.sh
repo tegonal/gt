@@ -20,9 +20,14 @@
 #    # into the default directory of this remote
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 #
-#    # pull the directory src/utility/ from remote tegonal-scripts
+#    # pull all files in the directory src/utility/ from remote tegonal-scripts
 #    # in version v0.1.0 (i.e. tag v0.1.0 is used)
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+#
+#    # pull the directory src/utility/ from remote tegonal-scripts
+#    # in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. Tracking means
+#    # we will again pull the directory i.e. all files in it during a gt update
+#    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true
 #
 #    # pull the file src/utility/ask.sh from remote tegonal-scripts
 #    # in the latest version and put into ./scripts/ instead of the default directory of this remote
@@ -105,15 +110,16 @@ function gt_pull_parse_args() {
 
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
-	local remote tag path pullDir chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification workingDir
+	local remote tag path pullDir trackDir chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'name of the remote repository'
 		tag "$tagParamPattern" 'git tag used to pull the file/directory'
 		path "$pathParamPattern" 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirParamPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
+		trackDir "$trackDirParamPattern" "(optional) if set to true, then $pathParamPatternLong needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false"
 		chopPath "$chopPathParamPattern" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
-		targetFileName "$targetFileNamePattern" '(optional) if you want to use a different file name then the one specified in the remote -- default: name as specified in the remote'
+		targetFileName "$targetFileNamePattern" '(optional) if you want to use a different file name than the one specified in the remote -- default: name as specified in the remote'
 		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		unsecure "$unsecureParamPattern" "(optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at $defaultWorkingDir/<remote>/*.asc -- default: false"
@@ -165,6 +171,7 @@ function gt_pull_parse_args() {
 
 	parseArguments params "$examples" "$GT_VERSION" "${args[@]}" || return $?
 
+	if ! [[ -v trackDir ]]; then trackDir=false; fi
 	if ! [[ -v chopPath ]]; then chopPath=false; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v forceNoVerification ]]; then forceNoVerification=false; fi
@@ -186,6 +193,11 @@ function gt_pull_parse_args() {
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+	exitIfArgIsNotBoolean "$trackDir" "$trackDirParamPatternLong"
+	exitIfArgIsNotBoolean "$chopPath" "$chopPathParamPatternLong"
+	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
+	exitIfArgIsNotBoolean "$unsecure" "$unsecureParamPatternLong"
+	exitIfArgIsNotBoolean "$forceNoVerification" "$unsecureNoVerificationParamPattern"
 
 	if [[ "$path" =~ ^/.* ]]; then
 		die "Leading / not allowed for path, given: \033[0;36m%s\033[0m" "$path"
@@ -309,6 +321,7 @@ function gt_pull_parse_args() {
 		"$tagToPull"
 		"$path"
 		"$pullDirAbsolute"
+		"$trackDir"
 		"$chopPath"
 		"$targetFileName"
 		"$tagFilter"
@@ -330,14 +343,15 @@ function gt_pull_internal_without_arg_checks() {
 		tagToPull=$5 \
 		path=$6 \
 		pullDirAbsolute=$7 \
-		chopPath=$8 \
-		targetFileName=$9 \
-		tagFilter=${10} \
-		autoTrust=${11} \
-		unsecure=${12} \
-		forceNoVerification=${13} \
-		doVerification=${14}
-	local -r maxParams=14
+		trackDir=$8 \
+		chopPath=$9 \
+		targetFileName=${10} \
+		tagFilter=${11} \
+		autoTrust=${12} \
+		unsecure=${13} \
+		forceNoVerification=${14} \
+		doVerification=${15}
+	local -r maxParams=15
 	shift "$maxParams" || traceAndDie "was not able to shift by %s" "$maxParams"
 	if (($# != 0)); then
 		traceAndDie "%s arguments expected, given: $(($# + maxParams))" "$maxParams"
@@ -416,14 +430,29 @@ function gt_pull_internal_without_arg_checks() {
 	local -i numberOfPulledFiles=0
 
 	function gt_pull_moveFile() {
-		local repoFile=$1
+		local -r repoFile=$1
+		local repoFileIsNotTrackingPath pathType
+		if [[ $trackDir == false || $repoFile != "$path" ]]; then
+			repoFileIsNotTrackingPath=true
+			pathType="file"
+		else
+			repoFileIsNotTrackingPath=false
+			pathType="directory"
+		fi
 
 		local targetFile
 		if [[ $chopPath == true ]]; then
-			if [[ -d "$repo/$path" ]]; then
-				local offset
-				offset=$(if [[ $path == */ ]]; then echo 1; else echo 2; fi)
-				targetFile="$(cut -c "$((${#path} + offset))"- <<<"$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
+			# $repoFileIsNotTrackingPath == true if we specified trackDir, in such a case we also just want the name of the directory and
+			# can use basename. Otherwise $repoFile is inside $path and we want to chop the path up to $repo/$path but keep
+			# the path after it
+			if [[ $repoFileIsNotTrackingPath == true && -d "$repo/$path" ]]; then
+				local repoPath offset
+				repoPath=$(if [[ $trackDir == true ]]; then dirname "$path"; else echo "$path"; fi)
+				# in case we track a top-level directory we get . as repoPath which would influence cut below
+				if [[ $repoPath == "." ]]; then repoPath=""; fi
+
+        offset=$(if [[ -z $repoPath || $repoPath == */ ]]; then echo 1; else echo 2; fi)
+				targetFile="$(cut -c "$((${#repoPath} + offset))"- <<<"$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
 			else
 				targetFile="$(basename "$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
 			fi
@@ -447,8 +476,13 @@ function gt_pull_internal_without_arg_checks() {
 
 		local relativeTarget hasPlaceholder sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
-		sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha512 for \033[0;36m%s\033[0m" "$source" || return $?
-		hasPlaceholder=$(hasGtPlaceholder "$source")
+		if [[ $repoFileIsNotTrackingPath == true ]]; then
+			sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha512 for \033[0;36m%s\033[0m" "$source" || return $?
+			hasPlaceholder=$(hasGtPlaceholder "$source")
+		else
+			sha="$directorySha"
+			hasPlaceholder=false
+		fi
 		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$repoFile" || echo "")
@@ -465,14 +499,14 @@ function gt_pull_internal_without_arg_checks() {
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$repoFile" "$pulledTsv"
 		elif [[ $entryTag != "$tagToPull" ]]; then
-			logInfo "the file was pulled before in version %s, going to overwrite with version %s \033[0;36m%s\033[0m" "$entryTag" "$tagToPull" "$repoFile"
+			logInfo "the %s was pulled before in version %s, going to overwrite with version %s \033[0;36m%s\033[0m" "$pathType" "$entryTag" "$tagToPull" "$repoFile"
 			# we could warn about a version which was older
 			replacePulledEntry "$pulledTsv" "$repoFile" "$entry" || return $?
 		else
 			if [[ $entrySha != "$sha" ]]; then
 				logWarning "looks like the sha512 of \033[0;36m%s\033[0m changed in tag %s" "$repoFile" "$tagToPull"
 				gitDiffChars "$entrySha" "$sha"
-				printf "Won't pull the file, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pulledTsv"
+				printf "Won't pull the %s, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pathType" "$pulledTsv"
 				rm "$source"
 				return
 			elif ! grep --line-regexp --fixed-strings "$entry" "$pulledTsv" >/dev/null; then
@@ -481,39 +515,52 @@ function gt_pull_internal_without_arg_checks() {
 				newLocation=$(realpath --relative-to="$currentDir" "$pullDirAbsolute/$targetFile" || echo "$pullDirAbsolute/$targetFile")
 				local -r currentLocation newLocation
 				if [[ "$currentLocation" != "$newLocation" ]]; then
-					logWarning "the file was previously pulled to a different location"
+					logWarning "the %s was previously pulled to a different location" "$pathType"
 					echo "current location: $currentLocation"
 					echo "    new location: $newLocation"
-					printf "Won't pull the file again, you have several alternatives:\n- remove the entry from %s and pull it again\n- move the file manually and adjust the relativeTarget of the entry (and pull again)\n" "$pulledTsv"
+					printf "Won't pull the %s again, you have several alternatives:\n- remove the entry from %s and pull it again\n- move the %s manually and adjust the relativeTarget of the entry (and pull again)\n" "$pathType" "$pulledTsv" "$pathType"
 				else
-					logWarning "the file was pulled previously but with a different tag-filter or manual change was carried out (see difference between new and old entry):"
+					logWarning "the %s was pulled previously but with a different tag-filter or manual change was carried out (see difference between new and old entry):" "$pathType"
 					gitDiffChars "$currentEntry" "$entry"
-					printf "Won't pull the file again, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pulledTsv"
+					printf "Won't pull the %s again, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pathType" "$pulledTsv"
 				fi
-				rm "$source"
+				if [[ $repoFileIsNotTrackingPath == true ]]; then
+					rm "$source"
+				fi
 				return
 			elif [[ -f $absoluteTarget ]]; then
-				logInfo "the file was pulled before to the same location, going to overwrite \033[0;36m%s\033[0m" "$absoluteTarget"
+				logInfo "the %s was pulled before to the same location, going to overwrite \033[0;36m%s\033[0m" "$pathType" "$absoluteTarget"
 			fi
 		fi
 
-		if [[ -n $pullHookBeforeFileExecutable ]]; then
-			"$pullHookBeforeFileExecutable" "$entryTag" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
-		fi
-		# TODO remove with v3.0.0
-		"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
-		if [[ $entryHasPlaceholder == true ]]; then
-			replaceGtPlaceholdersDuringUpdate "$remote" "$repo" "$entryFile" "$absoluteTarget" "$source" "$entryTag" "$tagToPull"
-		fi
-		mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
-		if [[ -n $pullHookAfterFileExecutable ]]; then
-			"$pullHookAfterFileExecutable" "$entryTag" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
-		fi
-		# TODO remove with v3.0.0
-		"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
+		if [[ $repoFileIsNotTrackingPath == true ]]; then
+			if [[ -n $pullHookBeforeFileExecutable ]]; then
+				"$pullHookBeforeFileExecutable" "$entryTag" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
+			fi
+			# TODO remove with v3.0.0
+			"$pullHookBefore" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook before failed for \033[0;36m%s\033[0m, will not move the file to its target %s" "$repoFile" "$absoluteTarget" || return $?
+			if [[ $entryHasPlaceholder == true ]]; then
+				replaceGtPlaceholdersDuringUpdate "$remote" "$repo" "$entryFile" "$absoluteTarget" "$source" "$entryTag" "$tagToPull"
+			fi
+			mv "$source" "$absoluteTarget" || returnDying "was not able to move the file \033[0;36m%s\033[0m to %s" "$source" "$absoluteTarget" || return $?
+			if [[ -n $pullHookAfterFileExecutable ]]; then
+				"$pullHookAfterFileExecutable" "$entryTag" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
+			fi
+			# TODO remove with v3.0.0
+			"$pullHookAfter" "$tagToPull" "$source" "$absoluteTarget" || returnDying "pull hook after failed for \033[0;36m%s\033[0m but the file was already moved, please do a manual cleanup" "$repoFile" "$absoluteTarget" || return $?
 
-		((++numberOfPulledFiles))
+			((++numberOfPulledFiles))
+		fi
 	}
+
+	if [[ $trackDir == true ]]; then
+		if ! [[ -d "$repo/$path" ]]; then
+			die "trackDir was set to true but the path \033[0;36m%s\033[0m is not a directory" "$path"
+		fi
+
+		# trackDir specified, write dir as such into pulled.tsv
+		gt_pull_moveFile "$path" || return $?
+	fi
 
 	local absoluteFile
 	while read -r -d $'\0' absoluteFile; do
@@ -552,7 +599,7 @@ function gt_pull_internal_without_arg_checks() {
 		else
 			gt_pull_moveFile "$repoFile" || return $?
 		fi
-	done < <(find "$repo/$path" -type f -not -name "*.$sigExtension" -print0 ||
+	done < <(find "$repo/$path" -type f -not -name "*.$sigExtension" -print0 | LC_ALL=C sort -z ||
 		# `while read` will fail because there is no \0
 		true)
 

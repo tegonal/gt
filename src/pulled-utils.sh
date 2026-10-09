@@ -66,7 +66,7 @@ function migratePulledTsvFormat() {
 		writeVersionPragma "1.0.0"
 		cat "$pulledTsv" >>"$pulledTsv.new" || die "was not able to append the current %s to \033[0;36m%s\033[0m" "$pulledTsv" "$pulledTsv.new"
 		switchNewPulledTsv
-		migratePulledTsvFormat "$pulledTsv" "1.0.0" "$toVersion"
+		migratePulledTsvFormat "$workingDirAbsolute" "$pulledTsv" "1.0.0" "$toVersion"
 	elif [[ $fromVersion == "1.0.0" ]]; then
 		logMigrationAvailable
 		writeVersionPragma "1.1.0"
@@ -87,7 +87,7 @@ function migratePulledTsvFormat() {
 		}
 		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_0_0_to_1_1_0 "$remote"
 		switchNewPulledTsv
-		migratePulledTsvFormat "$pulledTsv" "1.1.0" "$toVersion"
+		migratePulledTsvFormat "$workingDirAbsolute" "$pulledTsv" "1.1.0" "$toVersion"
 	elif [[ $fromVersion == "1.1.0" ]]; then
 		logMigrationAvailable
 		writeVersionPragma "1.2.0"
@@ -106,6 +106,14 @@ function migratePulledTsvFormat() {
 			done
 		}
 		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_1_0_to_1_2_0 "$remote"
+		switchNewPulledTsv
+		migratePulledTsvFormat "$workingDirAbsolute" "$pulledTsv" "1.2.0" "$toVersion"
+	elif [[ $fromVersion == "1.2.0" ]]; then
+		logMigrationAvailable
+		# We only update the version pragma. There is no structural change but v1.3.0 signifies that the gt version
+		# supports tracking directories.
+		writeVersionPragma "1.3.0"
+		tail -n +2 "$pulledTsv" >>"$pulledTsv.new" || die "could not tail %s" "$pulledTsv"
 		switchNewPulledTsv
 	else
 		die "no automatic migration available from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m\nIn case you updated gt, then check the release notes for migration hints:\n%s" "$fromVersion" "$toVersion" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
@@ -160,7 +168,7 @@ function grepPulledEntryByFile() {
 	local escapedFile
 	# shellcheck disable=SC2016	# $ in regex is not a variable, all good
 	escapedFile="$(printf '%s\n' "$file" | sed -e 's/[.[\*^$()+?{}|\\]/\\&/g')"
-	grep -E "^[^	]+	$escapedFile" "$@" "$pulledTsv"
+	grep -E "^[^	]+	$escapedFile	" "$@" "$pulledTsv"
 }
 
 function replacePulledEntry() {
@@ -297,4 +305,15 @@ function replaceGtPlaceholdersDuringUpdate() {
 			echo "gt-placeholder-$key"
 		done
 	fi
+}
+
+function isASubPathOf() {
+  local -r isASubPathOf_path=${1%/}
+  local -rn isASubPathOf_arrDirectories=$2
+  local isASubPathOf_item
+  for isASubPathOf_item in "${isASubPathOf_arrDirectories[@]}"; do
+    isASubPathOf_item=${isASubPathOf_item%/}
+    [[ $isASubPathOf_path == "$isASubPathOf_item"/* ]] && return 0
+  done
+  return 1
 }
