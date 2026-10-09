@@ -199,8 +199,14 @@ function gt_pull_parse_args() {
 	exitIfArgIsNotBoolean "$unsecure" "$unsecureParamPatternLong"
 	exitIfArgIsNotBoolean "$forceNoVerification" "$unsecureNoVerificationParamPattern"
 
-	if [[ "$path" =~ ^/.* ]]; then
+	local -r dot_segment_re='(^|/)\.{1,2}(/|$)'
+
+	if [[ "$path" == /* ]]; then
 		die "Leading / not allowed for path, given: \033[0;36m%s\033[0m" "$path"
+	elif [[ "$path" =~ $dot_segment_re ]]; then
+		die "'.' and '..' segments not allowed in path, given: \033[0;36m%s\033[0m" "$path"
+	elif [[ "$path" == *//* ]]; then
+		die "Empty segments (//) not allowed in path, given: \033[0;36m%s\033[0m" "$path"
 	fi
 
 	if [[ "$targetFileName" =~ / ]]; then
@@ -319,7 +325,7 @@ function gt_pull_parse_args() {
 		"$workingDirAbsolute"
 		"$remote"
 		"$tagToPull"
-		"$path"
+		"${path%/}"
 		"$pullDirAbsolute"
 		"$trackDir"
 		"$chopPath"
@@ -341,7 +347,7 @@ function gt_pull_internal_without_arg_checks() {
 		workingDirAbsolute=$3 \
 		remote=$4 \
 		tagToPull=$5 \
-		path=$6 \
+		path=${6%/} \
 		pullDirAbsolute=$7 \
 		trackDir=$8 \
 		chopPath=$9 \
@@ -373,6 +379,10 @@ function gt_pull_internal_without_arg_checks() {
 	gitFetchTagFromRemote "$remote" "$repo" "$tagToPull" || return $?
 
 	git -C "$repo" checkout "tags/$tagToPull" -- "$path" || returnDying "was not able to checkout tags/%s and path %s" "$tagToPull" "$path" || return $?
+
+	if [[ -L "$repo/$path" ]]; then
+		die "pulling symlinks is not allowed for now (create a feature request if you need this), found \033[0;36m%s\033[0m" "$path"
+	fi
 
 	if [[ -d "$repo/$path" ]] && [[ $targetFileName != "" ]]; then
 		returnDying "you cannot specify %s when you pull a directory -- what you can do though:\n1. pull the directory\n2. rename the file(s) manually\n3. adjust the entries in %s\n\nNext time you gt re-pull or gt update the rename will be taken into account" "$targetFileNamePatternLong" "$pulledTsv" || return $?
