@@ -437,8 +437,9 @@ Parameters:
 -t|--tag                     git tag used to pull the file/directory
 -p|--path                    path in remote repository which shall be pulled (file or directory)
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
+--track-dir                  (optional) if set to true, then --path needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
---target-file-name           (optional) if you want to use a different file name then the one specified in the remote -- default: name as specified in the remote
+--target-file-name           (optional) if you want to use a different file name than the one specified in the remote -- default: name as specified in the remote
 --tag-filter                 (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
 --auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
@@ -486,9 +487,14 @@ Full usage example:
 # into the default directory of this remote
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 
-# pull the directory src/utility/ from remote tegonal-scripts
+# pull all files in the directory src/utility/ from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+
+# pull the directory src/utility/ from remote tegonal-scripts
+# in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. Tracking means
+# we will again pull the directory i.e. all files in it during a gt update
+gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true
 
 # pull the file src/utility/ask.sh from remote tegonal-scripts
 # in the latest version and put into ./scripts/ instead of the default directory of this remote

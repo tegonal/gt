@@ -136,10 +136,10 @@ function gt_re_pull() {
 
 		# shellcheck disable=SC2329 # gt_re_pull_rePullInternal_callback is called by name
 		function gt_re_pull_rePullInternal_callback() {
-			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder _entrySha512
+			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder entrySha512
 
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder entrySha512)
 			parseFnArgs params "$@"
 
 			local entryTargetFileName
@@ -147,14 +147,16 @@ function gt_re_pull() {
 
 			local parentDir
 			parentDir=$(dirname "$entryAbsolutePath") || gt_re_pull_incrementError "$entryFile" "$remote" || return
-			if [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
+			if [[ $entrySha512 == "$directorySha" ]]; then
+				logInfo "skipping \033[0;36m%s\033[0m since it is a tracking directory" "$entryFile"
+			elif [[ $onlyMissing == false ]] || ! [[ -f $entryAbsolutePath ]]; then
 				local startTimestampInMs elapsedInSeconds
 				startTimestampInMs="$(timestampInMs)" || true
 				gt_pull_parsed_args[2]=$entryTag
 				gt_pull_parsed_args[3]=$entryFile
 				gt_pull_parsed_args[4]=$parentDir
-				gt_pull_parsed_args[6]=$entryTargetFileName
-				gt_pull_parsed_args[7]=$entryTagFilter
+				gt_pull_parsed_args[7]=$entryTargetFileName
+				gt_pull_parsed_args[8]=$entryTagFilter
 
 				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))

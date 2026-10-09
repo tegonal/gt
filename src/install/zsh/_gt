@@ -26,6 +26,9 @@ function _gt_pull() {
 		(auto-trust)
 			_gt_param_auto_trust_describe
 			;;
+		(track-dir)
+			_describe 'track-dir' "('true:track the directory, i.e. pull new files during gt updates' 'false:do not track the directory')"
+			;;
 		(chop-path)
 			_describe 'chop-path' "('true:chop the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'gt.sh') in the target folder' 'false:keep the source path, i.e. --path src/gt.sh is pulled as $(printf '\033[0;36m%s\033[0m' 'src/gt.sh') in the target folder')"
 			;;

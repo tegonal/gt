@@ -42,7 +42,7 @@ local -r unsecureParamPattern="$unsecureParamPatternLong"
 local -r unsecureNoVerificationParamPatternLong='--unsecure-no-verification'
 local -r unsecureNoVerificationParamPattern="$unsecureNoVerificationParamPatternLong"
 
-local -r pulledTsvLatestVersion="1.2.0"
+local -r pulledTsvLatestVersion="1.3.0"
 local -r pulledTsvLatestVersionPragmaWithoutVersion='#@ Version: '
 local -r pulledTsvLatestVersionPragma="${pulledTsvLatestVersionPragmaWithoutVersion}$pulledTsvLatestVersion"
 local -r pulledTsvHeader=$'tag\tfile\trelativeTarget\ttagFilter\thasPlaceholder\tsha512'
@@ -64,4 +64,8 @@ local -r gpgOnlyParamPattern="$gpgOnlyParamPatternLong"
 local -r listParamPatternLong="--list"
 local -r listParamPattern="$listParamPatternLong"
 
+local -r trackDirParamPatternLong='--track-dir'
+local -r trackDirParamPattern="$trackDirParamPatternLong"
+
 local -r fakeTag="NOT_A_REAL_TAG_JUST_TEMPORARY"
+local -r directorySha="is_a_tracking_directory"

@@ -5,9 +5,14 @@
 # into the default directory of this remote
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/update-bash-docu.sh
 
-# pull the directory src/utility/ from remote tegonal-scripts
+# pull all files in the directory src/utility/ from remote tegonal-scripts
 # in version v0.1.0 (i.e. tag v0.1.0 is used)
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
+
+# pull the directory src/utility/ from remote tegonal-scripts
+# in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. Tracking means
+# we will again pull the directory i.e. all files in it during a gt update
+gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true
 
 # pull the file src/utility/ask.sh from remote tegonal-scripts
 # in the latest version and put into ./scripts/ instead of the default directory of this remote

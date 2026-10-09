@@ -159,9 +159,9 @@ function gt_update() {
 
 		# shellcheck disable=SC2329 # gt_update_rePullInternal_callback is called by name
 		function gt_update_rePullInternal_callback() {
-			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder _entrySha512
+			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder _entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512)
 			parseFnArgs params "$@"
 
 			local entryTargetFileName
@@ -185,9 +185,6 @@ function gt_update() {
 				previousTagFilter="$entryTagFilter"
 			fi
 
-			local parentDir
-			parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
-
 			if [[ $list == true ]]; then
 				if [[ $entryTag != "$tagToPull" ]]; then
 					updatablePerRemote+=("$entryTag" "$tagToPull" "$entryFile")
@@ -197,9 +194,19 @@ function gt_update() {
 				startTimestampInMs="$(timestampInMs)" || true
 				gt_pull_parsed_args[2]=$tagToPull
 				gt_pull_parsed_args[3]=$entryFile
-				gt_pull_parsed_args[4]=$parentDir
-				gt_pull_parsed_args[6]=$entryTargetFileName
-				gt_pull_parsed_args[7]=$entryTagFilter
+
+				if [[ $entrySha512 == "$directorySha" ]]; then
+					gt_pull_parsed_args[4]=$localAbsolutePath
+					gt_pull_parsed_args[5]=true # trackDir
+					gt_pull_parsed_args[7]=""
+				else
+					local parentDir
+					parentDir=$(dirname "$localAbsolutePath") || gt_update_incrementError "$entryFile" "$remote" || return
+					gt_pull_parsed_args[4]=$parentDir
+					gt_pull_parsed_args[5]=false # trackDir
+					gt_pull_parsed_args[7]=$entryTargetFileName
+				fi
+				gt_pull_parsed_args[8]=$entryTagFilter
 
 				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))
