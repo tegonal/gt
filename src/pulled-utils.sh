@@ -308,12 +308,12 @@ function replaceGtPlaceholdersDuringUpdate() {
 }
 
 function isASubPathOf() {
-  local -r isASubPathOf_path=${1%/}
-  local -rn isASubPathOf_arrDirectories=$2
-  local isASubPathOf_item
-  for isASubPathOf_item in "${isASubPathOf_arrDirectories[@]}"; do
-    isASubPathOf_item=${isASubPathOf_item%/}
-    [[ $isASubPathOf_path == "$isASubPathOf_item"/* ]] && return 0
-  done
-  return 1
+	local -r isASubPathOf_path=${1%/}
+	local -rn isASubPathOf_arrDirectories=$2
+	local isASubPathOf_item
+	for isASubPathOf_item in "${isASubPathOf_arrDirectories[@]}"; do
+		isASubPathOf_item=${isASubPathOf_item%/}
+		[[ $isASubPathOf_path == "$isASubPathOf_item"/* ]] && return 0
+	done
+	return 1
 }

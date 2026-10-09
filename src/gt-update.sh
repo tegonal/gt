@@ -171,10 +171,10 @@ function gt_update() {
 			# tracking directories or if the entrySha512 is equal to the directorySha and we only want to update
 			# files which are not tracking directories
 			if [[ $list != true ]] && {
-					[[ $onlyTrackingDir == true && $entrySha512 != "$directorySha" ]] ||
+				[[ $onlyTrackingDir == true && $entrySha512 != "$directorySha" ]] ||
 					[[ $onlyTrackingDir == false && $entrySha512 == "$directorySha" ]]
 			}; then
-					return
+				return
 			fi
 
 			local entryTargetFileName

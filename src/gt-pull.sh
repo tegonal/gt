@@ -451,7 +451,7 @@ function gt_pull_internal_without_arg_checks() {
 				# in case we track a top-level directory we get . as repoPath which would influence cut below
 				if [[ $repoPath == "." ]]; then repoPath=""; fi
 
-        offset=$(if [[ -z $repoPath || $repoPath == */ ]]; then echo 1; else echo 2; fi)
+				offset=$(if [[ -z $repoPath || $repoPath == */ ]]; then echo 1; else echo 2; fi)
 				targetFile="$(cut -c "$((${#repoPath} + offset))"- <<<"$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
 			else
 				targetFile="$(basename "$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
