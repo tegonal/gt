@@ -441,9 +441,10 @@ function gt_pull_internal_without_arg_checks() {
 			# can use basename. Otherwise $repoFile is inside $path and we want to chop the path up to $repo/$path but keep
 			# the path after it
 			if [[ $repoFileIsNotTrackingPath == true && -d "$repo/$path" ]]; then
-				local offset
-				offset=$(if [[ $path == */ ]]; then echo 1; else echo 2; fi)
-				targetFile="$(cut -c "$((${#path} + offset))"- <<<"$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
+				local repoPath offset
+				repoPath=$(if [[ $trackDir == true ]]; then dirname "$path"; else echo "$path"; fi)
+				offset=$(if [[ $repoPath == */ ]]; then echo 1; else echo 2; fi)
+				targetFile="$(cut -c "$((${#repoPath} + offset))"- <<<"$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
 			else
 				targetFile="$(basename "$repoFile")" || returnDying "could not calculate the target file for \033[0;36m%s\033[0m" "$repoFile" || return $?
 			fi
@@ -590,7 +591,7 @@ function gt_pull_internal_without_arg_checks() {
 		else
 			gt_pull_moveFile "$repoFile" || return $?
 		fi
-	done < <(find "$repo/$path" -type f -not -name "*.$sigExtension" -print0 ||
+	done < <(find "$repo/$path" -type f -not -name "*.$sigExtension" -print0 | LC_ALL=C sort -z ||
 		# `while read` will fail because there is no \0
 		true)
 
