@@ -90,6 +90,7 @@ function gt_update() {
 
 	exitIfWorkingDirDoesNotExist "$workingDir"
 	exitIfArgIsNotBoolean "$list" "$listParamPatternLong"
+	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
 
 	if [[ -n $tag && -z $remote ]]; then
 		die "tag can only be defined if a remote is specified via %s" "$remoteParamPattern"

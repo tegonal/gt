@@ -105,6 +105,7 @@ function gt_remote_add() {
 	# before we report about missing arguments we check if the working directory is inside of the call location
 	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
+	exitIfArgIsNotBoolean "$unsecure" "$unsecureParamPatternLong"
 
 	local -r remoteIdentifierRegex="^[a-zA-Z0-9_-]+$"
 	if ! [[ $remote =~ $remoteIdentifierRegex ]]; then
@@ -288,12 +289,13 @@ function gt_remote_remove() {
 	local -r currentDir
 
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+	local -r deletePulledFilesParamPatternLong='--delete-pulled-files'
 
 	local remote workingDir deletePulledFiles
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'define the name of the remote which shall be removed'
-		deletePulledFiles "--delete-pulled-files" "(optional) if set to true, then all files defined in the remote's pulled.tsv are deleted as well -- default: false"
+		deletePulledFiles "$deletePulledFilesParamPatternLong" "(optional) if set to true, then all files defined in the remote's pulled.tsv are deleted as well -- default: false"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
 	local -r examples=$(
@@ -320,6 +322,7 @@ function gt_remote_remove() {
 	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
+	exitIfArgIsNotBoolean "$deletePulledFiles" "$deletePulledFilesParamPatternLong"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"

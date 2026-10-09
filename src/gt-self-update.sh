@@ -38,12 +38,12 @@ function gt_self_update() {
 	currentDir=$(pwd) || die "could not determine currentDir, maybe it does not exist anymore?"
 	local -r currentDir
 
-	local -r forcePattern='--force'
+	local -r forceInstallParamPatternLong='--force'
 
 	local forceInstall
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
-		forceInstall "$forcePattern" "if set to true, then install.sh will be called even if gt is already on latest tag -- default false"
+		forceInstall "$forceInstallParamPatternLong" "if set to true, then install.sh will be called even if gt is already on latest tag -- default false"
 	)
 	local -r examples=$(
 		# shellcheck disable=SC2312
@@ -59,6 +59,7 @@ function gt_self_update() {
 	parseArguments params "$examples" "$GT_VERSION" "$@" || return $?
 	if ! [[ -v forceInstall ]]; then forceInstall="false"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
+	exitIfArgIsNotBoolean "$forceInstall" "$forceInstallParamPatternLong"
 
 	local installDir
 	installDir="$(readlink -m "$dir_of_gt/..")"
@@ -77,10 +78,10 @@ function gt_self_update() {
 		if [[ $currentBranch == "$latestTag" ]]; then
 			logInfoWithoutNewline "latest version of gt (%s) is already installed" "$latestTag"
 			if [[ $forceInstall != true ]]; then
-				printf ", nothing to do in addition (specify %s true if you want to re-install)\n" "$forcePattern"
+				printf ", nothing to do in addition (specify %s true if you want to re-install)\n" "$forceInstallParamPatternLong"
 				return 0
 			else
-				printf ", but '%s true' was specified, going to re-install it\n" "$forcePattern"
+				printf ", but '%s true' was specified, going to re-install it\n" "$forceInstallParamPatternLong"
 			fi
 		fi
 		cd "$currentDir" || die "could not cd back to the current dir %s" "$currentDir"

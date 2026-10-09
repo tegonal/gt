@@ -91,6 +91,7 @@ function gt_reset() {
 	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
+	exitIfArgIsNotBoolean "$gpgOnly" "$gpgOnlyParamPatternLong"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"

@@ -60,14 +60,13 @@ function gt_re_pull() {
 	local -r currentDir
 
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
-
-	local -r onlyMissingPattern="--only-missing"
+	local -r onlyMissingParamPatternLong="--only-missing"
 
 	local remote workingDir autoTrust onlyMissing
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ar params=(
 		remote "$remoteParamPattern" '(optional) if set, only the remote with this name is reset, otherwise all are reset'
-		onlyMissing "$onlyMissingPattern" "(optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true"
+		onlyMissing "$onlyMissingParamPatternLong" "(optional) if set, then only files which do not exist locally are pulled, otherwise all are re-pulled -- default: true"
 		autoTrust "$autoTrustParamPattern" "$autoTrustParamDocu"
 		workingDir "$workingDirParamPattern" "$workingDirParamDocu"
 	)
@@ -97,6 +96,8 @@ function gt_re_pull() {
 	exitIfPathNamedIsOutsideOf "$workingDir" "working directory" "$currentDir"
 
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
+	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
+	exitIfArgIsNotBoolean "$onlyMissing" "$onlyMissingParamPatternLong"
 
 	local workingDirAbsolute
 	workingDirAbsolute=$(readlink -m "$workingDir") || die "could not deduce workingDirAbsolute from %s" "$workingDir"
@@ -202,7 +203,7 @@ function gt_re_pull() {
 	if ((errors == 0)); then
 		logSuccess "%s files re-pulled in %s seconds, %s skipped" "$pulled" "$elapsedInSeconds" "$skipped"
 		if ((skipped > 0)) && [[ $onlyMissing == true ]]; then
-			logInfo "In case you want to re-fetch also existing files, then use: %s false" "$onlyMissingPattern"
+			logInfo "In case you want to re-fetch also existing files, then use: %s false" "$onlyMissingParamPatternLong"
 		fi
 	else
 		logWarning "%s files re-pulled in %s seconds, %s skipped, %s errors occurred, see above" "$pulled" "$elapsedInSeconds" "$skipped" "$errors"

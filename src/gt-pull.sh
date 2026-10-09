@@ -193,6 +193,11 @@ function gt_pull_parse_args() {
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
 	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+	exitIfArgIsNotBoolean "$trackDir" "$trackDirParamPatternLong"
+	exitIfArgIsNotBoolean "$chopPath" "$chopPathParamPatternLong"
+	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
+	exitIfArgIsNotBoolean "$unsecure" "$unsecureParamPatternLong"
+	exitIfArgIsNotBoolean "$forceNoVerification" "$unsecureNoVerificationParamPattern"
 
 	if [[ "$path" =~ ^/.* ]]; then
 		die "Leading / not allowed for path, given: \033[0;36m%s\033[0m" "$path"
