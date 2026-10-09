@@ -167,6 +167,16 @@ function gt_update() {
 			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512 onlyTrackingDir)
 			parseFnArgs params "$@"
 
+			# we can return early if the entrySha512 is not equal to the directorySha and we only want to update
+			# tracking directories or if the entrySha512 is equal to the directorySha and we only want to update
+			# files which are not tracking directories
+			if [[ $list != true ]] && {
+					[[ $onlyTrackingDir == true && $entrySha512 != "$directorySha" ]] ||
+					[[ $onlyTrackingDir == false && $entrySha512 == "$directorySha" ]]
+			}; then
+					return
+			fi
+
 			local entryTargetFileName
 			entryTargetFileName=$(basename "$entryRelativePath")
 
@@ -224,13 +234,10 @@ function gt_update() {
 					gt_update_rePullInternal_pull "$parentDir" true ""
 
 				elif [[ $onlyTrackingDir == false && $entrySha512 != "$directorySha" ]]; then
-					local parentDirRepo
-					parentDirRepo=$(dirname "$entryFile")
-
-					# during an gt update we don't have to update individual files which are within a tracked directory
-					# because they will be updated already when we call gt_update_rePullInternal_callback_logic with
-					# onlyTrackingDir=true
-					if isASubPathOf "$parentDirRepo" trackingDirs; then
+					# during an gt update we don't have to update individual files which are within a tracked directory (or sub
+					# directory of a tracked directory) because they will be updated already when we call
+					# gt_update_rePullInternal_callback_logic with onlyTrackingDir=true
+					if isASubPathOf "$entryFile" trackingDirs; then
 						if [[ $entryTag == "$tagToPull" ]]; then
 							logInfo "already pulled via tracking dir, skipping %s" "$entryFile"
 						else
