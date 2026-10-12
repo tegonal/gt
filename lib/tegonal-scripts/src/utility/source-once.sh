@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.13.0
 #######  Description  #############
 #
 #  Utility functions to source files but only if a certain guard is not defined. Sourcing happens inside the functions
@@ -59,7 +59,7 @@ function determineSourceOnceGuard() {
 
 function sourceOnce_exitIfNotAtLeastOneArg() {
 	if (($# < 1)); then
-		printf >&2 "you need to pass at least the file you want to source to sourceOnce in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "${BASH_SOURCE[1]}"
+		printf >&2 "you need to pass at least the file you want to source to sourceOnce/Always in \033[0;36m%s\033[0m\nFollowing a description of the parameters:" "${BASH_SOURCE[1]}"
 		echo >&2 '1. file       the file to source'
 		echo >&2 '2... args...  additional parameters which are passed to the source command'
 		printStackTraced
@@ -91,7 +91,7 @@ function sourceOnce() {
 		declare __SOURCED__=true
 		# we know that shellcheck cannot follow the non-constant source we don't know the source and thus cannot help out
 		# shellcheck disable=SC1090
-		source "$sourceOnce_file" "$@" || die "there was an error sourcing %s, see above" "$sourceOnce_file"
+		source "$sourceOnce_file" "$@" || traceAndDie "there was an error sourcing %s, see above" "$sourceOnce_file"
 		unset __SOURCED__
 	fi
 }

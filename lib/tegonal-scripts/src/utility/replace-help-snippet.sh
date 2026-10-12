@@ -6,10 +6,10 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.13.0
 #######  Description  #############
 #
-#  Helper script do capture the `--help` output of a script and replace a snippet in HTML based scripts (e.g. in a Markdown script).
+#  Helper script to capture the `--help` output of a script and replace a snippet in HTML based scripts (e.g. in a Markdown script).
 #  Makes use of replace-snippet.sh
 #
 #######  Usage  ###################
@@ -78,8 +78,13 @@ function replaceHelpSnippet() {
 	# shellcheck disable=SC2145		# we want array expansion in string
 	echo "capturing output of calling: $script ${varargs[@]}"
 
-	local snippet cleanedUpSnippet markdownSnippet
-	snippet=$("$script" "${varargs[@]}") || true
+	local snippet cleanedUpSnippet markdownSnippet exitCode
+	exitCode=0
+	snippet=$("$script" "${varargs[@]}") || {
+		exitCode=$?
+		true
+	}
+	[[ $exitCode == 0 || $exitCode == 99 ]] || returnDying "extracting the snippet failed (exit code was %s), see above" "$exitCode" || return $?
 	# remove ansi colour codes from snippet
 	cleanedUpSnippet=$(perl -0777 -pe "s/\033\[([01];\d{2}|0)m//g" <<<"$snippet") || die "could not quote snippet for %s" "$script"
 	markdownSnippet=$(printf "\`\`\`text\n%s\n\`\`\`" "$cleanedUpSnippet") || die "could not create markdownSnippet for %s" "$script"
