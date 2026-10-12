@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.13.0
 #######  Description  #############
 #
 #  Carry out some common update version steps either during releasing or in preparing the next dev cycle (indicated via
@@ -56,7 +56,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.12.4'
+export TEGONAL_SCRIPTS_VERSION='v4.13.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -103,7 +103,7 @@ function updateVersionCommonSteps() {
 		"$additionalPatternParamPatternLong" "$additionalPattern" \
 		-d "$projectsScriptsDir" || return $?
 
-	find "$projectsRootDir/.gt" -name "pull-hook.sh" -print0 |
+	find "$projectsRootDir/.gt" -name "pull-hook*.sh" -print0 |
 		while read -r -d $'\0' script; do
 			updateVersionScripts \
 				"$versionParamPatternLong" "$version" \

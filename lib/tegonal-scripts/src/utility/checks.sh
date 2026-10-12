@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.13.0
 #######  Description  #############
 #
 #  Functions to check declarations
@@ -155,13 +155,13 @@ function checkIsInitialisedArray() {
 }
 
 function checkArgIsArrayWithTuples() {
-	if (($# != 5)); then
-		logError "Five arguments need to be passed to checkArgIsArrayWithTuples, given \033[0;36m%s\033[0m\n" "$#"
+	if (($# != 4)) && (($# != 5)); then
+		logError "Four or five arguments need to be passed to checkArgIsArrayWithTuples, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: array            name of the array to check'
 		echo >&2 '2: tupleNum         the number of values of each tuple'
 		echo >&2 '3: tupleRepresents  what does the tuple represent (used in error message)'
 		echo >&2 '4: argNumberOrName  what argument do we check (used in error message)'
-		echo >&2 '5: describeTupleFn  function which describes how the tuples are built up'
+		echo >&2 '5: describeTupleFn  (optional) function which describes how the tuples are built up'
 		printStackTrace
 		exit 9
 	fi
@@ -170,10 +170,17 @@ function checkArgIsArrayWithTuples() {
 	local -r tupleNum=$2
 	local -r tupleRepresents=$3
 	local -r argNumberOrName=$4
-	local -r describeTupleFn=$5
-	shift 5 || traceAndDie "could not shift by 5"
+	shift 4 || traceAndDie "could not shift by 4"
 
-	exitIfArgIsNotFunction "$describeTupleFn" "$argNumberOrName"
+	# shellcheck disable=SC2329	# called by name
+	function checkArgIsArrayWithTuples_noop() {
+		:
+	}
+	local describeTupleFn=checkArgIsArrayWithTuples_noop
+	if (($# == 1)); then
+		describeTupleFn=$1
+		exitIfArgIsNotFunction "$describeTupleFn" "$argNumberOrName"
+	fi
 
 	local funcName=${FUNCNAME[1]}
 	if [[ $funcName == "exitIfArgIsNotArrayWithTuples" ]]; then
@@ -203,7 +210,7 @@ function checkArgIsArrayWithTuples() {
 		exit 9
 	fi
 
-	if ! ((arrLength % tupleNum == 0)); then
+	if ((arrLength % tupleNum != 0)); then
 		logError "the passed array \033[0;36m%s\033[0m is broken" "${!checkArgIsArrayWithTuples_paramArr}"
 		printf >&2 "The %s argument to %s needs to be an array with %s-tuples containing %s, given:\n" "$argNumberOrName" "$funcName" "$tupleNum" "$tupleRepresents"
 		"$describeTupleFn"
@@ -215,7 +222,7 @@ function checkArgIsArrayWithTuples() {
 
 		local -i i j
 		for ((i = 0; i < arrLength; i += tupleNum)); do
-			local -r length=$((i + tupleNum - 1 < arrLength ? i + tupleNum : arrLength))
+			local length=$((i + tupleNum - 1 < arrLength ? i + tupleNum : arrLength))
 			if ((i + tupleNum - 1 >= arrLength)); then
 				printf >&2 "\033[1;33mleftovers:\033[0m\n"
 			fi
