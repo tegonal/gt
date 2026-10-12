@@ -1,4 +1,4 @@
-#@ Version: 1.2.0
+#@ Version: 1.3.0
 tag	file	relativeTarget	tagFilter	hasPlaceholder	sha512
 v6.0.1	src/.github/workflows/cleanup.yml	../.github/workflows/cleanup.yml	.*	true	20c839110976f4f3dcdbcfb2ad7ffb1913dc41ef4951644f93a6361a58aa42563eb24fba7904afb474c4e63a333de9148465e8cb6e92ffa13d088bff13205a23
 v6.0.1	src/.github/dependabot.yml	../.github/dependabot.yml	.*	true	ee986facf7f741861a95fedd2c5e44d3499fbfe24951769c90956b2683d9bd8fb153347f4dc221a23c89dbf185542f92e6f0020aa44aab5811cf07a47bd144cf
