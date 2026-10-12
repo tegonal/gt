@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.4
+#                                         Version: v4.12.0
 #######  Description  #############
 #
 #  utility functions for dealing with gpg
@@ -94,11 +94,8 @@ function trustGpgKey() {
 	local -ra params=(gpgDir keyId)
 	parseFnArgs params "$@" || return $?
 
-	local fingerprints fingerprint
-	fingerprints="$(
-		gpg --homedir "$gpgDir" --with-colons --fingerprint "$keyId" | grep '^fpr:' | cut -d: -f10
-	)" || die "was not able to determine fingerprint for keyId %s in gpg dir %s" "$keyId" "$gpgDir"
-	fingerprint=$(head -n1 <<<"$fingerprints") || die "was not able to extract the first fingerprint for keyId %s in gpg dir %s" "$keyId" "$gpgDir"
+	local fingerprint
+	fingerprint="$(gpg --homedir "$gpgDir" --with-colons --fingerprint "$keyId" | grep '^fpr:' | cut -d: -f10 | head -n1)" || die "was not able to determine fingerprint for keyId %s in gpg dir %s" "$keyId" "$gpgDir"
 	echo "$fingerprint:5:" | gpg --homedir "$gpgDir" --import-ownertrust
 }
 
@@ -279,10 +276,7 @@ function getSaveGpgHomedir() {
 	local -ra params=(gpgDir)
 	parseFnArgs params "$@" || return $?
 
-	# socket path max is on certain systems 108 - longest socket name which is currently S.gpg-agent.browser (20 chars)
-	# 108 - 20 = 88 - 1 (NUL terminating char) 87 and to be on the safer side we use 85
-	local -r maxSocketPathLength=85
-	if ((${#gpgDir} <= maxSocketPathLength)); then
+	if ((${#gpgDir} < 100)); then
 		echo "$gpgDir"
 	else
 		local tmpDir
