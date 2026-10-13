@@ -28,6 +28,18 @@ function beforePr() {
 	runShellspecIfInstalled --jobs 2 &&
 		customRunShellcheck &&
 		cleanupOnPushToMain
+
+	logInfo "checking if we can call --help of the release scripts"
+	local releaseScripts=(
+		'release.sh'
+		'prepare-next-dev-cycle.sh'
+		'update-version-in-non-sh-files.sh'
+	)
+	for script in "${releaseScripts[@]}"; do
+		local status
+		"$scriptsDir/release.sh" --help >/dev/null || status=$?
+		[[ $status -eq 99 ]] || die "looks like calling %s failed unexpectedly, see above" "$script"
+	done
 }
 
 ${__SOURCED__:+return}

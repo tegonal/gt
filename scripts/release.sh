@@ -18,7 +18,7 @@ if ! [[ -v scriptsDir ]]; then
 	readonly scriptsDir
 fi
 source "$scriptsDir/dirs.source.sh"
-sourceOnce "$dir_of_tegonal_scripts/releasing/release-files.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/release-files-template.sh"
 sourceOnce "$scriptsDir/before-pr.sh"
 sourceOnce "$scriptsDir/prepare-next-dev-cycle.sh"
 sourceOnce "$scriptsDir/update-version-in-non-sh-files.sh"
