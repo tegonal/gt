@@ -34,7 +34,7 @@ local -r tagParamPattern="-t|$tagParamPatternLong"
 
 local -r tagFilterParamPatternLong='--tag-filter'
 local -r tagFilterParamPattern="$tagFilterParamPatternLong"
-local -r tagFilterParamDocu='(optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag'
+local -r tagFilterParamDocu='(optional) define a regexp pattern (as supported by grep -P) to filter available tags when determining the latest tag'
 
 local -r unsecureParamPatternLong='--unsecure'
 local -r unsecureParamPattern="$unsecureParamPatternLong"

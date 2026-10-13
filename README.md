@@ -331,7 +331,7 @@ Parameters:
 -r|--remote              name identifying this remote
 -u|--url                 url of the remote repository
 -d|--directory           (optional) directory into which files are pulled -- default: lib/<remote>
---tag-filter             (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
+--tag-filter             (optional) define a regexp pattern (as supported by grep -P) to filter available tags when determining the latest tag
 --unsecure               (optional) if set to true, the remote does not need to have GPG key(s) defined at .gt/*.asc -- default: false
 -w|--working-directory   (optional) path which gt shall use as working directory -- default: .gt
 
@@ -440,7 +440,7 @@ Parameters:
 --track-dir                  (optional) if set to true, then --path needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
 --target-file-name           (optional) if you want to use a different file name than the one specified in the remote -- default: name as specified in the remote
---tag-filter                 (optional) define a regexp pattern (as supported by grep -E) to filter available tags when determining the latest tag
+--tag-filter                 (optional) define a regexp pattern (as supported by grep -P) to filter available tags when determining the latest tag
 --auto-trust                 (optional) if set to true and GPG is not set up yet, then all keys in .gt/remotes/<remote>/public-keys/*.asc are imported without manual consent -- default: false
 --unsecure                   (optional) if set to true, the remote does not need to have GPG key(s) defined in gpg database or at .gt/<remote>/*.asc -- default: false
 --unsecure-no-verification   (optional) if set to true, implies --unsecure true and does not verify even if gpg keys are in store or at .gt/<remote>/*.asc -- default: false
