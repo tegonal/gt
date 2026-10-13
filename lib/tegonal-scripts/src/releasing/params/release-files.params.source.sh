@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 # Defines local variables for the params defined in ...params-definition.source.sh
@@ -15,8 +15,8 @@
 ###################################
 {
 	# shellcheck disable=SC2154   # it is assumed dir_of_tegonal_scripts is defined where this file is sourced
-	source "$dir_of_tegonal_scripts/releasing/params/release-template.params.source.sh" ||
-		traceAndDie "could not source release-template.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-files-template.params.source.sh" || traceAndDie "could not source release-files-template.params.source.sh"
 }
-
-local key findForSigning
+# no additional local variables currently compared to release-files-template.params.source.sh
+# adding `local` as comment to tell the linter that's fine
+# local

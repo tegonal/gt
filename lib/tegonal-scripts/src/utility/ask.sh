@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 #  Utility functions to ask the user something via input.
@@ -57,7 +57,7 @@ function askYesOrNo() {
 	local -r question=$1
 	shift 1 || traceAndDie "could not shift by 1"
 
-	local -r askYesOrNo_timeout=20
+	local -r askYesOrNo_timeout=30
 	local answer='n'
 
 	# shellcheck disable=SC2329   # called by name

@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 # Defines default args for ...params-definition.source.sh
@@ -15,9 +15,9 @@
 ###################################
 {
 	# shellcheck disable=SC2154   # it is assumed dir_of_tegonal_scripts is defined where this file is sourced
-	source "$dir_of_tegonal_scripts/releasing/params/prepare-next-dev-cycle-template.default-args.source.sh" ||
-		traceAndDie "could not source prepare-next-dev-cycle-template.default-args.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/prepare-files-next-dev-cycle-template.default-args.source.sh" ||
+		traceAndDie "could not source prepare-files-next-dev-cycle-template.default-args.source.sh"
 }
 
-# currently prepare-files-next-dev-cycle defines not more optional params than prepare-next-dev-cycle-template,
+# currently prepare-files-next-dev-cycle defines not more optional params than prepare-files-next-dev-cycle-template,
 # hence the above is enough

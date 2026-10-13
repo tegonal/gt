@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+#
+#    __                          __
+#   / /____ ___ ____  ___  ___ _/ /       This script is provided to you by https://github.com/tegonal/scripts
+#  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        Copyright 2022 Tegonal Genossenschaft <info@tegonal.com>
+#  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
+#         /___/                           Please report bugs and contribute back your improvements
+#
+#                                         Version: v5.0.0
+#######  Description  #############
+#
+#  Releasing files based on conventions:
+#  - expects a version in format vX.Y.Z(-RC...)
+#  - main is your default branch (or you use --branch to define another)
+#  - requires you to have a function beforePr in scope (or you define another one via --before-pr-fn)
+#  - requires you to have a function prepareNextDevCycle in scope (or you define another one via --prepare-next-dev-cycle-fn)
+#  - there is a public key defined at .gt/signing-key.public.asc which will be used
+#    to verify the signatures which will be created
+#
+#######  Usage  ###################
+#
+#    #!/usr/bin/env bash
+#    set -euo pipefail
+#    shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
+#    # Assumes tegonal's scripts were fetched with gt - adjust location accordingly
+#    dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/../lib/tegonal-scripts/src"
+#    source "$dir_of_tegonal_scripts/setup_tegonal_scripts.sh" "$dir_of_tegonal_scripts"
+#
+#    scriptsDir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)"
+#    sourceOnce "$scriptsDir/before-pr.sh"
+#
+#    function findScripts() {
+#    	find "src" -name "*.sh" -not -name "*.doc.sh" "$@"
+#    }
+#    # make the function visible to release-files-template.sh / not necessary if you source release-files-template.sh, see further below
+#    declare -fx findScripts
+#
+#    # releases version v0.1.0 using the key 0x945FE615904E5C85 for signing and function findScripts to find the files which
+#    # should be signed (and thus released). Assumes that a function named beforePr is in scope (which we sourced above)
+#    "$dir_of_tegonal_scripts/releasing/release-files-template.sh" -v v0.1.0 -k "0x945FE615904E5C85" --sign-fn findScripts
+#
+#    # releases version v0.1.0 using the key 0x945FE615904E5C85 for signing and function findScripts to find the files which
+#    # should be signed (and thus released). Moreover, searches for additional occurrences where the version should be
+#    # replaced via the specified pattern
+#    "$dir_of_tegonal_scripts/releasing/release-files-template.sh" \
+#    	-v v0.1.0 -k "0x945FE615904E5C85" --sign-fn findScripts \
+#    	-p "(TEGONAL_SCRIPTS_VERSION=['\"])[^'\"]+(['\"])"
+#
+#    function specialBeforePr() {
+#    	beforePr && echo "imagine some additional work"
+#    }
+#    # make the function visible to release-files-template.sh / not necessary if you source prepare-files-next-dev-cycle-template.sh
+#    # see further below
+#    declare -fx specialBeforePr
+#
+#    # releases version v0.1.0 using the key 0x945FE615904E5C85 for signing and
+#    "$dir_of_tegonal_scripts/releasing/release-files-template.sh" \
+#    	-v v0.1.0 -k "0x945FE615904E5C85" --sign-fn findScripts \
+#    	--before-pr-fn specialBeforePr
+#
+#    # in case you want to provide your own release.sh and only want to do some pre-configuration
+#    # then you might want to source it instead
+#    sourceOnce "$dir_of_tegonal_scripts/releasing/release-files-template.sh"
+#
+#    # and then call the function with your pre-configuration settings:
+#    # here we define the function which shall be used to find the files to be signed
+#    # since "$@" follows afterwards, one could still override it via command line arguments.
+#    # put "$@" first, if you don't want that a user can override your pre-configuration
+#    releaseFilesTemplate --sign-fn findScripts "$@"
+#
+#    # call the function define --before-pr-fn, don't allow to override via command line arguments
+#    releaseFilesTemplate "$@" --before-pr-fn specialBeforePr
+#
+###################################
+set -euo pipefail
+shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
+unset CDPATH
+export TEGONAL_SCRIPTS_VERSION='v5.0.0'
+
+if ! [[ -v dir_of_tegonal_scripts ]]; then
+	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
+	source "$dir_of_tegonal_scripts/setup_tegonal_scripts.sh" "$dir_of_tegonal_scripts"
+fi
+sourceOnce "$dir_of_tegonal_scripts/utility/execute-if-defined.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/gpg-utils.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/release-template.sh"
+sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
+
+function releaseFilesTemplate() {
+	source "$dir_of_tegonal_scripts/releasing/params/release-files-template.params.source.sh" || traceAndDie "could not source release-files-template.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-files-template.params-definition.source.sh" || die "could not source release-files-template.params-definition.source.sh"
+	parseArguments releaseFilesTemplateParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
+	source "$dir_of_tegonal_scripts/releasing/params/release-files-template.default-args.source.sh" || die "could not source release-files-template.default-args.source.sh"
+	exitIfNotAllArgumentsSet releaseFilesTemplateParams "" "$TEGONAL_SCRIPTS_VERSION"
+
+	exitIfArgIsNotFunction "$findForSigning" "$findForSigningParamPatternLong"
+	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
+	exitIfArgIsNotFunction "$prepareNextDevCycleFn" "$prepareNextDevCycleFnParamPatternLong"
+
+	local -a releaseTemplateArgs
+	addLocalVarMatchingParamNamesToArgs releaseTemplateParams releaseTemplateArgs
+
+	# those variables are used in local functions further below which will be called from releaseTemplate.
+	# The problem: in case releaseTemplate defines a variable with the same name, then we would use those
+	# variables instead of the one we define here, hence we prefix them to avoid this problem
+	local release_files_projectsRootDir="$projectsRootDir"
+	local release_files_afterVersionUpdateHook="$afterVersionUpdateHook"
+	local release_files_findForSigning="$findForSigning"
+	local release_files_branch="$branch"
+
+	function releaseFilesTemplate_afterVersionHook() {
+		source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.params.source.sh" || traceAndDie "could not source after-version-update-hook.params.source.sh"
+		source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.params-definition.source.sh" || traceAndDie "could not source after-version-update-hook.params-definition.source.sh"
+		parseArguments afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
+		exitIfNotAllArgumentsSet afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION"
+
+		updateVersionScripts \
+			"$versionParamPatternLong" "$version" \
+			"$additionalPatternParamPatternLong" "$additionalPattern" \
+			-d "$projectsRootDir/src" || return $?
+
+		executeIfFunctionNameDefined "$release_files_afterVersionUpdateHook" "$afterVersionUpdateHookParamPatternLong" \
+			"$versionParamPatternLong" "$version" \
+			"$projectsRootDirParamPatternLong" "$projectsRootDir" \
+			"$additionalPatternParamPatternLong" "$additionalPattern"
+	}
+
+	function releaseFilesTemplate_releaseHook() {
+		local -r gtDir="$release_files_projectsRootDir/.gt"
+		local -r gpgDir="$gtDir/gpg"
+		if ! rm -rf "$gpgDir"; then
+			logError "was not able to remove gpg directory %s\nPlease do this manually and re-run the release command" "$gpgDir"
+			git reset --hard "origin/$release_files_branch"
+		fi
+		mkdir "$gpgDir"
+		chmod 700 "$gpgDir"
+
+		# we don't specify confirmationQuestion (i.e. empty) which means we trust it without consent
+		importGpgKey "$gpgDir" "$gtDir/signing-key.public.asc" "" || die "was not able to import the signing-key, cannot release"
+
+		local script
+		"$release_files_findForSigning" -type f -not -name "*.sig" -print0 |
+			while read -r -d $'\0' script; do
+				echo "signing $script"
+				gpg --detach-sign --batch --no-tty --yes -u "$key" -o "${script}.sig" "$script" || die "was not able to sign %s" "$script"
+				gpg --homedir "$gpgDir" --batch --no-tty --verify "${script}.sig" "$script" || die "verification via previously imported %s failed" "$gtDir/signing-key.public.asc"
+			done || return $?
+	}
+
+	releaseTemplate \
+		"${releaseTemplateArgs[@]}" \
+		"$releaseHookParamPatternLong" releaseFilesTemplate_releaseHook \
+		"$afterVersionUpdateHookParamPatternLong" releaseFilesTemplate_afterVersionHook
+}
+
+${__SOURCED__:+return}
+releaseFilesTemplate "$@"

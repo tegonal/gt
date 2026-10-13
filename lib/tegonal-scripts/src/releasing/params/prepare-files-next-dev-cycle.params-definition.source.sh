@@ -7,19 +7,23 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
-# Defines the parameters for the function prepareFilesNextDevCycle
+# Defines the parameters for a prepareNextDevCycle function which is based on prepareNextDevCycleTemplate
+# but defines an own pattern for additionalPattern
 #
 ###################################
 {
 	# shellcheck disable=SC2154   # it is assumed dir_of_tegonal_scripts is defined where this file is sourced
-	source "$dir_of_tegonal_scripts/releasing/params/prepare-next-dev-cycle-template.params-definition.source.sh" ||
-		traceAndDie "could not source prepare-next-dev-cycle-template.params-definition.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/prepare-files-next-dev-cycle-template.params-definition.source.sh" ||
+		traceAndDie "could not source prepare-files-next-dev-cycle-template.params-definition.source.sh"
 }
 
-# keep in sync with src/releasing/release-files.params.source.sh
+local -a prepareFilesNextDevCycle_withoutAdditionalPattern=()
+arrDropTuplesByKey prepareFilesNextDevCycleTemplateParams 3 prepareFilesNextDevCycle_withoutAdditionalPattern additionalPattern
+
 local -ra prepareFilesNextDevCycleParams=(
-	"${prepareNextDevCycleTemplateParams[@]}"
+	"${prepareFilesNextDevCycle_withoutAdditionalPattern[@]}"
+	additionalPattern "$additionalPatternParamPattern" "is ignored because the function itself overwrites it, still here as release-files-template uses this argument"
 )
