@@ -7,25 +7,23 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
-# Defines the parameters for the function releaseFiles
+# Defines the parameters for the a custom release function which is based on releaseFilesTemplate but wants to
+# hide certain params from the consumers (see below)
 #
 ###################################
 {
 	# shellcheck disable=SC2154   # it is assumed dir_of_tegonal_scripts is defined where this file is sourced
-	source "$dir_of_tegonal_scripts/releasing/params/release-template.params-definition.source.sh" ||
-		traceAndDie "could not source release-template.params-definition.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-files-template.params-definition.source.sh" ||
+		traceAndDie "could not source release-files-template.params-definition.source.sh"
 }
 
-local -a releaseFiles_version=() releaseFiles_restWithoutReleaseHook=()
-arrKeepTuplesByKey releaseTemplateParams 3 releaseFiles_version version
-arrDropTuplesByKey releaseTemplateParams 3 releaseFiles_restWithoutReleaseHook version releaseHook
+local -a releaseFiles_sameAsFilesWithSomeExceptions=()
+arrDropTuplesByKey releaseFilesTemplateParams 3 releaseFiles_sameAsFilesWithSomeExceptions \
+	findForSigning prepareNextDevCycleFn afterVersionUpdateHook projectsRootDir additionalPattern
 
 local -ra releaseFilesParams=(
-	"${releaseFiles_version[@]}"
-	key "$keyParamPattern" "$keyParamDocu"
-	findForSigning "$findForSigningParamPattern" "$findForSigningParamDocu"
-	"${releaseFiles_restWithoutReleaseHook[@]}"
+	"${releaseFiles_sameAsFilesWithSomeExceptions[@]}"
 )

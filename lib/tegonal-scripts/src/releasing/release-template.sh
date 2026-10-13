@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 #  Defines a release process template where some conventions are defined:
@@ -40,7 +40,7 @@
 #    	# or
 #    	sbt test publishedSigned
 #    }
-#    # make the function visible to release-templates.sh / not necessary if you source release-templates.sh, see further below
+#    # make the function visible to release-template.sh / not necessary if you source release-template.sh, see further below
 #    declare -fx releaseScalaLib
 #
 #    # releases version v0.1.0 using releaseScalaLib as hook
@@ -80,7 +80,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.12.0'
+export TEGONAL_SCRIPTS_VERSION='v5.0.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -92,41 +92,13 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/pre-release-checks-git.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-common-steps.sh"
 
 function releaseTemplate() {
-	local versionParamPatternLong branchParamPatternLong projectsRootDirParamPatternLong
-	local additionalPatternParamPatternLong prepareOnlyParamPatternLong
-	local beforePrFnParamPatternLong prepareNextDevCycleFnParamPatternLong afterVersionUpdateHookParamPatternLong
-	local forReleaseParamPatternLong releaseHookParamPatternLong
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-template.params.source.sh" || traceAndDie "could not source release-template.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-template.params-definition.source.sh" || traceAndDie "could not source release-template.params-definition.source.sh"
+	parseArguments releaseTemplateParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
+	source "$dir_of_tegonal_scripts/releasing/params/release-template.default-args.source.sh" || traceAndDie "could not source release-template.default-args.source.sh"
+	exitIfNotAllArgumentsSet releaseTemplateParams "" "$TEGONAL_SCRIPTS_VERSION"
 
-	local version releaseHook branch projectsRootDir additionalPattern nextVersion prepareOnly
-	local beforePrFn prepareNextDevCycleFn afterVersionUpdateHook
-	# shellcheck disable=SC2034   # is passed by name to parseArguments
-	local -ra params=(
-		version "$versionParamPattern" "$versionParamDocu"
-		releaseHook "$releaseHookParamPattern" "$releaseHookParamDocu"
-		branch "$branchParamPattern" "$branchParamDocu"
-		projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
-		additionalPattern "$additionalPatternParamPattern" "$additionalPatternParamDocu"
-		nextVersion "$nextVersionParamPattern" "$nextVersionParamDocu"
-		prepareOnly "$prepareOnlyParamPattern" "$prepareOnlyParamDocu"
-		beforePrFn "$beforePrFnParamPattern" "$beforePrFnParamDocu"
-		prepareNextDevCycleFn "$prepareNextDevCycleFnParamPattern" "$prepareNextDevCycleFnParamDocu"
-		afterVersionUpdateHook "$afterVersionUpdateHookParamPattern" "$afterVersionUpdateHookParamDocu"
-	)
-
-	parseArgumentsIgnoreUnknown params "" "$TEGONAL_SCRIPTS_VERSION" "$@"
-
-	# deduces nextVersion based on version if not already set (and if version set)
-	source "$dir_of_tegonal_scripts/releasing/deduce-next-version.source.sh"
-	if ! [[ -v branch ]]; then branch="main"; fi
-	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
-	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
-	if ! [[ -v prepareOnly ]] || [[ $prepareOnly != "true" ]]; then prepareOnly=false; fi
-	if ! [[ -v beforePrFn ]]; then beforePrFn='beforePr'; fi
-	if ! [[ -v prepareNextDevCycleFn ]]; then prepareNextDevCycleFn='prepareNextDevCycle'; fi
-	if ! [[ -v afterVersionUpdateHook ]]; then afterVersionUpdateHook=''; fi
-	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
-
+	exitIfArgIsNotBoolean "$prepareOnly" "$prepareOnlyParamPatternLong"
 	exitIfArgIsNotFunction "$releaseHook" "$releaseHookParamPatternLong"
 	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
 	exitIfArgIsNotFunction "$prepareNextDevCycleFn" "$prepareNextDevCycleFnParamPatternLong"
@@ -164,6 +136,9 @@ function releaseTemplate() {
 		else
 			git tag "$version" || die "could not create tag $version"
 		fi
+
+		logInfo "Release completed, going to prepare next development cycle for %s by calling" "$nextVersion" \
+			"$prepareNextDevCycleFn $versionParamPatternLong $nextVersion $additionalPatternParamPatternLong $additionalPattern $projectsRootDirParamPatternLong $projectsRootDir $beforePrFnParamPatternLong $beforePrFn"
 
 		"$prepareNextDevCycleFn" \
 			"$versionParamPatternLong" "$nextVersion" \

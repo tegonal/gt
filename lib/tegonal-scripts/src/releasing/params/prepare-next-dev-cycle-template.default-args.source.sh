@@ -7,16 +7,18 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 # Defines default args for ...params-definition.source.sh
 #
 ###################################
+{
+	# shellcheck disable=SC2154   # it is assumed dir_of_tegonal_scripts is defined where this file is sourced
+	source "$dir_of_tegonal_scripts/releasing/params/update-version-common-steps.default-args.source.sh" ||
+		traceAndDie "could not source update-version-common-steps.default-args.source.sh"
+}
 
 # Note, it is used in release-template.default-args.source.sh, if you should add default args which are only relevant
-# for prepare-next then don't re-use in release-template.default-args any more.
-if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath ".") || die "could not determine realpath of ."; fi
-if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
 if ! [[ -v beforePrFn ]]; then beforePrFn='beforePr'; fi
 if ! [[ -v afterVersionUpdateHook ]]; then afterVersionUpdateHook=''; fi

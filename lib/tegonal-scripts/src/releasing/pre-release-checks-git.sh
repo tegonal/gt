@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 # Checks that releasing a certain version (creating a corresponding git tag) makes sense: We check:
@@ -34,7 +34,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.12.0'
+export TEGONAL_SCRIPTS_VERSION='v5.0.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -45,7 +45,6 @@ sourceOnce "$dir_of_tegonal_scripts/utility/git-utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function preReleaseCheckGit() {
-	local versionParamPatternLong
 	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
 	local version branch
@@ -60,11 +59,47 @@ function preReleaseCheckGit() {
 	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 	exitIfArgIsNotVersion "$version" "$versionParamPatternLong"
 
-	exitIfGitHasChanges
+	local currentBranch
+	currentBranch="$(currentGitBranch)" || die "could not determine current git branch, see above"
+	local -r currentBranch
+
+	local -r releaseBranch="release/$version"
+
+	# if there are uncommitted changes and we are not on the branch on which we want to perform the release
+	# and neither on the release branch for the current version (e.g. we want to release main and are currently on
+	# release/$version -- could indicate a previous failed release attempt), then we exit with an error message ...
+	if [[ $currentBranch != "$branch" ]] && [[ $currentBranch != "$releaseBranch" ]]; then
+		exitIfGitHasChanges
+	else
+		git fetch || die "could not fetch latest changes from origin, cannot verify if we are up-to-date with remote or not"
+
+		if localGitIsBehind "$branch"; then
+			# ... we also exit if the local branch on which we want to perform the release is behind origin/$branch and we
+			# have uncommitted changes (then maybe the user forgot to commit and push the latest changes to origin/$branch)
+			# we don't check if we are ahead because maybe we were able to write the commit which we intended to tag
+			# but failed to tag as such (or failed afterwards during prepareNextDevCycle)
+			exitIfGitHasChanges
+		elif hasGitChanges; then
+			# ... otherwise we ask the user if we should reset the branch (still a destructive action but we ask)...
+			local resetBranch
+			if [[ $currentBranch == "$branch" ]]; then
+				resetBranch="origin/$branch"
+			else
+				resetBranch="$branch"
+			fi
+
+			git status || exit $?
+			if askYesOrNo "You have uncommitted changes (see above). Shall I execute \`git reset --hard %s\` for you (only do this if the changes are due to a previous release failure)?" "$resetBranch"; then
+				git reset --hard "$resetBranch" || die "git reset --hard %s failed, please reset manually or commit/stash before releasing" "$resetBranch"
+			else
+				exit 1
+			fi
+		fi
+	fi
 
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
-	if grep -q --fixed-strings "$version" <<<"$tags"; then
+	if grep -q --fixed-strings --line-regexp "$version" <<<"$tags"; then
 		logError "tag %s already exists locally, adjust version or delete it with git tag -d %s" "$version" "$version"
 		if hasRemoteTag "$version"; then
 			printf >&2 "Note, it also exists on the remote which means you also need to delete it there -- e.g. via git push origin :%s\n" "$version"
@@ -83,9 +118,6 @@ function preReleaseCheckGit() {
 		exit 1
 	fi
 
-	local currentBranch
-	currentBranch="$(currentGitBranch)" || die "could not determine current git branch, see above"
-	local -r currentBranch
 	if [[ $currentBranch != "$branch" ]]; then
 		logError "you need to be on the \033[0;36m%s\033[0m branch to release, check that you have merged all changes from your current branch \033[0;36m%s\033[0m." "$branch" "$currentBranch"
 		if askYesOrNo "Shall I switch to %s for you?" "$branch"; then

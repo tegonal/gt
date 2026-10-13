@@ -24,22 +24,14 @@ sourceOnce "$scriptsDir/prepare-next-dev-cycle.sh"
 sourceOnce "$scriptsDir/update-version-in-non-sh-files.sh"
 
 function release() {
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-files.params.source.sh" || traceAndDie "could not source release-files.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/release-files.params-definition.source.sh" || traceAndDie "could not source release-files.params-definition.source.sh"
+	parseArguments releaseFilesParams "" "$GT_VERSION" "$@" || return $?
+	source "$dir_of_tegonal_scripts/releasing/params/release-files.default-args.source.sh" || die "could not source release-files.default-args.source.sh"
+	exitIfNotAllArgumentsSet releaseFilesParams "" "$GT_VERSION"
 
-	local version
-	# shellcheck disable=SC2034   # they seem unused but are necessary in order that parseArguments doesn't create global readonly vars
-	local key branch nextVersion prepareOnly
-	# shellcheck disable=SC2034   # is passed by name to parseArguments
-	local -ra params=(
-		version "$versionParamPattern" "$versionParamDocu"
-		key "$keyParamPattern" "$keyParamDocu"
-		branch "$branchParamPattern" "$branchParamDocu"
-		nextVersion "$nextVersionParamPattern" "$nextVersionParamDocu"
-		prepareOnly "$prepareOnlyParamPattern" "$prepareOnlyParamDocu"
-	)
-	parseArguments params "" "$GT_VERSION" "$@" || return $?
-	# we don't check if all args are set (and neither set default values) as we currently don't use
-	# any param in here but just delegate to releaseFiles.
+	local -a releaseFilesTemplateArgs
+	addLocalVarMatchingParamNamesToArgs releaseFilesTemplateParams releaseFilesTemplateArgs
 
 	if ! wget -q -O- "https://api.github.com/repos/tegonal/gt/actions/workflows/installation.yml/runs?per_page=1&status=completed&branch=main" | grep '"conclusion": "success"' >/dev/null; then
 		die "installation workflow failed, you should not release ;-)"
@@ -54,8 +46,10 @@ function release() {
 	}
 
 	function release_afterVersionHook() {
-		local version projectsRootDir additionalPattern
+		source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.params.source.sh" || traceAndDie "could not source after-version-update-hook.params.source.sh"
+		source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.params-definition.source.sh" || traceAndDie "could not source after-version-update-hook.params-definition.source.sh"
 		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
+		exitIfNotAllArgumentsSet afterVersionHookParams "" "$GT_VERSION"
 
 		updateVersionInNonShFiles -v "$version" --project-dir "$projectsRootDir" --pattern "$additionalPattern"
 
@@ -78,12 +72,13 @@ function release() {
 
 	# similar as in prepare-next-dev-cycle.sh, you might need to update it there as well if you change something here
 	local -r additionalPattern="(GT_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
-	releaseFiles \
-		--project-dir "$projectDir" \
-		--pattern "$additionalPattern" \
-		"$@" \
-		--sign-fn findFilesToRelease \
-		--after-version-update-hook release_afterVersionHook
+
+	releaseFilesTemplate \
+		"$projectsRootDirParamPatternLong" "$projectDir" \
+		"$additionalPatternParamPatternLong" "$additionalPattern" \
+		"${releaseFilesTemplateArgs[@]}" \
+		"$findForSigningParamPatternLong" findScripts \
+		"$afterVersionUpdateHookParamPatternLong" release_afterVersionHook
 }
 
 ${__SOURCED__:+return}

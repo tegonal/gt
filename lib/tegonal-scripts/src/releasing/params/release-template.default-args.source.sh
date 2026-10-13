@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 # Defines default args for ...params-definition.source.sh
@@ -20,6 +20,6 @@
 	source "$dir_of_tegonal_scripts/releasing/params/prepare-next-dev-cycle-template.params.source.sh" || traceAndDie "could not source prepare-next-dev-cycle-template.params.source.sh"
 }
 if ! [[ -v branch ]]; then branch="main"; fi
-if ! [[ -v prepareOnly ]] || [[ $prepareOnly != "true" ]]; then prepareOnly=false; fi
+if ! [[ -v prepareOnly ]]; then prepareOnly=false; fi
 if ! [[ -v beforePrFn ]]; then beforePrFn='beforePr'; fi
 if ! [[ -v prepareNextDevCycleFn ]]; then prepareNextDevCycleFn='prepareNextDevCycle'; fi

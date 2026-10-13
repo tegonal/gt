@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v4.13.0
+#                                         Version: v5.0.0
 #
 #######  Description  #############
 #
@@ -151,14 +151,14 @@ function latestRemoteTag() {
 	if (($# > 2)); then
 		logError "Maximum 2 arguments can be passed to latestRemoteTag, given \033[0;36m%s\033[0m\n" "$#"
 		echo >&2 '1: remote   	(optional) the name of the remote, defaults to origin'
-		echo >&2 '2: tagFilter	(optional) a regex pattern (as supported by grep -E) which allows to filter available tags before determining the latest, defaults to .* (i.e. include all)'
+		echo >&2 '2: tagFilter	(optional) a regex pattern (as supported by grep -P) which allows to filter available tags before determining the latest, defaults to .* (i.e. include all)'
 		printStackTrace
 		exit 9
 	fi
 	local -r remote=${1:-"origin"}
 	local -r tagFilter=${2:-".*"}
 	local tag
-	tag=$(remoteTagsSorted "$remote" | grep -E "$tagFilter" | tail -n 1) || die "could not get remote tags sorted for remote %s, see above" "$remote"
+	tag=$(remoteTagsSorted "$remote" | grep -P "$tagFilter" | tail -n 1) || die "could not get remote tags sorted for remote %s, see above" "$remote"
 	if [[ -z $tag ]]; then
 		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet." "$remote"
 	fi

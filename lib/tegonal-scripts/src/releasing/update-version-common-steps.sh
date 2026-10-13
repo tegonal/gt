@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v4.12.0
+#                                         Version: v5.0.0
 #######  Description  #############
 #
 #  Carry out some common update version steps either during releasing or in preparing the next dev cycle (indicated via
@@ -56,7 +56,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v4.12.0'
+export TEGONAL_SCRIPTS_VERSION='v5.0.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -70,22 +70,12 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-README.sh"
 sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 
 function updateVersionCommonSteps() {
-	local forReleaseParamPatternLong versionParamPatternLong additionalPatternParamPatternLong
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/update-version-common-steps.params.source.sh" || traceAndDie "could not source update-version-common-steps.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/update-version-common-steps.params-definition.source.sh" || traceAndDie "could not source /update-version-common-steps.params-definition.source.sh"
+	parseArguments updateVersionCommonStepsParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
+	source "$dir_of_tegonal_scripts/releasing/params/update-version-common-steps.default-args.source.sh" || traceAndDie "could not source update-version-common-steps.default-args.source.sh"
+	exitIfNotAllArgumentsSet updateVersionCommonStepsParams "" "$TEGONAL_SCRIPTS_VERSION"
 
-	local forRelease version projectsRootDir additionalPattern
-	# shellcheck disable=SC2034   # is passed by name to parseArguments
-	local -ra params=(
-		forRelease "$forReleaseParamPattern" "$forReleaseParamDocu"
-		version "$versionParamPattern" "$versionParamDocu"
-		projectsRootDir "$projectsRootDirParamPattern" "$projectsRootDirParamDocu"
-		additionalPattern "$additionalPatternParamPattern" "$additionalPatternParamDocu"
-	)
-	parseArguments params "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
-
-	if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath "."); fi
-	if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
-	exitIfNotAllArgumentsSet params "" "$TEGONAL_SCRIPTS_VERSION"
 	exitIfArgIsNotBoolean "$forRelease" "$forReleaseParamPatternLong"
 
 	local -r projectsScriptsDir="$projectsRootDir/scripts"
@@ -103,7 +93,7 @@ function updateVersionCommonSteps() {
 		"$additionalPatternParamPatternLong" "$additionalPattern" \
 		-d "$projectsScriptsDir" || return $?
 
-	find "$projectsRootDir/.gt" -name "pull-hook.sh" -print0 |
+	find "$projectsRootDir/.gt" -name "pull-hook*.sh" -print0 |
 		while read -r -d $'\0' script; do
 			updateVersionScripts \
 				"$versionParamPatternLong" "$version" \
