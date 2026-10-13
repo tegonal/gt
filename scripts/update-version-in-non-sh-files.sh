@@ -23,9 +23,10 @@ sourceOnce "$dir_of_tegonal_scripts/releasing/update-version-scripts.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-args.sh"
 
 function updateVersionInNonShFiles() {
-	source "$dir_of_tegonal_scripts/releasing/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
-	local version projectsRootDir additionalPattern
+	source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.params.source.sh" || traceAndDie "could not source after-version-update-hook.params.source.sh"
+	source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.params-definition.source.sh" || traceAndDie "could not source after-version-update-hook.params-definition.source.sh"
 	parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
+	exitIfNotAllArgumentsSet afterVersionHookParams "" "$GT_VERSION"
 
 	local -ra additionalScripts=(
 		"$projectsRootDir/install.sh"
