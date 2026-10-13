@@ -77,7 +77,7 @@ function release() {
 		"$projectsRootDirParamPatternLong" "$projectDir" \
 		"$additionalPatternParamPatternLong" "$additionalPattern" \
 		"${releaseFilesTemplateArgs[@]}" \
-		"$findForSigningParamPatternLong" findScripts \
+		"$findForSigningParamPatternLong" findFilesToRelease \
 		"$afterVersionUpdateHookParamPatternLong" release_afterVersionHook
 }
 
