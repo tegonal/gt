@@ -19,6 +19,7 @@ fi
 source "$scriptsDir/dirs.source.sh"
 sourceOnce "$dir_of_tegonal_scripts/qa/run-shellspec-if-installed.sh"
 
+sourceOnce "$scriptsDir/check-help-callable.sh"
 sourceOnce "$scriptsDir/cleanup-on-push-to-main.sh"
 sourceOnce "$scriptsDir/run-shellcheck.sh"
 
@@ -27,19 +28,8 @@ function beforePr() {
 	# this way we still have fail fast behaviour and don't mask/hide a non-zero exit code
 	runShellspecIfInstalled --jobs 2 &&
 		customRunShellcheck &&
-		cleanupOnPushToMain
-
-	logInfo "checking if we can call --help of the release scripts"
-	local releaseScripts=(
-		'release.sh'
-		'prepare-next-dev-cycle.sh'
-		'update-version-in-non-sh-files.sh'
-	)
-	for script in "${releaseScripts[@]}"; do
-		local status
-		"$scriptsDir/release.sh" --help >/dev/null || status=$?
-		[[ $status -eq 99 ]] || die "looks like calling %s failed unexpectedly, see above" "$script"
-	done
+		cleanupOnPushToMain &&
+		customCheckHelpCallable
 }
 
 ${__SOURCED__:+return}
