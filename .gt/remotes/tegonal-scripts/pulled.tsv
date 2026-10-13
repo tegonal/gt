@@ -1,7 +1,5 @@
 #@ Version: 1.3.0
 tag	file	relativeTarget	tagFilter	hasPlaceholder	sha512
-v4.13.0	src/releasing/prepare-files-next-dev-cycle.sh	../lib/tegonal-scripts/src/releasing/prepare-files-next-dev-cycle.sh	.*	false	5c2130d7838bb373649d8bc6f15110ad141cd8fcb0ffceee8f5d8ba770851fa6e2eaff1b539226f82810b1b11e8547143f9fbccb760f7988a83a3b94c7b07653
-v4.13.0	src/releasing/release-files.sh	../lib/tegonal-scripts/src/releasing/release-files.sh	.*	false	305a9bd54a0463f3ccada4d27f292b9bd5e298e2c1f2a94c3218f82b01cf96c208f91c2d792e8e88a6af15862ec4a955f24468af45483d353aacc89ab4c4ae72
 v5.0.0	src/utility	../lib/tegonal-scripts/src/utility	.*	false	is_a_tracking_directory
 v5.0.0	src/utility/array-utils.sh	../lib/tegonal-scripts/src/utility/array-utils.sh	.*	false	c7d779990cfc3ae903d0a092123cea153ba9e653275a715fc44f698a6825b6e2062cc838fd71a2e3a7260b844c99b1b0a9ae784f84d248b828dfa8cd0a55a18d
 v5.0.0	src/utility/ask.sh	../lib/tegonal-scripts/src/utility/ask.sh	.*	false	11c5000bf6bbf05b001a9c626acb1c8564a400e692bdd13aca31f934cc9f65c29958e3e5028caf85f361b39f1c2d8bbcb81269dddc8a0964816f935c396f0781
