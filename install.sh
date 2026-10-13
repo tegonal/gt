@@ -211,6 +211,10 @@ function install() {
 	fi
 	logSuccess "installation completed, %s %s set up in %s" "$projectName" "$tag" "$installDir"
 
+	# if you change the name here, then you need to change the name in src/utils.sh as well
+	local -r lastGtUpdateCheckFile="$installDir/src/last-update-check.txt"
+	date +"%Y-%m-%d" >"$lastGtUpdateCheckFile"
+
 	local fpath_output
 	fpath_output=$(zsh -c 'echo $fpath' 2>/dev/null) || echo ""
 
