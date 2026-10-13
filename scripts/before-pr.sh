@@ -18,7 +18,6 @@ if ! [[ -v scriptsDir ]]; then
 fi
 source "$scriptsDir/dirs.source.sh"
 sourceOnce "$dir_of_tegonal_scripts/qa/run-shellspec-if-installed.sh"
-
 sourceOnce "$scriptsDir/check-help-callable.sh"
 sourceOnce "$scriptsDir/cleanup-on-push-to-main.sh"
 sourceOnce "$scriptsDir/run-shellcheck.sh"

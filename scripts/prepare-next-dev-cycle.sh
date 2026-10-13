@@ -38,7 +38,10 @@ function prepareNextDevCycle() {
 		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
 		exitIfNotAllArgumentsSet afterVersionHookParams "" "$GT_VERSION"
 
-		updateVersionInNonShFiles -v "$version-SNAPSHOT" --project-dir "$projectsRootDir" --pattern "$additionalPattern"
+		local -a updateVersionInNonShFilesArgs
+		addLocalVarMatchingParamNamesToArgs afterVersionHookParams updateVersionInNonShFilesArgs
+
+		updateVersionInNonShFiles "${updateVersionInNonShFilesArgs[@]}" -v "$version-SNAPSHOT"
 	}
 
 	# similar as in release.sh, you might need to update it there as well if you change something here

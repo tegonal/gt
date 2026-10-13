@@ -51,7 +51,10 @@ function release() {
 		parseArguments afterVersionHookParams "" "$GT_VERSION" "$@" || return $?
 		exitIfNotAllArgumentsSet afterVersionHookParams "" "$GT_VERSION"
 
-		updateVersionInNonShFiles -v "$version" --project-dir "$projectsRootDir" --pattern "$additionalPattern"
+		local -a updateVersionInNonShFilesArgs
+		addLocalVarMatchingParamNamesToArgs afterVersionHookParams updateVersionInNonShFilesArgs
+
+		updateVersionInNonShFiles "${updateVersionInNonShFilesArgs[@]}"
 
 		# same as in pull-hook.sh
 		local -r githubUrl="https://github.com/tegonal/gt"
