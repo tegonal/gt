@@ -444,6 +444,7 @@ function doIfLastCheckMoreThanDaysAgo() {
 }
 
 function gt_checkForSelfUpdate() {
+	# if you change the name here, then you need to change the name in install.sh as well
 	local -r lastGtUpdateCheckFile="$dir_of_gt/last-update-check.txt"
 
 	# shellcheck disable=SC2329 # gt_checkForSelfUpdate_callback is called by name
