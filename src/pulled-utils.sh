@@ -28,11 +28,11 @@ sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
 
 function pulledTsvEntry() {
-	local tag file relativeTarget tagFilter hasPlaceholder sha512
+	local tag file relativeTarget tagFilter hasPlaceholder excludeFilesMatching sha512
 	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-	local -ra params=(tag file relativeTarget tagFilter hasPlaceholder sha512)
+	local -ra params=(tag file relativeTarget tagFilter hasPlaceholder excludeFilesMatching sha512)
 	parseFnArgs params "$@"
-	printf "%s\t" "$tag" "$file" "$relativeTarget" "$tagFilter" "$hasPlaceholder"
+	printf "%s\t" "$tag" "$file" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$excludeFilesMatching"
 	printf "%s\n" "$sha512"
 }
 
@@ -102,7 +102,10 @@ function migratePulledTsvFormat() {
 				IFS=$'\t' read -r entryTag entryFile entryRelativePath tagFiler entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
 				local hasPlaceholder
 				hasPlaceholder=$(hasGtPlaceholder "$workingDirAbsolute/$entryRelativePath")
-				pulledTsvEntry "$entryTag" "$entryFile" "$entryRelativePath" "$tagFiler" "$hasPlaceholder" "$entrySha" >>"$pulledTsv.new"
+				(
+					printf "%s\t" "$entryTag" "$entryFile" "$entryRelativePath" "$tagFiler" "$hasPlaceholder"
+					printf "%s\n" "$entrySha"
+				) >>"$pulledTsv.new"
 			done
 		}
 		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_1_0_to_1_2_0 "$remote"
@@ -114,6 +117,28 @@ function migratePulledTsvFormat() {
 		# supports tracking directories.
 		writeVersionPragma "1.3.0"
 		tail -n +2 "$pulledTsv" >>"$pulledTsv.new" || die "could not tail %s" "$pulledTsv"
+		switchNewPulledTsv
+		migratePulledTsvFormat "$workingDirAbsolute" "$pulledTsv" "1.3.0" "$toVersion"
+	elif [[ $fromVersion == "1.3.0" ]]; then
+		# add excludeFilesMatching
+		logMigrationAvailable
+		writeVersionPragma "1.4.0"
+		echo $'tag\tfile\trelativeTarget\ttagFilter\thasPlaceholder\texcludeFilesMatching\tsha512' >>"$pulledTsv.new"
+
+		# shellcheck disable=SC2329		# is called by name
+		function migrate_pulledTsv_1_3_0_to_1_4_0() {
+			# start from line 3, i.e. skip the version pragma + header in pulled.tsv
+			eval "tail -n +3 \"$pulledTsv\" >&$migrationFileDescriptorOut" || die "could not tail %s" "$pulledTsv"
+			while read -u "$migrationFileDescriptorIn" -r entry; do
+				local entryTag entryFile entryRelativePath tagFiler hasPlaceholder entrySha
+				IFS=$'\t' read -r entryTag entryFile entryRelativePath tagFiler hasPlaceholder entrySha <<<"$entry" || die "could not set variables for entry:\n%s" "$entry"
+				(
+					printf "%s\t" "$entryTag" "$entryFile" "$entryRelativePath" "$tagFiler" "$hasPlaceholder" "^$"
+					printf "%s\n" "$entrySha"
+				) >>"$pulledTsv.new"
+			done
+		}
+		withCustomOutputInput "$migrationFileDescriptorOut" "$migrationFileDescriptorIn" migrate_pulledTsv_1_3_0_to_1_4_0 "$remote"
 		switchNewPulledTsv
 	else
 		die "no automatic migration available from \033[0;36m%s\033[0m to version \033[0;36m%s\033[0m\nIn case you updated gt, then check the release notes for migration hints:\n%s" "$fromVersion" "$toVersion" "https://github.com/tegonal/gt/releases/tag/$GT_VERSION"
@@ -154,7 +179,7 @@ function exitIfHeaderOfPulledTsvIsWrong() {
 }
 
 function setEntryVariables() {
-	local -ra variableNames=(entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entrySha)
+	local -ra variableNames=(entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entryExcludeFilesMatching entrySha)
 	exitIfVariablesNotDeclared "${variableNames[@]}"
 
 	# shellcheck disable=SC2034
@@ -201,11 +226,11 @@ function readPulledTsv() {
 	# start from line 3, i.e. skip the version pragma + header in pulled.tsv
 	eval "tail -n +3 \"$pulledTsv\" >&$fileDescriptorOut" || traceAndDie "could not tail %s" "$pulledTsv"
 	while read -u "$fileDescriptorIn" -r entry; do
-		local entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entrySha
+		local entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entryExcludeFilesMatching entrySha
 		setEntryVariables "$entry"
 		local localAbsolutePath
 		localAbsolutePath=$(readlink -m "$workingDirAbsolute/$entryRelativePath") || returnDying "could not determine local absolute path of \033[0;36m%s\033[0m of remote %s" "$entryFile" "$remote" || return $?
-		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$localAbsolutePath" "$entryTagFilter" "$entryHasPlaceholder" "$entrySha" || return $?
+		"$readPulledTsv_callback" "$entryTag" "$entryFile" "$entryRelativePath" "$localAbsolutePath" "$entryTagFilter" "$entryHasPlaceholder" "$entryExcludeFilesMatching" "$entrySha" || return $?
 	done
 }
 

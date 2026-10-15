@@ -14,6 +14,12 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 # we will again pull the directory i.e. all files in it during a gt update
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true
 
+# pull the directory src/utility/ from remote tegonal-scripts
+# in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. However, don't pull
+# files in the folder which match the given pattern (as used by grep -P) -- in
+# this particular case we don't want to pull src/utility/gpg-utils.sh and src/utility/secret-utils.sh
+gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true --exclude-files-matching '(gpg|secret)-utils.sh'
+
 # pull the file src/utility/ask.sh from remote tegonal-scripts
 # in the latest version and put into ./scripts/ instead of the default directory of this remote
 # chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/

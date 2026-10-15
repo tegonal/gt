@@ -352,9 +352,9 @@ function gt_remote_remove() {
 		local -i numberOfDeletedFiles=0
 
 		function gt_remote_remove_readCallback() {
-			local _entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entrySha512
+			local _entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entryExcludeFilesMatching _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entrySha512)
+			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entryExcludeFilesMatching _entrySha512)
 			parseFnArgs params "$@"
 			rm "$entryAbsolutePath"
 			((++numberOfDeletedFiles))

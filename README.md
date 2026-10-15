@@ -438,6 +438,7 @@ Parameters:
 -p|--path                    path in remote repository which shall be pulled (file or directory)
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
 --track-dir                  (optional) if set to true, then --path needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false
+--exclude-files-matching     (optional) can only be used if a directory is pulled and defines which files shall be excluded via the given regex (as supported by grep -P) -- default: ^$
 --chop-path                  (optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory
 --target-file-name           (optional) if you want to use a different file name than the one specified in the remote -- default: name as specified in the remote
 --tag-filter                 (optional) define a regexp pattern (as supported by grep -P) to filter available tags when determining the latest tag
@@ -495,6 +496,12 @@ gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/
 # in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. Tracking means
 # we will again pull the directory i.e. all files in it during a gt update
 gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true
+
+# pull the directory src/utility/ from remote tegonal-scripts
+# in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. However, don't pull
+# files in the folder which match the given pattern (as used by grep -P) -- in
+# this particular case we don't want to pull src/utility/gpg-utils.sh and src/utility/secret-utils.sh
+gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true --exclude-files-matching '(gpg|secret)-utils.sh'
 
 # pull the file src/utility/ask.sh from remote tegonal-scripts
 # in the latest version and put into ./scripts/ instead of the default directory of this remote
