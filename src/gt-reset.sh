@@ -116,7 +116,7 @@ function gt_reset() {
 
 		local unsecureArgs
 		if [[ -f $pullArgsFile ]]; then
-			unsecureArgs=$(grep -E "(--unsecure|--unsecure-no-verification)\s*true" "$pullArgsFile")
+			unsecureArgs=$(grep -E "(--unsecure|--unsecure-no-verification)\s*true" -- "$pullArgsFile")
 		else
 			unsecureArgs=""
 		fi

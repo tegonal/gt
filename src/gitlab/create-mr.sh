@@ -94,7 +94,7 @@ function commitAndCreateMrOnChanges() {
 			"${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests"
 	) || die "could not send the POST request for creating a merge request"
 
-	if [[ $statusCode = 409 ]] && grep "open merge request" "$curlOutputFile"; then
+	if [[ $statusCode = 409 ]] && grep "open merge request" -- "$curlOutputFile"; then
 		echo "There is already a merge request, no need to create another (we force pushed, so the MR is updated)"
 	elif [[ "$statusCode" != 2* ]]; then
 		printf >&2 "curl return http status code %s, expected 2xx. Message body:\n" "$statusCode"

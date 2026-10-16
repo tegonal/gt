@@ -200,12 +200,21 @@ function gt_pull_parse_args() {
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
-	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$tag" "$tagParamPatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$path" "$pathParamPatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$pullDir" "$pullDirParamPatternLong"
 	exitIfArgIsNotBoolean "$trackDir" "$trackDirParamPatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$excludeFilesMatching" "$excludeFilesMatchingParamPatternLong"
+	exitIfNotValidGrepPRegex "$excludeFilesMatching" "$excludeFilesMatchingParamPatternLong"
 	exitIfArgIsNotBoolean "$chopPath" "$chopPathParamPatternLong"
+	exitIfContainsTabNewlineOrCarriageReturn "$targetFileName" "$targetFileNamePatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$tagFilter" "$tagFilterParamPatternLong"
+	exitIfNotValidGrepPRegex "$tagFilter" "$tagFilterParamPatternLong"
 	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
 	exitIfArgIsNotBoolean "$unsecure" "$unsecureParamPatternLong"
 	exitIfArgIsNotBoolean "$forceNoVerification" "$unsecureNoVerificationParamPattern"
+	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+
 	if [[ $tagFilter == *$'\t'* ]]; then
 		die "tabs are not allowed to be used for %s, given: %s" "$tagFilterParamPatternLong" "$tagFilter"
 	fi
@@ -466,6 +475,8 @@ function gt_pull_internal_without_arg_checks() {
 
 	function gt_pull_moveFile() {
 		local -r repoFile=$1
+		exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$repoFile" "repoFile"
+
 		local repoFileIsNotTrackingPath pathType
 		if [[ $trackDir == false || $repoFile != "$path" ]]; then
 			repoFileIsNotTrackingPath=true
@@ -547,7 +558,7 @@ function gt_pull_internal_without_arg_checks() {
 				printf "Won't pull the %s, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pathType" "$pulledTsv"
 				rm "$source"
 				return
-			elif ! grep --line-regexp --fixed-strings "$entry" "$pulledTsv" >/dev/null; then
+			elif ! grep --line-regexp --fixed-strings -e "$entry" -- "$pulledTsv" >/dev/null; then
 				local currentLocation newLocation
 				currentLocation=$(realpath --relative-to="$currentDir" "$workingDirAbsolute/$entryRelativePath" || echo "$workingDirAbsolute/$entryRelativePath")
 				newLocation=$(realpath --relative-to="$currentDir" "$pullDirAbsolute/$targetFile" || echo "$pullDirAbsolute/$targetFile")
@@ -607,7 +618,7 @@ function gt_pull_internal_without_arg_checks() {
 		local repoFileRelative
 		repoFileRelative="${repoFile#"$path"}"
 		repoFileRelative="${repoFileRelative#/}"
-		if [[ $excludeFilesMatching != '^$' ]] && grep -P "$excludeFilesMatching" <<<"$repoFileRelative" >/dev/null; then
+		if [[ $excludeFilesMatching != '^$' ]] && grep -P -e "$excludeFilesMatching" <<<"$repoFileRelative" >/dev/null; then
 			logInfo "skipping %s as it matches the defined exclusion pattern %s for path %s" "$repoFile" "$excludeFilesMatching" "$path"
 			continue
 		fi

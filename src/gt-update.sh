@@ -183,7 +183,7 @@ function gt_update() {
 			local tagToPull
 			if [[ -n $tag ]]; then
 				tagToPull="$tag"
-				if ! grep -P "$entryTagFilter" >/dev/null <<<"$tagToPull"; then
+				if ! grep -P -e "$entryTagFilter" >/dev/null <<<"$tagToPull"; then
 					# if the given tag does not match the entryTagFilter for the specific file, then we ignore the entry
 					((++skipped))
 					return

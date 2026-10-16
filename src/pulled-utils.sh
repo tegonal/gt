@@ -26,6 +26,7 @@ source "$dir_of_gt/dirsSrc.source.sh"
 sourceOnce "$dir_of_gt/utils.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/checks.sh"
 sourceOnce "$dir_of_tegonal_scripts/utility/parse-fn-args.sh"
+sourceOnce "$dir_of_tegonal_scripts/utility/string-utils.sh"
 
 function pulledTsvEntry() {
 	local tag file relativeTarget tagFilter hasPlaceholder excludeFilesMatching sha512
@@ -191,9 +192,8 @@ function grepPulledEntryByFile() {
 	local -r file=$2
 	shift 2 || traceAndDie "could not shift by 2"
 	local escapedFile
-	# shellcheck disable=SC2016	# $ in regex is not a variable, all good
-	escapedFile="$(printf '%s\n' "$file" | sed -e 's/[.[\*^$()+?{}|\\]/\\&/g')"
-	grep -E "^[^	]+	$escapedFile	" "$@" "$pulledTsv"
+	escapedFile="$(escapeRegex "$file")"
+	grep -E "^[^  ]+ $escapedFile " "$@" -- "$pulledTsv"
 }
 
 function replacePulledEntry() {
@@ -237,7 +237,7 @@ function readPulledTsv() {
 function hasGtPlaceholder() {
 	local -r file=$1
 	shift 1 || traceAndDie "could not shift by 1"
-	grep -q "gt-placeholder" "$file" && echo "true" || echo "false"
+	grep -q "gt-placeholder" -- "$file" && echo "true" || echo "false"
 }
 
 function replaceGtPlaceholdersDuringUpdate() {
