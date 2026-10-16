@@ -123,6 +123,8 @@ function gt_re_pull() {
 		local repo
 		source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
+		# we never track a directory during re-pull an neither exclude files (the ones which have been excluded during
+		# `gt pull` are not in the pulled.tsv and thus won't be re-pulled)
 		local -a gt_pull_parsed_args
 		gt_pull_parse_args gt_pull_parsed_args "$currentDir" \
 			"$workingDirParamPatternLong" "$workingDirAbsolute" \
@@ -137,10 +139,10 @@ function gt_re_pull() {
 
 		# shellcheck disable=SC2329 # gt_re_pull_rePullInternal_callback is called by name
 		function gt_re_pull_rePullInternal_callback() {
-			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder entrySha512
+			local entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entryHasPlaceholder _entryExcludeFilesMatching entrySha512
 
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _hasPlaceholder entrySha512)
+			local -ra params=(entryTag entryFile entryRelativePath entryAbsolutePath entryTagFilter _entryHasPlaceholder _entryExcludeFilesMatching entrySha512)
 			parseFnArgs params "$@"
 
 			local entryTargetFileName
@@ -156,8 +158,8 @@ function gt_re_pull() {
 				gt_pull_parsed_args[2]=$entryTag
 				gt_pull_parsed_args[3]=$entryFile
 				gt_pull_parsed_args[4]=$parentDir
-				gt_pull_parsed_args[7]=$entryTargetFileName
-				gt_pull_parsed_args[8]=$entryTagFilter
+				gt_pull_parsed_args[8]=$entryTargetFileName
+				gt_pull_parsed_args[9]=$entryTagFilter
 
 				if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 					((++pulled))

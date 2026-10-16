@@ -111,7 +111,7 @@ function install() {
 	shift 3 || die "could not shift by 3"
 
 	local -r versionRegex="^(v[0-9]+)\.([0-9]+)\.[0-9]+(-RC[0-9]+)?$"
-	if ! grep -Eq "$versionRegex" >/dev/null <<<"$tag"; then
+	if ! grep -Eq -e "$versionRegex" >/dev/null <<<"$tag"; then
 		die "tag needs to follow the regex %s -- given %s" "$versionRegex" "$tag"
 	fi
 

@@ -29,6 +29,12 @@
 #    # we will again pull the directory i.e. all files in it during a gt update
 #    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true
 #
+#    # pull the directory src/utility/ from remote tegonal-scripts
+#    # in version v0.1.0 (i.e. tag v0.1.0 is used) and track it. However, don't pull
+#    # files in the folder which match the given pattern (as used by grep -P) -- in
+#    # this particular case we don't want to pull src/utility/gpg-utils.sh and src/utility/secret-utils.sh
+#    gt pull -r tegonal-scripts -t v0.1.0 -p src/utility/ --track-dir true --exclude-files-matching '(gpg|secret)-utils.sh'
+#
 #    # pull the file src/utility/ask.sh from remote tegonal-scripts
 #    # in the latest version and put into ./scripts/ instead of the default directory of this remote
 #    # chop the repository path (i.e. src/utility), i.e. put ask.sh directly into ./scripts/
@@ -110,7 +116,7 @@ function gt_pull_parse_args() {
 
 	source "$dir_of_gt/common-constants.source.sh" || traceAndDie "could not source common-constants.source.sh"
 
-	local remote tag path pullDir trackDir chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification workingDir
+	local remote tag path pullDir trackDir excludeFilesMatching chopPath targetFileName tagFilter autoTrust unsecure forceNoVerification workingDir
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'name of the remote repository'
@@ -118,6 +124,7 @@ function gt_pull_parse_args() {
 		path "$pathParamPattern" 'path in remote repository which shall be pulled (file or directory)'
 		pullDir "$pullDirParamPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		trackDir "$trackDirParamPattern" "(optional) if set to true, then $pathParamPatternLong needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false"
+		excludeFilesMatching "$excludeFilesMatchingParamPattern" "(optional) can only be used if a directory is pulled and defines which files shall be excluded via the given regex (as supported by grep -P) -- default: ^$"
 		chopPath "$chopPathParamPattern" '(optional) if set to true, then files are put into the pull directory without the path specified. For files this means they are put directly into the pull directory'
 		targetFileName "$targetFileNamePattern" '(optional) if you want to use a different file name than the one specified in the remote -- default: name as specified in the remote'
 		tagFilter "$tagFilterParamPattern" "$tagFilterParamDocu"
@@ -172,6 +179,7 @@ function gt_pull_parse_args() {
 	parseArguments params "$examples" "$GT_VERSION" "${args[@]}" || return $?
 
 	if ! [[ -v trackDir ]]; then trackDir=false; fi
+	if ! [[ -v excludeFilesMatching ]]; then excludeFilesMatching='^$'; fi
 	if ! [[ -v chopPath ]]; then chopPath=false; fi
 	if ! [[ -v autoTrust ]]; then autoTrust=false; fi
 	if ! [[ -v forceNoVerification ]]; then forceNoVerification=false; fi
@@ -192,12 +200,27 @@ function gt_pull_parse_args() {
 	fi
 	exitIfNotAllArgumentsSet params "$examples" "$GT_VERSION"
 
-	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$tag" "$tagParamPatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$path" "$pathParamPatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$pullDir" "$pullDirParamPatternLong"
 	exitIfArgIsNotBoolean "$trackDir" "$trackDirParamPatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$excludeFilesMatching" "$excludeFilesMatchingParamPatternLong"
+	exitIfNotValidGrepPRegex "$excludeFilesMatching" "$excludeFilesMatchingParamPatternLong"
 	exitIfArgIsNotBoolean "$chopPath" "$chopPathParamPatternLong"
+	exitIfContainsTabNewlineOrCarriageReturn "$targetFileName" "$targetFileNamePatternLong"
+	exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$tagFilter" "$tagFilterParamPatternLong"
+	exitIfNotValidGrepPRegex "$tagFilter" "$tagFilterParamPatternLong"
 	exitIfArgIsNotBoolean "$autoTrust" "$autoTrustParamPatternLong"
 	exitIfArgIsNotBoolean "$unsecure" "$unsecureParamPatternLong"
 	exitIfArgIsNotBoolean "$forceNoVerification" "$unsecureNoVerificationParamPattern"
+	exitIfRemoteDirDoesNotExist "$workingDir" "$remote"
+
+	if [[ $tagFilter == *$'\t'* ]]; then
+		die "tabs are not allowed to be used for %s, given: %s" "$tagFilterParamPatternLong" "$tagFilter"
+	fi
+	if [[ $excludeFilesMatching == *$'\t'* ]]; then
+		die "tabs are not allowed to be used for %s, given: %s" "$excludeFilesMatchingParamPatternLong" "$excludeFilesMatching"
+	fi
 
 	local -r dot_segment_re='(^|/)\.{1,2}(/|$)'
 
@@ -328,6 +351,7 @@ function gt_pull_parse_args() {
 		"${path%/}"
 		"$pullDirAbsolute"
 		"$trackDir"
+		"$excludeFilesMatching"
 		"$chopPath"
 		"$targetFileName"
 		"$tagFilter"
@@ -350,14 +374,15 @@ function gt_pull_internal_without_arg_checks() {
 		path=${6%/} \
 		pullDirAbsolute=$7 \
 		trackDir=$8 \
-		chopPath=$9 \
-		targetFileName=${10} \
-		tagFilter=${11} \
-		autoTrust=${12} \
-		unsecure=${13} \
-		forceNoVerification=${14} \
-		doVerification=${15}
-	local -r maxParams=15
+		excludeFilesMatching=$9 \
+		chopPath=${10} \
+		targetFileName=${11} \
+		tagFilter=${12} \
+		autoTrust=${13} \
+		unsecure=${14} \
+		forceNoVerification=${15} \
+		doVerification=${16}
+	local -r maxParams=16
 	shift "$maxParams" || traceAndDie "was not able to shift by %s" "$maxParams"
 	if (($# != 0)); then
 		traceAndDie "%s arguments expected, given: $(($# + maxParams))" "$maxParams"
@@ -384,8 +409,17 @@ function gt_pull_internal_without_arg_checks() {
 		die "pulling symlinks is not allowed for now (create a feature request if you need this), found \033[0;36m%s\033[0m" "$path"
 	fi
 
-	if [[ -d "$repo/$path" ]] && [[ $targetFileName != "" ]]; then
-		returnDying "you cannot specify %s when you pull a directory -- what you can do though:\n1. pull the directory\n2. rename the file(s) manually\n3. adjust the entries in %s\n\nNext time you gt re-pull or gt update the rename will be taken into account" "$targetFileNamePatternLong" "$pulledTsv" || return $?
+	if [[ -d "$repo/$path" ]]; then
+		if [[ $targetFileName != "" ]]; then
+			returnDying "you cannot specify %s (was %s) when you pull a directory. Path was \033[0;36m%s\033[0m\nWhat you can do though:\n1. pull the directory\n2. rename the file(s) manually\n3. adjust the entries in %s\n\nNext time you gt re-pull or gt update the rename will be taken into account" "$targetFileNamePatternLong" "$targetFileName" "$path" "$pulledTsv" || return $?
+		fi
+	else
+		if [[ $trackDir == true ]]; then
+			returnDying "you cannot set %s to true when you pull a file. Path was \033[0;36m%s\033[0m" "$trackDirParamPatternLong" "$path" || return $?
+		fi
+		if [[ $excludeFilesMatching != '^$' ]]; then
+			returnDying "you cannot specify %s (was %s) when you pull a file. Path was \033[0;36m%s\033[0m" "$excludeFilesMatchingParamPatternLong" "$excludeFilesMatching" "$path" || return $?
+		fi
 	fi
 
 	function gt_pull_mentionUnsecure() {
@@ -441,6 +475,8 @@ function gt_pull_internal_without_arg_checks() {
 
 	function gt_pull_moveFile() {
 		local -r repoFile=$1
+		exitIfEmptyOrContainsTabNewlineOrCarriageReturn "$repoFile" "repoFile"
+
 		local repoFileIsNotTrackingPath pathType
 		if [[ $trackDir == false || $repoFile != "$path" ]]; then
 			repoFileIsNotTrackingPath=true
@@ -484,27 +520,30 @@ function gt_pull_internal_without_arg_checks() {
 
 		local source="$repo/$repoFile"
 
-		local relativeTarget hasPlaceholder sha entry currentEntry
+		local relativeTarget hasPlaceholder excludeFilesMatchingForTsv sha entry currentEntry
 		relativeTarget=$(realpath --relative-to="$workingDirAbsolute" "$absoluteTarget") || returnDying "could not determine relativeTarget for \033[0;36m%s\033[0m" "$absoluteTarget" || return $?
 		if [[ $repoFileIsNotTrackingPath == true ]]; then
-			sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha512 for \033[0;36m%s\033[0m" "$source" || return $?
 			hasPlaceholder=$(hasGtPlaceholder "$source")
+			excludeFilesMatchingForTsv="^$"
+			sha=$(sha512sum "$source" | cut -d " " -f 1) || returnDying "could not calculate sha512 for \033[0;36m%s\033[0m" "$source" || return $?
 		else
-			sha="$directorySha"
 			hasPlaceholder=false
+			excludeFilesMatchingForTsv=$excludeFilesMatching
+			sha="$directorySha"
 		fi
-		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
+
+		entry=$(pulledTsvEntry "$tagToPull" "$repoFile" "$relativeTarget" "$tagFilter" "$hasPlaceholder" "$excludeFilesMatchingForTsv" "$sha") || returnDying "could not create pulled.tsv entry for tag %s and repoFile \033[0;36m%s\033[0m" "$tagToPull" "$repoFile" || return $?
 		# perfectly fine if there is no entry, we return an empty string in this case for which we check further below
 		currentEntry=$(grepPulledEntryByFile "$pulledTsv" "$repoFile" || echo "")
 		local -r relativeTarget hasPlaceholder sha entry currentEntry
 
-		local entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entrySha
+		local entryTag entryFile entryRelativePath entryTagFilter entryHasPlaceholder entryExcludeFilesMatching entrySha
 		setEntryVariables "$currentEntry" || return $?
 		local -r entryTag entryRelativePath entrySha
 
 		# they are currently unused but we need to define it, otherwise setEntryVariables would write into global variables
 		# shellcheck disable=SC2034
-		local -r entryFile entryTagFilter
+		local -r entryFile entryTagFilter entryExcludeFilesMatching
 
 		if [[ $currentEntry == "" ]]; then
 			echo "$entry" >>"$pulledTsv" || die "was not able to append the entry for file %s to \033[0;36m%s\033[0m" "$repoFile" "$pulledTsv"
@@ -519,7 +558,7 @@ function gt_pull_internal_without_arg_checks() {
 				printf "Won't pull the %s, remove the entry from %s and \`gt pull\` if you want to pull it nonetheless\n" "$pathType" "$pulledTsv"
 				rm "$source"
 				return
-			elif ! grep --line-regexp --fixed-strings "$entry" "$pulledTsv" >/dev/null; then
+			elif ! grep --line-regexp --fixed-strings -e "$entry" -- "$pulledTsv" >/dev/null; then
 				local currentLocation newLocation
 				currentLocation=$(realpath --relative-to="$currentDir" "$workingDirAbsolute/$entryRelativePath" || echo "$workingDirAbsolute/$entryRelativePath")
 				newLocation=$(realpath --relative-to="$currentDir" "$pullDirAbsolute/$targetFile" || echo "$pullDirAbsolute/$targetFile")
@@ -564,10 +603,6 @@ function gt_pull_internal_without_arg_checks() {
 	}
 
 	if [[ $trackDir == true ]]; then
-		if ! [[ -d "$repo/$path" ]]; then
-			die "trackDir was set to true but the path \033[0;36m%s\033[0m is not a directory" "$path"
-		fi
-
 		# trackDir specified, write dir as such into pulled.tsv
 		gt_pull_moveFile "$path" || return $?
 	fi
@@ -580,6 +615,14 @@ function gt_pull_internal_without_arg_checks() {
 
 		local repoFile
 		repoFile=$(realpath --relative-to="$repo" "$absoluteFile")
+		local repoFileRelative
+		repoFileRelative="${repoFile#"$path"}"
+		repoFileRelative="${repoFileRelative#/}"
+		if [[ $excludeFilesMatching != '^$' ]] && grep -P -e "$excludeFilesMatching" <<<"$repoFileRelative" >/dev/null; then
+			logInfo "skipping %s as it matches the defined exclusion pattern %s for path %s" "$repoFile" "$excludeFilesMatching" "$path"
+			continue
+		fi
+
 		local sigFile="$absoluteFile.$sigExtension"
 		if [[ $doVerification == true && -f $sigFile ]]; then
 			printf "verifying \033[0;36m%s\033[0m from remote %s\n" "$repoFile" "$remote"

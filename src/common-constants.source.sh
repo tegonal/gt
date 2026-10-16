@@ -42,10 +42,10 @@ local -r unsecureParamPattern="$unsecureParamPatternLong"
 local -r unsecureNoVerificationParamPatternLong='--unsecure-no-verification'
 local -r unsecureNoVerificationParamPattern="$unsecureNoVerificationParamPatternLong"
 
-local -r pulledTsvLatestVersion="1.3.0"
+local -r pulledTsvLatestVersion="1.4.0"
 local -r pulledTsvLatestVersionPragmaWithoutVersion='#@ Version: '
 local -r pulledTsvLatestVersionPragma="${pulledTsvLatestVersionPragmaWithoutVersion}$pulledTsvLatestVersion"
-local -r pulledTsvHeader=$'tag\tfile\trelativeTarget\ttagFilter\thasPlaceholder\tsha512'
+local -r pulledTsvHeader=$'tag\tfile\trelativeTarget\ttagFilter\thasPlaceholder\texcludeFilesMatching\tsha512'
 
 local -r pathParamPatternLong='--path'
 local -r pathParamPattern="-p|$pathParamPatternLong"
@@ -63,6 +63,9 @@ local -r gpgOnlyParamPattern="$gpgOnlyParamPatternLong"
 
 local -r listParamPatternLong="--list"
 local -r listParamPattern="$listParamPatternLong"
+
+local -r excludeFilesMatchingParamPatternLong='--exclude-files-matching'
+local -r excludeFilesMatchingParamPattern="$excludeFilesMatchingParamPatternLong"
 
 local -r trackDirParamPatternLong='--track-dir'
 local -r trackDirParamPattern="$trackDirParamPatternLong"

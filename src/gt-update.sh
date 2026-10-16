@@ -162,9 +162,9 @@ function gt_update() {
 
 		# shellcheck disable=SC2329 # is invoked just by a function which is itself called by name
 		function gt_update_rePullInternal_callback_logic() {
-			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512 onlyTrackingDir
+			local entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasPlaceholder entryExcludeFilesMatching entrySha512 onlyTrackingDir
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasplaceholder entrySha512 onlyTrackingDir)
+			local -ra params=(entryTag entryFile entryRelativePath localAbsolutePath entryTagFilter _entryHasPlaceholder entryExcludeFilesMatching entrySha512 onlyTrackingDir)
 			parseFnArgs params "$@"
 
 			# we can return early if the entrySha512 is not equal to the directorySha and we only want to update
@@ -183,7 +183,7 @@ function gt_update() {
 			local tagToPull
 			if [[ -n $tag ]]; then
 				tagToPull="$tag"
-				if ! grep -P "$entryTagFilter" >/dev/null <<<"$tagToPull"; then
+				if ! grep -P -e "$entryTagFilter" >/dev/null <<<"$tagToPull"; then
 					# if the given tag does not match the entryTagFilter for the specific file, then we ignore the entry
 					((++skipped))
 					return
@@ -205,9 +205,9 @@ function gt_update() {
 			else
 
 				function gt_update_rePullInternal_pull() {
-					local pullDir trackDir targetFileName
+					local pullDir trackDir targetFileName excludeFilesMatching
 					# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-					local -ra params=(pullDir trackDir targetFileName)
+					local -ra params=(pullDir trackDir targetFileName excludeFilesMatching)
 					parseFnArgs params "$@"
 
 					local startTimestampInMs elapsedInSeconds
@@ -216,8 +216,9 @@ function gt_update() {
 					gt_pull_parsed_args[3]=$entryFile
 					gt_pull_parsed_args[4]=$pullDir
 					gt_pull_parsed_args[5]=$trackDir
-					gt_pull_parsed_args[7]=$targetFileName
-					gt_pull_parsed_args[8]=$entryTagFilter
+					gt_pull_parsed_args[6]=$excludeFilesMatching
+					gt_pull_parsed_args[8]=$targetFileName
+					gt_pull_parsed_args[9]=$entryTagFilter
 
 					if gt_pull_internal_without_arg_checks "$currentDir" "$startTimestampInMs" "${gt_pull_parsed_args[@]}"; then
 						((++pulled))
@@ -231,7 +232,7 @@ function gt_update() {
 
 				if [[ $onlyTrackingDir == true && $entrySha512 == "$directorySha" ]]; then
 					trackingDirs+=("$entryFile")
-					gt_update_rePullInternal_pull "$parentDir" true ""
+					gt_update_rePullInternal_pull "$parentDir" true "" "$entryExcludeFilesMatching"
 
 				elif [[ $onlyTrackingDir == false && $entrySha512 != "$directorySha" ]]; then
 					# during an gt update we don't have to update individual files which are within a tracked directory (or sub
@@ -245,7 +246,7 @@ function gt_update() {
 							gt_update_incrementError "$entryFile" "$remote"
 						fi
 					else
-						gt_update_rePullInternal_pull "$parentDir" false "$entryTargetFileName"
+						gt_update_rePullInternal_pull "$parentDir" false "$entryTargetFileName" "$entryExcludeFilesMatching"
 					fi
 				fi
 			fi

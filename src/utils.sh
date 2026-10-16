@@ -108,12 +108,12 @@ function gitFetchTagFromRemote() {
 
 	local tags
 	tags=$(git -C "$repo" tag) || die "The following command failed (see above): git tag"
-	if grep "$tagToFetch" <<<"$tags" >/dev/null; then
+	if grep -e "$tagToFetch" <<<"$tags" >/dev/null; then
 		logInfo "tag \033[0;36m%s\033[0m already exists locally, skipping fetching from remote \033[0;36m%s\033[0m" "$tagToFetch" "$remote"
 	else
 		local remoteTags
 		remoteTags=$(cd "$repo" && remoteTagsSorted "$remote" -r) || (logInfo >&2 "check your internet connection" && return 1) || return $?
-		grep "$tagToFetch" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToFetch" "$remoteTags" || return $?
+		grep -e "$tagToFetch" <<<"$remoteTags" >/dev/null || returnDying "remote \033[0;36m%s\033[0m does not have the tag \033[0;36m%s\033[0m\nFollowing the available tags:\n%s" "$remote" "$tagToFetch" "$remoteTags" || return $?
 		git -C "$repo" fetch --depth 1 "$remote" "refs/tags/$tagToFetch:refs/tags/$tagToFetch" || returnDying "was not able to fetch tag %s from remote %s" "$tagToFetch" "$remote" || return $?
 	fi
 
@@ -146,7 +146,7 @@ function askToDeleteAndReInitialiseGitDirIfRemoteIsBroken() {
 	local repo gitconfig
 	source "$dir_of_gt/paths.source.sh" || traceAndDie "could not source paths.source.sh"
 
-	if ! git --git-dir="$repo/.git" remote | grep "$remote" >/dev/null; then
+	if ! git --git-dir="$repo/.git" remote | grep -e "$remote" >/dev/null; then
 		logError "looks like the .git directory of remote \033[0;36m%s\033[0m is broken. There is no remote %s set up in its gitconfig. Following the remotes:" "$remote" "$remote"
 		git --git-dir="$repo/.git" remote
 		if [[ -f $gitconfig ]]; then
@@ -475,4 +475,40 @@ function gt_checkForSelfUpdate() {
 	}
 
 	doIfLastCheckMoreThanDaysAgo 15 "$lastGtUpdateCheckFile" gt_checkForSelfUpdate_callback
+}
+
+function exitIfNotValidGrepPRegex() {
+	local regex represents
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(regex represents)
+	parseFnArgs params "$@"
+
+	local -i rc=0
+	err=$(grep -P -e "$regex" </dev/null 2>&1 >/dev/null) || rc=$?
+
+	if [[ "$rc" -ge 2 ]]; then
+		die "Invalid %s \033[0;36m%s\033[0m\n%s" "$represents" "$regex" "$err" >&2
+		exit 1
+	fi
+}
+
+function exitIfContainsTabNewlineOrCarriageReturn() {
+	local value represents
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(value represents)
+	parseFnArgs params "$@"
+	if [[ $value == *$'\t'* || $value == *$'\n'* || $value == *$'\r'* ]]; then
+		die "%s cannot contain tabs or newlines/carriage return, given: \033[0;36m%s\033[0m\n%s" "$represents" "$value"
+	fi
+}
+
+function exitIfEmptyOrContainsTabNewlineOrCarriageReturn() {
+	local value represents
+	# shellcheck disable=SC2034   # is passed by name to parseFnArgs
+	local -ra params=(value represents)
+	parseFnArgs params "$@"
+	if [[ -z $value ]]; then
+		die "%s must be non-empty" "$represents"
+	fi
+	exitIfContainsTabNewlineOrCarriageReturn "$value" "$represents"
 }

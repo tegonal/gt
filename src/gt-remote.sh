@@ -120,7 +120,7 @@ function gt_remote_add() {
 		if askYesOrNo >&2 "Shall I create the work directory for you and continue?"; then
 			mkdir -p "$workingDirAbsolute" || die "was not able to create the workingDir %s" "$workingDirAbsolute"
 			local gitIgnore="$currentDir/.gitignore"
-			if [[ -f "$gitIgnore" ]] && ! grep "$workingDir/" "$gitIgnore"; then
+			if [[ -f "$gitIgnore" ]] && ! grep -F -e "$workingDir/" -- "$gitIgnore"; then
 				if askYesOrNo >&2 "Shall I add gt specific ignore patterns to %s" "$gitIgnore"; then
 					printf "\n# gt (https://github.com/tegonal/gt)\n%s/**/repo\n%s/**/gpg\n" "$workingDir" "$workingDir" >>"$gitIgnore" || logWarning "was not able to write gpg ignore patterns to %s, please add them manually" "$gitIgnore"
 				fi
@@ -352,9 +352,9 @@ function gt_remote_remove() {
 		local -i numberOfDeletedFiles=0
 
 		function gt_remote_remove_readCallback() {
-			local _entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entrySha512
+			local _entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entryExcludeFilesMatching _entrySha512
 			# shellcheck disable=SC2034   # is passed by name to parseFnArgs
-			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entrySha512)
+			local -ra params=(_entryTag _entryFile _entryRelativePath entryAbsolutePath _entryTagFilter _entryHasPlaceholder _entryExcludeFilesMatching _entrySha512)
 			parseFnArgs params "$@"
 			rm "$entryAbsolutePath"
 			((++numberOfDeletedFiles))
