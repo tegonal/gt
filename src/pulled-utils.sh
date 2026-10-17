@@ -193,7 +193,7 @@ function grepPulledEntryByFile() {
 	shift 2 || traceAndDie "could not shift by 2"
 	local escapedFile
 	escapedFile="$(escapeRegex "$file")"
-	grep -E "^[^  ]+ $escapedFile " "$@" -- "$pulledTsv"
+	grep -P "^[^\t]+\t$escapedFile\t" "$@" -- "$pulledTsv"
 }
 
 function replacePulledEntry() {
