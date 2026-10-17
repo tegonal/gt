@@ -204,6 +204,9 @@ function latestRemoteTagIncludingChecks() {
 	tag=$(cd "$repo" && latestRemoteTag "$remote" "$tagFilter") ||
 		die "could not determine latest tag of remote \033[0;36m%s\033[0m with filter %s, need to abort as no tag was specified via argument %s either" "$remote" "$tagFilter" "$tagParamPattern"
 	logInfo >&2 "latest is \033[0;36m%s\033[0m honoring the tag filter %s" "$tag" "$tagFilter"
+
+	allowedVersionRegex='^[a-zA-Z0-9._-]+$'
+	[[ "$tag" =~ $allowedVersionRegex ]] || die "tag %s doesn't match %s, something is odd, aborting" "$tag" "$allowedVersionRegex"
 	echo "$tag"
 }
 

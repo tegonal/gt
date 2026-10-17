@@ -119,12 +119,7 @@ jobs:
       - name: reset gpg keys
         run: gt reset --gpg-only true -r "${{ matrix.remote }}"
       - name: gt update
-        id: gt_update
-        run: |
-          set -euo pipefail
-          gt update -r "${{ matrix.remote }}"
-          gt update -r "${{ matrix.remote }}"
-          echo "remote_version=$(git --git-dir='.gt/remotes/${{ matrix.remote}}/repo/.git' tag | sort --version-sort | tail -n 1)" >> $GITHUB_OUTPUT
+        run: gt update -r "${{ matrix.remote }}"
       - id: has_changes
         name: git status
         run: |
@@ -132,19 +127,36 @@ jobs:
           git status
           gitStatus=$(git status --porcelain)
           (if [[ $gitStatus != "" ]]; then echo "has_changes=1"; else echo "has_changes=0"; fi) >> $GITHUB_OUTPUT
+      - id: determine_versions
+        if: ${{ steps.has_changes.outputs.has_changes == 1 }}
+        run: |
+          set -euo pipefail
+          mapfile -t newTags < <(
+            git diff -U0 -- ".gt/remotes/${{ matrix.remote }}/pulled.tsv" \
+              | grep -E '^\+[^+]' | cut -f1 | sed 's/^+//' | sort -u --version-sort
+          )
+
+          allowedVersionRegex='^[a-zA-Z0-9._-]+$'
+          for t in "${newTags[@]}"; do
+           [[ "$t" =~ $allowedVersionRegex ]] || { echo >&2 "tag '$t' doesn't match $allowedVersionRegex, something is odd, aborting." ; exit 1; }
+          done
+
+          newVersionsStr=$(IFS=,; echo "${newTags[*]}")
+          echo "new_versions=$newVersionsStr" >> $GITHUB_OUTPUT
       - name: git commit
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
+        id: git_commit
         run: |
           set -euo pipefail
           git config --local user.name 'tegonal-bot'
           git config --local user.email 'tegonal-bot@users.noreply.github.com'
-          git commit -am 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt' || true
+          git commit -am 'update files of remote ${{ matrix.remote }} to version(s) ${{steps.determine_versions.outputs.new_versions}} via gt' || true
       - name: cleanup-on-push-to-main
         if: ${{ steps.has_changes.outputs.has_changes == 1 && hashFiles('./scripts/cleanup-on-push-to-main.sh') != '' }}
         run: |
           (
               ./scripts/cleanup-on-push-to-main.sh || (printf '\033[0;31mERROR\033[0m: during cleanup, see error above\n' && false) &&
-              (git commit -am 'cleanup after gt pull for remote ${{ matrix.remote }} and version ${{steps.gt_update.outputs.remote_version}}' || (printf '\033[0;31mERROR\033[0m: during commit, maybe no changes due to cleanup (which would be fine)?, see above\n'; false ))
+              (git commit -am 'cleanup after gt pull for remote ${{ matrix.remote }} and version(s) ${{steps.determine_versions.outputs.new_versions}}' || (printf '\033[0;31mERROR\033[0m: during commit, maybe no changes due to cleanup (which would be fine)?, see above\n'; false ))
           ) || (printf '\033[0;34mINFO\033[0m: going to reset changes back to the status after `gt update` and continue without cleanup\n' && git reset --hard)
       - name: Create pull request if necessary
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
@@ -153,8 +165,8 @@ jobs:
         #gt-placeholder-gh-action-create-pr-end
         with:
           branch: 'gt/update/${{ matrix.remote }}'
-          title: 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt'
-          commit-message: 'update files of remote ${{ matrix.remote }} to version ${{steps.gt_update.outputs.remote_version}} via gt'
+          title: 'update files of remote ${{ matrix.remote }} to version(s) ${{steps.determine_versions.outputs.new_versions}} via gt'
+          commit-message: 'update files of remote ${{ matrix.remote }} to version(s) ${{steps.determine_versions.outputs.new_versions}} via gt'
           body: "following the changes after running `gt update -r \"${{ matrix.remote }}\"` and reset gpg keys"
           delete-branch: true
           token: ${{ secrets.AUTO_PR_TOKEN }}
