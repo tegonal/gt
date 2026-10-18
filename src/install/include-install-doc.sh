@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.0.2
+#                                         Version: v3.1.0-SNAPSHOT
 #######  Description  #############
 #
 #  utility to include the content of install.doc.sh into given files (e.g. into other scripts or github workflow files
