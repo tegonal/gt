@@ -134,56 +134,61 @@ jobs:
 
           pulledTsv=".gt/remotes/${{ matrix.remote }}/pulled.tsv"
           allowedVersionRegex='^[a-zA-Z0-9._-]+$'
-
           isMigration=false
-          migrationVersion=""
+
+          # pulled.tsv has two header lines (version pragma + column names), data starts at line 3
+          dataStartLine=3
 
           changedFiles=$(git diff --name-only)
 
+          # find out if we really have updates or if gt was updated and we merely migrated the pulled.tsv to a new version
           if [[ "$changedFiles" == "$pulledTsv" ]]; then
-            # A migration must change the first-line version pragma.
             oldPragma=$(git show "HEAD:$pulledTsv" | sed -n '1p')
             newPragma=$(head -n 1 "$pulledTsv")
 
             if [[ $oldPragma != "$newPragma" ]]; then
-              # Extract the first-column versions before and after the change.
-              # Ignore the first line because it contains the version pragma.
-              oldVersions=$(git show "HEAD:$pulledTsv" | tail -n +2 | cut -f1 | sort -u --version-sort)
+              oldTags=$(git show "HEAD:$pulledTsv" | tail -n +"$dataStartLine" | cut -f1 | sort --version-sort)
+              newTags=$(tail -n +"$dataStartLine" "$pulledTsv" | cut -f1 | sort --version-sort)
 
-              newVersions=$(tail -n +2 "$pulledTsv" | cut -f1 | sort -u --version-sort)
-
-              # A migration does not modify versions if we have version changes then we updated files
-              # to the migration as such
-              if [[ "$oldVersions" == "$newVersions" ]]; then
+              # if some tags changed, then we consider it an update, even if no file changed. Might be the files we fetched
+              # did not change in this release but we still update to a new version ...
+              if [[ "$oldTags" == "$newTags" ]]; then
+                # ... however, if the tags are the same then its solely a migration
                 isMigration=true
-                migrationVersion="${newPragma#'#@ Version: '}"
+                migrationVersion="${newPragma#"#@ Version: "}"
+                echo "commit_message=migrate pulled.tsv of remote ${{ matrix.remote }} to version $migrationVersion" >>"$GITHUB_OUTPUT"
                 [[ $migrationVersion =~ $allowedVersionRegex ]] || {
-                  echo >&2 "ERROR: migration version '$migrationVersion' does not match $allowedVersionRegex => something is odd, aborting."
-                  exit 1
+                    echo >&2 "ERROR: migration version '$migrationVersion' does not match $allowedVersionRegex => something is odd, aborting."
+                    exit 1
                 }
               fi
             fi
           fi
 
-          if [[ "$isMigration" == true ]]; then
-            echo "commit_message=migrate pulled.tsv of remote ${{ matrix.remote }} to version $migrationVersion" >> "$GITHUB_OUTPUT"
-          else
-            mapfile -t newTags < <(
-              git diff -U0 -- "$pulledTsv" | grep -E '^\+[^+]' | cut -f1 | sed 's/^+//' | sort -u --version-sort
-            )
+          if [[ "$isMigration" == false ]]; then
+              gitDiff=$(
+                  git diff -U0 -- "$pulledTsv" | grep -E '^\+[^+]' | cut -f1 | sed 's/^+//' |
+                      # sort out the version pragma and the header row (i.e. the first two columns)
+                      grep -vxE '#@ .*|tag' | sort -u --version-sort
+              )
+              mapfile -t newTags <<<"$gitDiff"
 
-            for t in "${newTags[@]}"; do
-              [[ "$t" =~ $allowedVersionRegex ]] || {
-                echo >&2 "ERROR: tag '$t' does not match $allowedVersionRegex => something is odd, aborting."
-                exit 1
-              }
-            done
+              if ((${#newTags[@]} == 0)); then
+                  echo >&2 "ERROR: could not find any new tags in the diff of $pulledTsv => something is odd, aborting."
+                  exit 1
+              fi
 
-            newVersionsStr=$(IFS=,; echo "${newTags[*]}")
+              for t in "${newTags[@]}"; do
+                  [[ "$t" =~ $allowedVersionRegex ]] || {
+                      echo >&2 "ERROR: tag '$t' does not match $allowedVersionRegex => something is odd, aborting."
+                      exit 1
+                  }
+              done
 
-            echo "commit_message=update files of remote ${{ matrix.remote }} to version(s) $newVersionsStr via gt" >> "$GITHUB_OUTPUT"
+              newVersionsStr=$(IFS=, printf '%s' "${newTags[*]}")
+
+              echo "commit_message=update files of remote ${{ matrix.remote }} to version(s) $newVersionsStr via gt" >>"$GITHUB_OUTPUT"
           fi
-
 
       - name: git commit
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
