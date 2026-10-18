@@ -99,7 +99,7 @@ function preReleaseCheckGit() {
 
 	local tags
 	tags=$(git tag) || die "The following command failed (see above): git tag"
-	if grep -q --fixed-strings --line-regexp -e "$version" <<<"$tags"; then
+	if grep -q --fixed-strings --line-regexp "$version" <<<"$tags"; then
 		logError "tag %s already exists locally, adjust version or delete it with git tag -d %s" "$version" "$version"
 		if hasRemoteTag "$version"; then
 			printf >&2 "Note, it also exists on the remote which means you also need to delete it there -- e.g. via git push origin :%s\n" "$version"

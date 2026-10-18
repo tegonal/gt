@@ -133,7 +133,7 @@ function hasRemoteTag() {
 	local output literalTag
 	output=$(git ls-remote -t "$remote") || die "the following command failed (see above): git ls-remote -t \"$remote\""
 	literalTag=$(escapeRegex "refs/tags/$tag") || die "was not able to escape the following for regex: %s" "refs/tags/$tag"
-	grep -q -E -e "$literalTag\$" <<<"$output"
+	grep -q -E "$literalTag\$" <<<"$output"
 }
 
 function remoteTagsSorted() {
@@ -158,7 +158,7 @@ function latestRemoteTag() {
 	local -r remote=${1:-"origin"}
 	local -r tagFilter=${2:-".*"}
 	local tag
-	tag=$(remoteTagsSorted "$remote" | grep -P -e "$tagFilter" | tail -n 1) || die "could not get remote tags sorted for remote %s, see above" "$remote"
+	tag=$(remoteTagsSorted "$remote" | grep -P "$tagFilter" | tail -n 1) || die "could not get remote tags sorted for remote %s, see above" "$remote"
 	if [[ -z $tag ]]; then
 		die "looks like remote \033[0;36m%s\033[0m does not have a tag yet." "$remote"
 	fi
