@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License v. 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v3.1.0-SNAPSHOT
+#                                         Version: v3.0.1
 #######  Description  #############
 #
 #  'reset' command of gt: utility to reset (re-initialise gpg, re-pull all files) for all or one previously defined remote
