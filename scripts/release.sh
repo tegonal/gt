@@ -77,9 +77,9 @@ function release() {
 	local -r additionalPattern="(GT_(?:LATEST_)?VERSION=['\"])[^'\"]+(['\"])"
 
 	releaseFilesTemplate \
+		"${releaseFilesTemplateArgs[@]}" \
 		"$projectsRootDirParamPatternLong" "$projectDir" \
 		"$additionalPatternParamPatternLong" "$additionalPattern" \
-		"${releaseFilesTemplateArgs[@]}" \
 		"$findForSigningParamPatternLong" findFilesToRelease \
 		"$afterVersionUpdateHookParamPatternLong" release_afterVersionHook
 }
