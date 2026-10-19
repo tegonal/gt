@@ -186,7 +186,7 @@ jobs:
               }
             done
 
-            newVersionsStr=$(IFS=, printf '%s' "${newTags[*]}")
+            newVersionsStr=$(IFS=,; printf '%s' "${newTags[*]}")
 
             echo "commit_message=update files of remote ${{ matrix.remote }} to version(s) $newVersionsStr via gt" >>"$GITHUB_OUTPUT"
           fi
