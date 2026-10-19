@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # gt-placeholder-owner-start
-    if: github.repository_owner == 'tegonal'
+    if: &correct-owner github.repository_owner == 'tegonal'
     # gt-placeholder-owner-end
 
     outputs:
@@ -223,6 +223,7 @@ jobs:
   signing_key:
     name: "Check signing-key"
     runs-on: ubuntu-latest
+    if: *correct-owner
     steps:
 
       #gt-placeholder-gh-action-checkout-3-start
@@ -263,6 +264,7 @@ jobs:
   trusted_keys:
     name: "Check trusted-key(s)"
     runs-on: ubuntu-latest
+    if: *correct-owner
     steps:
       - name: Import gpg key(s) defined in vars.PUBLIC_GPG_KEYS_WE_TRUST and secrets.PUBLIC_GPG_KEYS_WE_TRUST
         run: |
