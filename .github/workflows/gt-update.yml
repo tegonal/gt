@@ -113,6 +113,11 @@ jobs:
           		exit 1
           	} && false || cd "$currentDir" && rm -r "$tmpDir" && "${result:-false}"
           # end install.doc.sh
+      - name: install shfmt if defined
+        if: hashFiles('lib/tegonal-scripts/src/ci/install-shfmt.sh') != ''
+        run: ./lib/tegonal-scripts/src/ci/install-shfmt.sh
+      #gt-placeholder-gh-action-dependencies-start
+      #gt-placeholder-gh-action-dependencies-end
       #gt-placeholder-gh-action-checkout-2-start
       - uses: actions/checkout@v7
       #gt-placeholder-gh-action-checkout-2-end
