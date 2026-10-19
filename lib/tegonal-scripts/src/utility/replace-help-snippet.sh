@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Helper script to capture the `--help` output of a script and replace a snippet in HTML based scripts (e.g. in a Markdown script).

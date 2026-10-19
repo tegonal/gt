@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Carry out some common update version steps either during releasing or in preparing the next dev cycle (indicated via
@@ -56,7 +56,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v5.1.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v5.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -75,7 +75,6 @@ function updateVersionCommonSteps() {
 	parseArguments updateVersionCommonStepsParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
 	source "$dir_of_tegonal_scripts/releasing/params/update-version-common-steps.default-args.source.sh" || traceAndDie "could not source update-version-common-steps.default-args.source.sh"
 	exitIfNotAllArgumentsSet updateVersionCommonStepsParams "" "$TEGONAL_SCRIPTS_VERSION"
-
 	exitIfArgIsNotBoolean "$forRelease" "$forReleaseParamPatternLong"
 
 	local -r projectsScriptsDir="$projectsRootDir/scripts"
@@ -108,7 +107,10 @@ function updateVersionCommonSteps() {
 
 		local -r templateDir="$projectsRootDir/./.github/ISSUE_TEMPLATE"
 		if [[ -d "$templateDir" ]]; then
-			updateVersionIssueTemplates "$versionParamPatternLong" "$version" -d "$templateDir"
+			updateVersionIssueTemplates \
+				"$versionParamPatternLong" "$version" \
+				"$additionalPatternParamPatternLong" "$additionalPattern" \
+				-d "$templateDir" || return $?
 		fi
 	fi
 }

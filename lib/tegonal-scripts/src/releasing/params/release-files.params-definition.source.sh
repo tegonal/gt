@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 # Defines the parameters for the a custom release function which is based on releaseFilesTemplate but wants to
@@ -21,8 +21,11 @@
 }
 
 local -a releaseFiles_sameAsFilesWithSomeExceptions=()
-arrDropTuplesByKey releaseFilesTemplateParams 3 releaseFiles_sameAsFilesWithSomeExceptions \
+local releaseFiles_hideFromUser=(
 	findForSigning prepareNextDevCycleFn afterVersionUpdateHook projectsRootDir additionalPattern
+)
+arrDropTuplesByKey releaseFilesTemplateParams 3 releaseFiles_sameAsFilesWithSomeExceptions \
+	"${releaseFiles_hideFromUser[@]}"
 
 local -ra releaseFilesParams=(
 	"${releaseFiles_sameAsFilesWithSomeExceptions[@]}"

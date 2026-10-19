@@ -5,7 +5,7 @@
 #  / __/ -_) _ `/ _ \/ _ \/ _ `/ /        It is licensed under Apache License 2.0
 #  \__/\__/\_, /\___/_//_/\_,_/_/         Please report bugs and contribute back your improvements
 #         /___/
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #
 #######  Description  #############
 #
@@ -25,7 +25,7 @@
 #    # will output v4\.2\.0
 #    escapeRegex "v4.2.0"
 #
-#    # useful in combination with grep which does not support literal searches:
+#    # Useful with grep -E, which does not support \Q...\E for quoting literal strings:
 #    # escapes to tegonal\+
 #    pattern=$(escapeRegex "tegonal+")
 #    grep -E "$pattern"

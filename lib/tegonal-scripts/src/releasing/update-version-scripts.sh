@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Updates the version which is placed before the `Description` section in bash files (line 8 in this file).
@@ -32,7 +32,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v5.1.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v5.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -67,16 +67,21 @@ function updateVersionScripts() {
 
 	parseArguments params "$examples" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
 	if ! [[ -v directory ]]; then directory="./src"; fi
-	if ! [[ -v additionalPattern ]]; then additionalPattern=""; fi
+	if ! [[ -v additionalPattern ]]; then additionalPattern="$additionalPatternDefaultArg"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
 
 	local where
-	if [[ -f $directory ]]; then
-		where="file $directory"
-	else
+	if [[ -d $directory ]]; then
 		where="directory $directory (and subdirectories)"
+	elif [[ -f $directory ]]; then
+		where="file $directory"
+	elif [[ -e $directory ]]; then
+		die "the given --directory exists but is neither a directory nor a regular file, path was %s" "$directory"
+	else
+		die "the given --directory does not exist, was %s" "$directory"
 	fi
-	echo "set version $version in bash headers in $where"
+
+	logInfo "set version %s in bash headers in %s" "$version" "$where"
 	if [[ -n $additionalPattern ]]; then
 		echo "also going to search for $additionalPattern and replace with \${1}$version\${2}"
 	fi

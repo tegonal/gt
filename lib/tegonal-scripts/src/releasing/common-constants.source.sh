@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  constants intended to be sourced into a function
@@ -39,6 +39,7 @@ local -r projectsRootDirParamDocu='(optional) The projects directory -- default:
 local -r additionalPatternParamPatternLong='--pattern'
 local -r additionalPatternParamPattern="-p|$additionalPatternParamPatternLong"
 local -r additionalPatternParamDocu='(optional) pattern which is used in a perl command (separator /) to search & replace additional occurrences. It should define two match groups and the replace operation looks as follows: '"\\\${1}\$version\\\${2}"
+local -r additionalPatternDefaultArg=''
 
 local -r nextVersionParamPatternLong='--next-version'
 local -r nextVersionParamPattern="-nv|$nextVersionParamPatternLong"
@@ -69,3 +70,7 @@ local -r afterVersionUpdateHookParamPatternLong='--after-version-update-hook'
 local -r afterVersionUpdateHookParamPattern="$afterVersionUpdateHookParamPatternLong"
 local -r afterVersionUpdateHookParamDocu="(optional) if defined, then this function is called after versions were updated and before calling beforePr. \
 The following arguments are passed: $versionParamPatternLong version $projectsRootDirParamPatternLong projectsRootDir and $additionalPatternParamPatternLong additionalPattern"
+
+local -r repoUrlParamPatternLong='--repo-url'
+local -r repoUrlParamPattern="$repoUrlParamPatternLong"
+local -r repoUrlParamDocu='The url to the repo (e.g. https://github.com/tegonal/scripts)'
