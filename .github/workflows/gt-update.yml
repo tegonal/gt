@@ -136,6 +136,7 @@ jobs:
           gitStatus=$(git status --porcelain)
           (if [[ $gitStatus != "" ]]; then echo "has_changes=1"; else echo "has_changes=0"; fi) >> $GITHUB_OUTPUT
       - id: determine_versions
+        name: determine versions
         if: ${{ steps.has_changes.outputs.has_changes == 1 }}
         run: |
           set -euo pipefail
