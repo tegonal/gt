@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Defines a release process template where some conventions are defined:
@@ -80,7 +80,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v5.1.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v5.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -102,6 +102,10 @@ function releaseTemplate() {
 	exitIfArgIsNotFunction "$releaseHook" "$releaseHookParamPatternLong"
 	exitIfArgIsNotFunction "$beforePrFn" "$beforePrFnParamPatternLong"
 	exitIfArgIsNotFunction "$prepareNextDevCycleFn" "$prepareNextDevCycleFnParamPatternLong"
+	exitIfPathNamedIsOutsideOfCurrentDir "$projectsRootDir" "$projectsRootDirParamPatternLong"
+
+	local -a afterVersionHookArgs
+	addLocalVarMatchingParamNamesToArgs afterVersionHookParams afterVersionHookArgs
 
 	preReleaseCheckGit \
 		"$versionParamPatternLong" "$version" \
@@ -112,14 +116,10 @@ function releaseTemplate() {
 
 	updateVersionCommonSteps \
 		"$forReleaseParamPatternLong" true \
-		"$versionParamPatternLong" "$version" \
-		"$projectsRootDirParamPatternLong" "$projectsRootDir" \
-		"$additionalPatternParamPatternLong" "$additionalPattern"
+		"${afterVersionHookArgs[@]}"
 
 	executeIfFunctionNameDefined "$afterVersionUpdateHook" "$afterVersionUpdateHookParamPatternLong" \
-		"$versionParamPatternLong" "$version" \
-		"$projectsRootDirParamPatternLong" "$projectsRootDir" \
-		"$additionalPatternParamPatternLong" "$additionalPattern"
+		"${afterVersionHookArgs[@]}"
 
 	# run again since we made changes
 	"$beforePrFn" || return $?
@@ -138,12 +138,11 @@ function releaseTemplate() {
 		fi
 
 		logInfo "Release completed, going to prepare next development cycle for %s by calling %s" "$nextVersion" \
-			"$prepareNextDevCycleFn $versionParamPatternLong $nextVersion $additionalPatternParamPatternLong $additionalPattern $projectsRootDirParamPatternLong $projectsRootDir $beforePrFnParamPatternLong $beforePrFn"
+			"${afterVersionHookArgs[*]} $versionParamPatternLong $nextVersion $beforePrFnParamPatternLong $beforePrFn"
 
 		"$prepareNextDevCycleFn" \
+			"${afterVersionHookArgs[@]}" \
 			"$versionParamPatternLong" "$nextVersion" \
-			"$additionalPatternParamPatternLong" "$additionalPattern" \
-			"$projectsRootDirParamPatternLong" "$projectsRootDir" \
 			"$beforePrFnParamPatternLong" "$beforePrFn" || die "could not prepare next dev cycle for version %s" "$nextVersion"
 
 		git push origin "$version" || die "could not push tag %s to origin" "$version"

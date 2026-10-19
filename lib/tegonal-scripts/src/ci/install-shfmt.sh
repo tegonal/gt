@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  installs shfmt v3.12.0_linux_amd64 into $HOME/.local/bin
@@ -42,47 +42,57 @@ function die() {
 	exit 1
 }
 
-currentDir=$(pwd)
-tmpDir=$(mktemp -d -t download-shfmt-XXXXXXXXXX) || die "could not create a temp directory"
-cd "$tmpDir"
-shfmtVersion="v3.12.0"
-binFile="shfmt_${shfmtVersion}_linux_amd64"
-expectedSha="d9fbb2a9c33d13f47e7618cf362a914d029d02a6df124064fff04fd688a745ea $binFile"
-echo "$expectedSha" >"$binFile.sha256"
+function main() {
+	local currentDir tmpDir shfmtVersion binFile expectedSha url
+	currentDir=$(pwd)
+	tmpDir=$(mktemp -d -t download-shfmt-XXXXXXXXXX) || die "could not create a temp directory"
+	# shellcheck disable=SC2064	# we want to expand it here since the vars are local to main
+	trap "cd '$currentDir'; rm -rf '$tmpDir'" EXIT
+	cd "$tmpDir"
+	shfmtVersion="v3.12.0"
+	binFile="shfmt_${shfmtVersion}_linux_amd64"
+	expectedSha="d9fbb2a9c33d13f47e7618cf362a914d029d02a6df124064fff04fd688a745ea $binFile"
+	echo "$expectedSha" >"$binFile.sha256"
 
-url="https://github.com/mvdan/sh/releases/download/$shfmtVersion/$binFile"
-echo "going to download shfmt $shfmtVersion from: $url"
-if command -v curl >/dev/null; then
-	curl --fail -L -O "$url" || die "could not download shfmt"
-else
-	# if curl does not exist, then we try it with wget
-	wget --no-verbose "$url"
-fi
-sha256sum -c "$binFile.sha256" || {
-	actualSha="$(sha256sum "$binFile")"
-	die "checksum did not match, aborting\nexpected:\n%s\ngiven   :\n%s" "$expectedSha" "$actualSha"
+	url="https://github.com/mvdan/sh/releases/download/$shfmtVersion/$binFile"
+	echo "going to download shfmt $shfmtVersion from: $url"
+	if command -v curl >/dev/null; then
+		curl --fail -L -O "$url" || die "could not download shfmt"
+	else
+		# if curl does not exist, then we try it with wget
+		wget --no-verbose "$url" || die "could not download shfmt"
+	fi
+	sha256sum -c "$binFile.sha256" || {
+		local actualSha
+		actualSha="$(sha256sum "$binFile")"
+		die "checksum did not match, aborting\nexpected:\n%s\ngiven   :\n%s" "$expectedSha" "$actualSha"
+	}
+	chmod +x "./$binFile" || die "could not make shfmt executable"
+
+	local shfmtInTmp homeLocalBin shfmtBin
+	shfmtInTmp="$tmpDir/$binFile"
+	homeLocalBin="$HOME/.local/bin"
+	shfmtBin="$homeLocalBin/shfmt"
+
+	mkdir -p "$homeLocalBin" || die "was not able to create the bin directory %s" "$homeLocalBin"
+
+	if [[ -f "$shfmtBin" ]]; then
+		echo "going to remove the existing installation in $homeLocalBin"
+		rm "$shfmtBin" || die "was not able to remove a previous installation in %s" "$homeLocalBin"
+	fi
+	mv "$shfmtInTmp" "$shfmtBin"
+
+	cd "$currentDir"
+
+	local shfmtPath shfmtCurrentVersion
+	shfmtPath=$(command -v shfmt)
+	if [[ $shfmtPath != "$shfmtBin" ]]; then
+		shfmtCurrentVersion=$(shfmt --version)
+		logError "was able to install shfmt in %s but \`command -v shfmt\` returns another path:\n%s\nFollowing the output of \`shfmt --version\`:\n%s" "$shfmtBin" "$shfmtPath" "$shfmtCurrentVersion"
+	else
+		shfmt --version
+		printf "\033[0;32mSUCCESS\033[0m: installed shfmt %s in %s\n" "$shfmtVersion" "$homeLocalBin"
+	fi
 }
-chmod +x "./$binFile" || die "could not make shfmt executable"
 
-shfmtInTmp="$tmpDir/$binFile"
-homeLocalBin="$HOME/.local/bin"
-shfmtBin="$homeLocalBin/shfmt"
-
-mkdir -p "$homeLocalBin" || die "was not able to create the bin directory %s" "$homeLocalBin"
-
-if [[ -f "$shfmtBin" ]]; then
-	echo "going to remove the existing installation in $homeLocalBin"
-	rm "$shfmtBin" || die "was not able to remove a previous installation in %s" "$homeLocalBin"
-fi
-mv "$shfmtInTmp" "$shfmtBin"
-
-cd "$currentDir"
-
-shfmtPath=$(command -v shfmt)
-if [[ $shfmtPath != "$shfmtBin" ]]; then
-	shfmtCurrentVersion=$(shfmt --version)
-	logError "was able to install shfmt in %s but \`command -v shfmt\` returns another path:\n%s\nFollowing the output of \`shfmt --version\`:\n" "$shfmtBin" "$shfmtPath" "$shfmtCurrentVersion"
-else
-	shfmt --version
-	printf "\033[0;32mSUCCESS\033[0m: installed shfmt %s in %s\n" "$shfmtVersion" "$homeLocalBin"
-fi
+main "$@"

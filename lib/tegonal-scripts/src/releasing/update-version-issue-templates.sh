@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Updates the placeholder of all labels named `Affected Version` in issue templates.
@@ -32,7 +32,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v5.1.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v5.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -69,29 +69,35 @@ function updateVersionIssueTemplates() {
 	if ! [[ -v directory ]]; then directory="./.github/ISSUE_TEMPLATE"; fi
 	if ! [[ -v additionalPattern ]]; then additionalPattern=""; fi
 	exitIfNotAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
+	exitIfArgIsNotVersion "$version" "$versionParamPatternLong"
 
 	local where
-	if [[ -f $directory ]]; then
-		where="file $directory"
-	else
+	if [[ -d $directory ]]; then
 		where="directory $directory (and subdirectories)"
+	elif [[ -f $directory ]]; then
+		where="file $directory"
+	elif [[ -e $directory ]]; then
+		die "the given --directory exists but is neither a directory nor a regular file, path was %s" "$directory"
+	else
+		die "the given --directory does not exist, was %s" "$directory"
 	fi
+
 	echo "set version $version in issue templates in $where"
 	if [[ -n $additionalPattern ]]; then
 		echo "also going to search for $additionalPattern and replace with \${1}$version\${2}"
 	fi
 
-	local script
+	local yaml
 	find "$directory" '(' -name "*.yml" -o -name "*.yaml" ')' -print0 |
-		while read -r -d $'\0' script; do
+		while read -r -d $'\0' yaml; do
 			perl -0777 -i \
 				-pe "s/(label:\s*Affected Version[\S\s]+placeholder:\s*)\"[^\"]+\"/\${1}\"$version\"/g;" \
-				"$script" || returnDying "was not able to update the version in the issue templates" || return $?
+				"$yaml" || returnDying "was not able to update the version in the issue templates" || return $?
 
 			if [[ -n $additionalPattern ]]; then
 				perl -0777 -i \
 					-pe "s/$additionalPattern/\${1}$version\${2}/g;" \
-					"$script" || returnDying "error during the additional replacement, see above" || return $?
+					"$yaml" || returnDying "error during the additional replacement, see above" || return $?
 			fi
 		done
 }

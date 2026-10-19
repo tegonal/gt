@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Replaces the version used in download badge(s) and in the sneak peek banner
@@ -32,7 +32,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v5.1.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v5.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -67,10 +67,11 @@ function updateVersionReadme() {
 
 	parseArguments params "$examples" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
 	if ! [[ -v file ]]; then file="./README.md"; fi
-	if ! [[ -v additionalPattern ]]; then additionalPattern=""; fi
+	if ! [[ -v additionalPattern ]]; then additionalPattern="$additionalPatternDefaultArg"; fi
 	exitIfNotAllArgumentsSet params "$examples" "$TEGONAL_SCRIPTS_VERSION"
+	[[ -f "$file" ]] || die "file not found (or not a regular file): %s" "$file"
 
-	echo "set version $version for Download badges and sneak peek banner in $file"
+	logInfo "set version $version for Download badges and sneak peek banner in $file"
 
 	local -r versionWithoutLeadingV="${version:1}"
 
@@ -81,7 +82,7 @@ function updateVersionReadme() {
 		"$file" || returnDying "was not able to update the version in download badges and in the sneak peek banner" || return $?
 
 	if [[ -n $additionalPattern ]]; then
-		echo "also going to search for $additionalPattern and replace with \${1}$version\${2}"
+		logInfo "also going to search for $additionalPattern and replace with \${1}$version\${2}"
 		perl -0777 -i \
 			-pe "s/$additionalPattern/\${1}$version\${2}/g;" \
 			"$file" || returnDying "error during the additional replacement, see above" || return $?

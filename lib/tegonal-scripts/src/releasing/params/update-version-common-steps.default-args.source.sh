@@ -7,16 +7,17 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 # Defines default args for ...params-definition.source.sh for files which use the same arguments but allow optional
 # parameters (the afterVersionUpdateHook as such should not)
 #
 ###################################
+{
+	# shellcheck disable=SC2154   # it is assumed dir_of_tegonal_scripts is defined where this file is sourced
+	source "$dir_of_tegonal_scripts/releasing/params/after-version-update-hook.default-args.source.sh" ||
+		traceAndDie "could not source after-version-update-hook.default-args.source.sh"
+}
 
-# Note, it is used in prepare-next-dev-cycle-template.default-args.source.sh, if you should add default args
-# which are only relevant for update-version-common-steps then don't re-use in
-# prepare-next-dev-cycle-template.default-args.source.sh any more.
-if ! [[ -v projectsRootDir ]]; then projectsRootDir=$(realpath ".") || die "could not determine realpath of ."; fi
-if ! [[ -v additionalPattern ]]; then additionalPattern="^$"; fi
+# nothing in addition for now

@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.1.0
+#                                         Version: v5.2.0
 #######  Description  #############
 #
 #  Releasing files based on conventions:
@@ -75,7 +75,7 @@
 set -euo pipefail
 shopt -s inherit_errexit || { echo >&2 "please update to bash 5, see errors above" && exit 1; }
 unset CDPATH
-export TEGONAL_SCRIPTS_VERSION='v5.1.0-SNAPSHOT'
+export TEGONAL_SCRIPTS_VERSION='v5.2.0'
 
 if ! [[ -v dir_of_tegonal_scripts ]]; then
 	dir_of_tegonal_scripts="$(cd -- "$(dirname -- "${BASH_SOURCE[0]:-$0}")" >/dev/null && pwd 2>/dev/null)/.."
@@ -115,15 +115,16 @@ function releaseFilesTemplate() {
 		parseArguments afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION" "$@" || return $?
 		exitIfNotAllArgumentsSet afterVersionHookParams "" "$TEGONAL_SCRIPTS_VERSION"
 
+		local -a afterVersionHookArgs
+		addLocalVarMatchingParamNamesToArgs afterVersionHookParams afterVersionHookArgs
+
 		updateVersionScripts \
 			"$versionParamPatternLong" "$version" \
 			"$additionalPatternParamPatternLong" "$additionalPattern" \
 			-d "$projectsRootDir/src" || return $?
 
 		executeIfFunctionNameDefined "$release_files_afterVersionUpdateHook" "$afterVersionUpdateHookParamPatternLong" \
-			"$versionParamPatternLong" "$version" \
-			"$projectsRootDirParamPatternLong" "$projectsRootDir" \
-			"$additionalPatternParamPatternLong" "$additionalPattern"
+			"${afterVersionHookArgs[@]}"
 	}
 
 	function releaseFilesTemplate_releaseHook() {
