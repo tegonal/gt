@@ -120,8 +120,8 @@ function gt_pull_parse_args() {
 	# shellcheck disable=SC2034   # is passed by name to parseArguments
 	local -ra params=(
 		remote "$remoteParamPattern" 'name of the remote repository'
-		tag "$tagParamPattern" 'git tag used to pull the file/directory'
 		path "$pathParamPattern" 'path in remote repository which shall be pulled (file or directory)'
+		tag "$tagParamPattern" '(optional) git tag used to pull the file/directory -- default: determines the latest tag in the remote repository which matches the given tag-filter'
 		pullDir "$pullDirParamPattern" "(optional) directory into which files are pulled -- default: pull directory of this remote (defined during \"remote add\" and stored in $defaultWorkingDir/<remote>/pull.args)"
 		trackDir "$trackDirParamPattern" "(optional) if set to true, then $pathParamPatternLong needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false"
 		excludeFilesMatching "$excludeFilesMatchingParamPattern" "(optional) can only be used if a directory is pulled and defines which files shall be excluded via the given regex (as supported by grep -P) -- default: ^$"
