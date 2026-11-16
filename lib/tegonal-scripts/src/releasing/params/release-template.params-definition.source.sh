@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 # Defines the parameters for the function releaseTemplate
@@ -23,6 +23,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/array-utils.sh"
 # version comes first, the remaining (currently optional) params come last.
 local -a releaseTemplate_version=() releaseTemplate_rest=()
 arrPartitionTuplesByKey afterVersionHookParams 3 releaseTemplate_version releaseTemplate_rest version
+local -ra releaseTemplate_version releaseTemplate_rest
 
 local -ra releaseTemplateParams=(
 	"${releaseTemplate_version[@]}"

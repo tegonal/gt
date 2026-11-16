@@ -6,7 +6,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 #  function which calls given scripts by passing --help and checks that the exit code is 99 as expected
@@ -58,7 +58,7 @@ function checkHelpCallable() {
 		"$script" --help >/dev/null || status=$?
 		[[ $status -eq 99 ]] || die "looks like calling %s failed unexpectedly, see above" "$script"
 	done
-	logSuccess "all given scripts could have been called with --help and exited with 99"
+	logSuccess "given scripts called with --help and all exited with 99"
 }
 
 ${__SOURCED__:+return}

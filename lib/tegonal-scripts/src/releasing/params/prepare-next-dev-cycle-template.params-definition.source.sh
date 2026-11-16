@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 # Defines the parameters for the function prepareNextDevCycleTemplate
@@ -23,6 +23,7 @@ sourceOnce "$dir_of_tegonal_scripts/utility/array-utils.sh"
 # version is redefined with its own docu, so we only need the rest
 local -a prepareNextDevCycleTemplate_rest=()
 arrDropTuplesByKey afterVersionHookParams 3 prepareNextDevCycleTemplate_rest version
+local -ra prepareNextDevCycleTemplate_rest
 
 local -ra prepareNextDevCycleTemplateParams=(
 	version "$versionParamPattern" 'The version for which we prepare the dev cycle'
