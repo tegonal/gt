@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under European Union Public License 1.2
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 #  constants intended to be sourced into a function
@@ -74,3 +74,7 @@ The following arguments are passed: $versionParamPatternLong version $projectsRo
 local -r repoUrlParamPatternLong='--repo-url'
 local -r repoUrlParamPattern="$repoUrlParamPatternLong"
 local -r repoUrlParamDocu='The url to the repo (e.g. https://github.com/tegonal/scripts)'
+
+local -ra release_hideFromUser=(
+	beforePrFn prepareNextDevCycleFn afterVersionUpdateHook projectsRootDir additionalPattern
+)

@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 # Defines the parameters for the function releaseFilesTemplate
@@ -22,6 +22,7 @@
 local -a releaseFilesTemplate_version=() releaseFilesTemplate_restWithoutReleaseHook=()
 arrKeepTuplesByKey releaseTemplateParams 3 releaseFilesTemplate_version version
 arrDropTuplesByKey releaseTemplateParams 3 releaseFilesTemplate_restWithoutReleaseHook version releaseHook
+local -ra releaseFilesTemplate_version releaseFilesTemplate_restWithoutReleaseHook
 
 local -ra releaseFilesTemplateParams=(
 	"${releaseFilesTemplate_version[@]}"

@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 # Defines the parameters for a prepareNextDevCycle function which is based on prepareNextDevCycleTemplate
@@ -22,6 +22,7 @@
 
 local -a prepareFilesNextDevCycle_withoutAdditionalPattern=()
 arrDropTuplesByKey prepareFilesNextDevCycleTemplateParams 3 prepareFilesNextDevCycle_withoutAdditionalPattern additionalPattern
+local -ra prepareFilesNextDevCycle_withoutAdditionalPattern
 
 local -ra prepareFilesNextDevCycleParams=(
 	"${prepareFilesNextDevCycle_withoutAdditionalPattern[@]}"

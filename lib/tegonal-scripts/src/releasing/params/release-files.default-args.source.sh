@@ -7,7 +7,7 @@
 #  \__/\__/\_, /\___/_//_/\_,_/_/         It is licensed under Apache License 2.0
 #         /___/                           Please report bugs and contribute back your improvements
 #
-#                                         Version: v5.2.0
+#                                         Version: v5.3.0
 #######  Description  #############
 #
 # Defines default args for ...params-definition.source.sh
@@ -18,7 +18,7 @@
 	source "$dir_of_tegonal_scripts/releasing/params/release-files-template.default-args.source.sh" ||
 		traceAndDie "could not source release-files-template.default-args.source.sh"
 }
-# currently release-files defines not more optional params than release-files-template, on the contrary, since don't
+# currently release-files defines not more optional params than release-files-template, on the contrary, since we don't
 # want to expose all params to the user, we have to unset certain values which are set
 # shellcheck disable=SC2154		# we assume default-args is sourced after params-definition
 for var in "${releaseFiles_hideFromUser[@]}"; do
