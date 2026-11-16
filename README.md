@@ -434,8 +434,8 @@ Following the output of running `gt pull --help`:
 ```text
 Parameters:
 -r|--remote                  name of the remote repository
--t|--tag                     git tag used to pull the file/directory
 -p|--path                    path in remote repository which shall be pulled (file or directory)
+-t|--tag                     (optional) git tag used to pull the file/directory -- default: determines the latest tag in the remote repository which matches the given tag-filter
 -d|--directory               (optional) directory into which files are pulled -- default: pull directory of this remote (defined during "remote add" and stored in .gt/<remote>/pull.args)
 --track-dir                  (optional) if set to true, then --path needs to be a directory. A subsequent gt update will then pull not only the files pulled during gt update but also new files. A gt re-pull on the other hand will only pull the files specified in pulled.tsv and not new files -- default: false
 --exclude-files-matching     (optional) can only be used if a directory is pulled and defines which files shall be excluded via the given regex (as supported by grep -P) -- default: ^$
