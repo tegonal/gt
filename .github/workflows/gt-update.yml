@@ -24,9 +24,10 @@ jobs:
     name: Determine Remotes
     runs-on: ubuntu-latest
 
-    # gt-placeholder-owner-start
-    if: &correct-owner github.repository_owner == 'tegonal'
-    # gt-placeholder-owner-end
+    if: &correct-owner
+      # gt-placeholder-owner-v2-start
+          github.repository_owner == 'tegonal'
+      # gt-placeholder-owner-v2-end
 
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
